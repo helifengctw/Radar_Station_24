@@ -4,10 +4,13 @@
 #include "preprocess.h"
 #include "postprocess.h"
 #include "model.h"
-//#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "cv_bridge/cv_bridge.h"
+#include "image_transport/image_transport.h"
 
+#include <opencv2/opencv.hpp>
 #include <iostream>
 #include <chrono>
 #include <cmath>
@@ -59,7 +62,7 @@ bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bo
 }
 
 void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer, float** gpu_output_buffer, float** cpu_output_buffer) {
-    assert(engine->getNbBindings() == 2);
+    assert(engine->getNbBindings() == 2);  // deprecated for TensorRT version not correspond
     // In order to bind the buffers, we need to know the names of the input and output tensors.
     // Note that indices are guaranteed to be less than IEngine::getNbBindings()
     const int inputIndex = engine->getBindingIndex(kInputTensorName);
@@ -136,129 +139,217 @@ void deserialize_engine(std::string& engine_name, IRuntime** runtime, ICudaEngin
     delete[] serialized_engine;
 }
 
-//class ImageSubscriber : public rclcpp::Node
-//{
-//public:
-//    ImageSubscriber(): Node("image_subscriber"){
-//        subscription_ = this->create_subscription<sensor_msgs::msg::Image::SharedPtr> (
-//                "image_raw", 1, std::bind(&ImageSubscriber::topic_callback, this, _1));
-//    }
-//
-//private:
-//    void topic_callback(const sensor_msgs::msg::Image::SharedPtr img) const{
-////        RCLCPP_INFO(this->get_logger(), "I heard: '%s'", msg->data.c_str());
-//    }
-//    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
-//};
+/// custom utils function
+void FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
+                      std::string * return_car_engine, std::string * return_num_engine){
+    std::string data_dir = "/home/hlf/Desktop/radar24_ws/src/yolov5_detect/data";
+    std::string car_wts_name = data_dir + "/weights/car_23_stable.wts";
+    std::string car_engine_name = data_dir + "/engine/car_23_stable.engine";
+    * return_car_engine = car_engine_name;
+    std::string num_wts_name = data_dir + "/weights/num_23_stable.wts";
+    std::string num_engine_name = data_dir + "/engine/num_23_stable.engine";
+    * return_num_engine = num_engine_name;
+    float gd = 0.33f, gw = 0.50f;  //extracted from parse_args()
+
+    // Create a model using the API directly and serialize it to a file
+    if (!car_wts_name.empty() && if_serialize_engine_car) {
+        serialize_engine(kBatchSize, is_p6, gd, gw, car_wts_name, car_engine_name);
+    }
+    if (!num_wts_name.empty() && if_serialize_engine_num) {
+        serialize_engine(kBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
+    }
+}
+
+cv::Mat GetCarRoi(cv::Mat src_raw, Detection det){
+    cv::Mat roi_car;
+    cv::Rect rect_car = get_rect(src_raw, det.bbox);
+    cv::Mat mask_car = cv::Mat::zeros(src_raw.rows, src_raw.cols, CV_8UC1);
+    rectangle(mask_car, rect_car, cv::Scalar(255), -1);
+    src_raw.copyTo(roi_car, mask_car);
+    return roi_car;
+}
+
+std::vector<cv::Mat> img_batch_num;
+float* gpu_buffers_car[2];
+float* gpu_buffers_num[2];
+float* cpu_output_buffer_car = nullptr;
+float* cpu_output_buffer_num = nullptr;
+cudaStream_t stream_car;
+cudaStream_t stream_num;
+IExecutionContext* context_car = nullptr;
+IExecutionContext* context_num = nullptr;
+
+
+class ImageSubscriber : public rclcpp::Node {
+public:
+    ImageSubscriber() : Node("image_subscriber") {
+        subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+                "/sensor_far/image_raw", 10, std::bind(&ImageSubscriber::ImageCallback, this, _1));
+    }
+
+private:
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+    void ImageCallback(sensor_msgs::msg::Image::SharedPtr) const;
+};
 
 int main(int argc, char** argv) {
     cudaSetDevice(kGpuId);
-    std::string wts_dir = "/home/hlf/Desktop/radar_24_ws/src/yolov5_detect/weights";
-    std::string wts_name = wts_dir + "/car_23_stable.wts";
-    std::string engine_name = wts_dir + "/car_23_stable.engine";
-    std::string car_wts_name = wts_dir + "/car_23_stable.wts";
-    std::string car_engine_name = wts_dir + "/car_23_stable.engine";
-    std::string number_wts_name = wts_dir + "/number_23_stable.wts";
-    std::string number_engine_name = wts_dir + "/number_23_stable.engine";
-    bool is_p6 = false;
-    float gd = 0.33f, gw = 0.50f;
-    std::string img_dir;
 
-//    if (!parse_args(argc, argv, wts_name, engine_name, is_p6, gd, gw, img_dir)) {
-//        std::cerr << "arguments not right!" << std::endl;
-//        std::cerr << "./yolov5_det -s [.wts] [.engine] [n/s/m/l/x/n6/s6/m6/l6/x6 or c/c6 gd gw]  // serialize model to plan file" << std::endl;
-//        std::cerr << "./yolov5_det -d [.engine] ../images  // deserialize plan file and run inference" << std::endl;
-//        return -1;
-//    }
+    std::string car_engine_name;
+    std::string num_engine_name;
+    // if necessary, serialize the wts file to an engine file, and return the directory of engine file
+    FilePreparation(false, false, false,
+                     &car_engine_name, &num_engine_name);
 
-    // Create a model using the API directly and serialize it to a file
-    if (!wts_name.empty()) {
-        serialize_engine(kBatchSize, is_p6, gd, gw, wts_name, engine_name);
-        return 0;
-    }
-
-    // Deserialize the engine from file
+    // Deserialize the engine_car from file
     IRuntime* runtime = nullptr;
-    ICudaEngine* engine = nullptr;
-    IExecutionContext* context = nullptr;
-    deserialize_engine(engine_name, &runtime, &engine, &context);
-    cudaStream_t stream;
-    CUDA_CHECK(cudaStreamCreate(&stream));
 
+    ICudaEngine* car_engine = nullptr;
+    deserialize_engine(car_engine_name, &runtime, &car_engine, &context_car);
+    CUDA_CHECK(cudaStreamCreate(&stream_car))
     // Init CUDA preprocessing
     cuda_preprocess_init(kMaxInputImageSize);
-
     // Prepare cpu and gpu buffers
-    float* gpu_buffers[2];
-    float* cpu_output_buffer = nullptr;
-    prepare_buffers(engine, &gpu_buffers[0], &gpu_buffers[1], &cpu_output_buffer);
+    prepare_buffers(car_engine, &gpu_buffers_car[0],
+                    &gpu_buffers_car[1], &cpu_output_buffer_car);
 
+    // Deserialize the engine_num from file
+    ICudaEngine* num_engine = nullptr;
+    deserialize_engine(num_engine_name, &runtime, &num_engine, &context_num);
+    CUDA_CHECK(cudaStreamCreate(&stream_num));
+    // Init CUDA preprocessing
+    cuda_preprocess_init(kMaxInputImageSize);
+    // Prepare cpu and gpu buffers
+    prepare_buffers(num_engine, &gpu_buffers_num[0],
+                    &gpu_buffers_num[1], &cpu_output_buffer_num);
+
+    cv::namedWindow("view");
+    cv::startWindowThread();
 
     //Read images from camera
-//    rclcpp::init(argc, argv);
-//    rclcpp::spin(std::make_shared<ImageSubscriber>());
-//    rclcpp::shutdown();
+    std::cout << "ros node init" << std::endl;
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<ImageSubscriber>());
+    rclcpp::shutdown();
 
 
     // Read images from directory
-    std::vector<std::string> file_names;
-    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
-        std::cerr << "read_files_in_dir failed." << std::endl;
-        return -1;
-    }
+//    std::vector<std::string> file_names;
+//    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
+//        std::cerr << "read_files_in_dir failed." << std::endl;
+//        return -1;
+//    }
 
     // batch predict
-    for (size_t i = 0; i < file_names.size(); i += kBatchSize) {
-        // Get a batch of images
-        std::vector<cv::Mat> img_batch;
-        std::vector<std::string> img_name_batch;
-        for (size_t j = i; j < i + kBatchSize && j < file_names.size(); j++) {
-            cv::Mat img = cv::imread(img_dir + "/" + file_names[j]);
-            img_batch.push_back(img);
-            img_name_batch.push_back(file_names[j]);
-        }
-
-        // Preprocess
-        cuda_batch_preprocess(img_batch, gpu_buffers[0], kInputW, kInputH, stream);
-
-        // Run inference
-        auto start = std::chrono::system_clock::now();
-        infer(*context, stream, (void**)gpu_buffers, cpu_output_buffer, kBatchSize);
-        auto end = std::chrono::system_clock::now();
-        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-
-        // NMS
-        std::vector<std::vector<Detection>> res_batch;
-        batch_nms(res_batch, cpu_output_buffer, img_batch.size(), kOutputSize, kConfThresh, kNmsThresh);
-
-        // Draw bounding boxes
-        draw_bbox(img_batch, res_batch);
-
-        // Save images
-        for (size_t j = 0; j < img_batch.size(); j++) {
-                cv::imwrite("_" + img_name_batch[j], img_batch[j]);
-        }
-    }
+//    for (size_t i = 0; i < file_names.size(); i += kBatchSize) {
+//        // Get a batch of images
+//        std::vector<cv::Mat> img_batch_car;
+//        std::vector<std::string> img_name_batch;
+//        for (size_t j = i; j < i + kBatchSize && j < file_names.size(); j++) {
+//            cv::Mat img = cv::imread(img_dir + "/" + file_names[j]);
+//            img_batch_car.push_back(img);
+//            img_name_batch.push_back(file_names[j]);
+//        }
+//
+//        // Preprocess
+//        cuda_batch_preprocess(img_batch_car, gpu_buffers[0], kInputW, kInputH, stream);
+//
+//        // Run inference
+//        auto start = std::chrono::system_clock::now();
+//        infer(*context, stream, (void**)gpu_buffers, cpu_output_buffer, kBatchSize);
+//        auto end = std::chrono::system_clock::now();
+//        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+//
+//        // NMS
+//        std::vector<std::vector<Detection>> res_batch_car;
+//        batch_nms(res_batch_car, cpu_output_buffer, img_batch_car.size(), kOutputSize, kConfThresh, kNmsThresh);
+//
+//        // Draw bounding boxes
+//        draw_bbox(img_batch_car, res_batch_car);
+//
+//        // Save images
+//        for (size_t j = 0; j < img_batch_car.size(); j++) {
+//                cv::imwrite("_" + img_name_batch[j], img_batch_car[j]);
+//        }
+//    }
 
     // Release stream and buffers
-    cudaStreamDestroy(stream);
-    CUDA_CHECK(cudaFree(gpu_buffers[0]));
-    CUDA_CHECK(cudaFree(gpu_buffers[1]));
-    delete[] cpu_output_buffer;
-    cuda_preprocess_destroy();
-    // Destroy the engine
-    context->destroy();
-    engine->destroy();
-    runtime->destroy();
+    cudaStreamDestroy(stream_car);
+    CUDA_CHECK(cudaFree(gpu_buffers_car[0]))
+    CUDA_CHECK(cudaFree(gpu_buffers_car[1]))
+    delete[] cpu_output_buffer_car;
 
-    // Print histogram of the output distribution
-    // std::cout << "\nOutput:\n\n";
-    // for (unsigned int i = 0; i < kOutputSize; i++) {
-    //   std::cout << prob[i] << ", ";
-    //   if (i % 10 == 0) std::cout << std::endl;
-    // }
-    // std::cout << std::endl;
+    cudaStreamDestroy(stream_num);
+    CUDA_CHECK(cudaFree(gpu_buffers_num[0]));
+    CUDA_CHECK(cudaFree(gpu_buffers_num[1]));
+    delete[] cpu_output_buffer_num;
+
+    cuda_preprocess_destroy();
+    
+    // Destroy the engine
+    context_num->destroy();
+    num_engine->destroy();
+    
+    context_car->destroy();
+    car_engine->destroy();
+    runtime->destroy();
 
     return 0;
 }
 
+
+void ImageSubscriber::ImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
+    std::cout << "enter callback function............" << std::endl;
+    std::vector<cv::Mat> img_batch_car;
+    cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
+    cv::Mat src_raw;
+    src.copyTo(src_raw);
+    img_batch_car.push_back(src);
+
+    // Preprocess
+    cuda_batch_preprocess(img_batch_car, gpu_buffers_car[0], kInputW, kInputH, stream_car);
+
+    // Run inference
+    auto start_time_car = std::chrono::system_clock::now();
+    infer(*context_car, stream_car, (void**)gpu_buffers_car,
+          cpu_output_buffer_car, kBatchSize);
+    auto end_time_car = std::chrono::system_clock::now();
+    std::cout << "car inference time: " <<
+    std::chrono::duration_cast<std::chrono::milliseconds>(end_time_car - start_time_car).count() << "ms" << std::endl;
+
+    // NMS
+    std::vector<std::vector<Detection>> res_batch_car;
+    batch_nms(res_batch_car, cpu_output_buffer_car, img_batch_car.size(),
+              kOutputSize, kConfThresh, kNmsThresh);
+
+    // Draw bounding boxes
+    draw_bbox(img_batch_car, res_batch_car);
+//    cv::imshow("view", src);
+
+    for (auto ii : res_batch_car){
+        for (auto i : ii){
+            cv::Mat roi_car = GetCarRoi(src_raw, i);
+            img_batch_num.push_back(roi_car);
+            if (img_batch_num.size() >= 4){
+                // Preprocess
+                cuda_batch_preprocess(img_batch_num, gpu_buffers_num[0], kInputW, kInputH, stream_num);
+                // Run inference
+                auto start_num = std::chrono::system_clock::now();
+                infer(*context_num, stream_num, (void**)gpu_buffers_num,
+                      cpu_output_buffer_num, kBatchSize);
+                auto end_num = std::chrono::system_clock::now();
+                std::cout << "num inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_num - start_num).count() << "ms" << std::endl;
+
+                // NMS
+                std::vector<std::vector<Detection>> res_batch_num;
+                batch_nms(res_batch_num, cpu_output_buffer_num, img_batch_num.size(),
+                          kOutputSize, kConfThresh, kNmsThresh);
+
+                // Draw bounding boxes
+                draw_bbox(img_batch_num, res_batch_num);
+                cv::imshow("view", *img_batch_num.end());
+                img_batch_num.clear();
+            }
+        }
+    }
+}

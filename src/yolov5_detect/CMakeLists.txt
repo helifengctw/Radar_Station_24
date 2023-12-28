@@ -12,12 +12,11 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra) #  -Wpedantic
+  add_compile_options() #  -Wpedantic-Wextra -Wall
 endif()
 
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 enable_language(CUDA)
-message("CUDA ARCHITECTURES IS : "${CMAKE_CUDA_COMPILER})
 
 # cuda
 include_directories(/usr/local/cuda/include)
@@ -35,6 +34,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(cv_bridge REQUIRED)
 
 
 ### "include_directories(${***_INCLUDE_DIRS})" is required additionally, 
@@ -70,7 +71,7 @@ add_executable(yolov5_detect ${SRCS})
 target_include_directories(yolov5_detect PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(yolov5_detect rclcpp std_msgs)
+ament_target_dependencies(yolov5_detect rclcpp std_msgs sensor_msgs cv_bridge image_transport)
 target_link_libraries(yolov5_detect nvinfer)
 target_link_libraries(yolov5_detect cudart)
 target_link_libraries(yolov5_detect myplugins)
