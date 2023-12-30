@@ -445,13 +445,37 @@ radar_interfaces_IS_TOP_LEVEL:STATIC=ON
 radar_interfaces_SOURCE_DIR:STATIC=/home/hlf/Desktop/radar24_ws/src/radar_interfaces
 
 //Dependencies for the target
-radar_interfaces__rosidl_typesupport_c__pyext_LIB_DEPENDS:STATIC=general;yolov5_detect__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;yolov5_detect__rosidl_typesupport_c;general;yolov5_detect__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+radar_interfaces__python_LIB_DEPENDS:STATIC=general;radar_interfaces__rosidl_generator_c;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;radar_interfaces__rosidl_typesupport_c;
 
 //Dependencies for the target
-radar_interfaces__rosidl_typesupport_fastrtps_c__pyext_LIB_DEPENDS:STATIC=general;yolov5_detect__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;yolov5_detect__rosidl_typesupport_fastrtps_c;general;yolov5_detect__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+radar_interfaces__rosidl_generator_c_LIB_DEPENDS:STATIC=general;rosidl_runtime_c::rosidl_runtime_c;general;rcutils::rcutils;
 
 //Dependencies for the target
-radar_interfaces__rosidl_typesupport_introspection_c__pyext_LIB_DEPENDS:STATIC=general;yolov5_detect__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;yolov5_detect__rosidl_typesupport_introspection_c;general;yolov5_detect__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+radar_interfaces__rosidl_typesupport_c_LIB_DEPENDS:STATIC=general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_c__pyext_LIB_DEPENDS:STATIC=general;radar_interfaces__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;radar_interfaces__rosidl_typesupport_c;general;radar_interfaces__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_cpp_LIB_DEPENDS:STATIC=general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_cpp::rosidl_typesupport_cpp;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_fastrtps_c_LIB_DEPENDS:STATIC=general;rmw::rmw;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_fastrtps_cpp::rosidl_typesupport_fastrtps_cpp;general;rosidl_typesupport_fastrtps_c::rosidl_typesupport_fastrtps_c;general;rosidl_typesupport_fastrtps_cpp::rosidl_typesupport_fastrtps_cpp;general;rosidl_typesupport_fastrtps_c::rosidl_typesupport_fastrtps_c;general;radar_interfaces__rosidl_generator_c;general;radar_interfaces__rosidl_typesupport_fastrtps_cpp;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_fastrtps_c__pyext_LIB_DEPENDS:STATIC=general;radar_interfaces__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;radar_interfaces__rosidl_typesupport_fastrtps_c;general;radar_interfaces__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_fastrtps_cpp_LIB_DEPENDS:STATIC=general;rmw::rmw;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_fastrtps_cpp::rosidl_typesupport_fastrtps_cpp;general;radar_interfaces__rosidl_generator_cpp;general;fastrtps;general;fastcdr;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_introspection_c_LIB_DEPENDS:STATIC=general;radar_interfaces__rosidl_generator_c;general;rosidl_typesupport_introspection_c::rosidl_typesupport_introspection_c;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_introspection_c__pyext_LIB_DEPENDS:STATIC=general;radar_interfaces__python;general;/usr/lib/x86_64-linux-gnu/libpython3.8.so;general;radar_interfaces__rosidl_typesupport_introspection_c;general;radar_interfaces__rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_c::rosidl_typesupport_c;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librmw.so;general;rosidl_runtime_c::rosidl_runtime_c;general;/opt/ros/foxy/lib/librosidl_runtime_c.so;general;rcutils::rcutils;
+
+//Dependencies for the target
+radar_interfaces__rosidl_typesupport_introspection_cpp_LIB_DEPENDS:STATIC=general;rosidl_runtime_c::rosidl_runtime_c;general;rosidl_typesupport_introspection_cpp::rosidl_typesupport_introspection_cpp;
 
 //The directory containing a CMake configuration file for rcpputils.
 rcpputils_DIR:PATH=/opt/ros/foxy/share/rcpputils/cmake

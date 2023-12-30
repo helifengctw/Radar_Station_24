@@ -1,6 +1,6 @@
 # generated from ament_cmake_export_libraries/cmake/template/ament_cmake_export_libraries.cmake.in
 
-set(_exported_libraries "yolov5_detect__rosidl_generator_c;yolov5_detect__rosidl_typesupport_c;yolov5_detect__rosidl_typesupport_cpp")
+set(_exported_libraries "radar_interfaces__rosidl_generator_c;radar_interfaces__rosidl_typesupport_c;radar_interfaces__rosidl_typesupport_cpp")
 set(_exported_library_names "")
 
 # populate radar_interfaces_LIBRARIES

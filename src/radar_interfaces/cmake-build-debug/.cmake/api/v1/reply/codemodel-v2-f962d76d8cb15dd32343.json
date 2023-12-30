@@ -1,0 +1,215 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-be7c9ef772d85811cd51.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15
+					]
+				},
+				{
+					"build" : "radar_interfaces__py",
+					"jsonFile" : "directory-radar_interfaces__py-Debug-191e3e92cb282b265440.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "cmake-build-debug/radar_interfaces__py",
+					"targetIndexes" : 
+					[
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "radar_interfaces",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces-Debug-5d83854561af83f20c80.json",
+					"name" : "radar_interfaces",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__cpp-Debug-53d39487624212b9954f.json",
+					"name" : "radar_interfaces__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "radar_interfaces__py::@f9e44bfe5039a5df2a6f",
+					"jsonFile" : "target-radar_interfaces__py-Debug-c1109e7e3b25420bc3c9.json",
+					"name" : "radar_interfaces__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__python::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__python-Debug-b7468dec3eab4b95f5ff.json",
+					"name" : "radar_interfaces__python",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_generator_c-Debug-7d1d56cee90036d6fcaf.json",
+					"name" : "radar_interfaces__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_c-Debug-5ffdf48314de97cd15bd.json",
+					"name" : "radar_interfaces__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_c__pyext-Debug-0ba436a621c97696b644.json",
+					"name" : "radar_interfaces__rosidl_typesupport_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_cpp-Debug-bc95d1461f4cd262e14d.json",
+					"name" : "radar_interfaces__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_fastrtps_c-Debug-d5bf435d7a0a8fedc57c.json",
+					"name" : "radar_interfaces__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_fastrtps_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_fastrtps_c__pyext-Debug-2275d90af50d88ef3fbe.json",
+					"name" : "radar_interfaces__rosidl_typesupport_fastrtps_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_fastrtps_cpp-Debug-b70c281ead113197eaf7.json",
+					"name" : "radar_interfaces__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_introspection_c-Debug-bdbc07178d30adf11631.json",
+					"name" : "radar_interfaces__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_introspection_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_introspection_c__pyext-Debug-04ae064eaf86db9b87f6.json",
+					"name" : "radar_interfaces__rosidl_typesupport_introspection_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces__rosidl_typesupport_introspection_cpp-Debug-284f6edd363ba7fb8858.json",
+					"name" : "radar_interfaces__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "radar_interfaces_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-radar_interfaces_uninstall-Debug-1135208a82c60dd321ba.json",
+					"name" : "radar_interfaces_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-d06f7083bdee232335f7.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug",
+		"source" : "/home/hlf/Desktop/radar24_ws/src/radar_interfaces"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

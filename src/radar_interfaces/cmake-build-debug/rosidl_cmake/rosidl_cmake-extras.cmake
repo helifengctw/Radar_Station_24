@@ -1,4 +1,4 @@
 # generated from rosidl_cmake/cmake/rosidl_cmake-extras.cmake.in
 
-set(radar_interfaces_IDL_FILES "msg/YoloPub.idl")
-set(radar_interfaces_INTERFACE_FILES "msg/YoloPub.msg")
+set(radar_interfaces_IDL_FILES "msg/Point.idl;msg/DistPoint.idl;msg/YoloPub.idl;msg/Points.idl;msg/DistPoints.idl")
+set(radar_interfaces_INTERFACE_FILES "msg/Point.msg;msg/DistPoint.msg;msg/YoloPub.msg;msg/Points.msg;msg/DistPoints.msg")

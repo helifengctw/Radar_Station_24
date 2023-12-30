@@ -2,7 +2,7 @@
 # rosidl_cmake/cmake/template/rosidl_cmake_export_typesupport_targets.cmake.in
 
 set(_exported_typesupport_targets
-  "__rosidl_typesupport_introspection_c:yolov5_detect__rosidl_typesupport_introspection_c;__rosidl_typesupport_introspection_cpp:yolov5_detect__rosidl_typesupport_introspection_cpp")
+  "__rosidl_typesupport_introspection_c:radar_interfaces__rosidl_typesupport_introspection_c;__rosidl_typesupport_introspection_cpp:radar_interfaces__rosidl_typesupport_introspection_cpp")
 
 # populate radar_interfaces_TARGETS_<suffix>
 if(NOT _exported_typesupport_targets STREQUAL "")

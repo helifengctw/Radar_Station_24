@@ -1,8 +1,10 @@
 #include "preprocess.h"
 #include "cuda_utils.h"
 
-static uint8_t* img_buffer_host = nullptr;
-static uint8_t* img_buffer_device = nullptr;
+static uint8_t* img_buffer_host_car = nullptr;
+static uint8_t* img_buffer_device_car = nullptr;
+static uint8_t* img_buffer_host_num = nullptr;
+static uint8_t* img_buffer_device_num = nullptr;
 
 struct AffineMatrix {
   float value[6];
@@ -95,59 +97,87 @@ __global__ void warpaffine_kernel(
 void cuda_preprocess(
     uint8_t* src, int src_width, int src_height,
     float* dst, int dst_width, int dst_height,
-    cudaStream_t stream) {
+    cudaStream_t stream, bool if_car = true) {
 
-  int img_size = src_width * src_height * 3;
-  // copy data to pinned memory
-  memcpy(img_buffer_host, src, img_size);
-  // copy data to device memory
-  CUDA_CHECK(cudaMemcpyAsync(img_buffer_device, img_buffer_host, img_size, cudaMemcpyHostToDevice, stream));
+    int img_size = src_width * src_height * 3;
+    if (if_car) {
+        // copy data to pinned memory
+        memcpy(img_buffer_host_car, src, img_size);
+        // copy data to device memory
+        CUDA_CHECK(cudaMemcpyAsync(img_buffer_device_car, img_buffer_host_car, img_size, cudaMemcpyHostToDevice, stream));
+    } else {
+        // copy data to pinned memory
+        memcpy(img_buffer_host_num, src, img_size);
+        // copy data to device memory
+        CUDA_CHECK(cudaMemcpyAsync(img_buffer_device_num, img_buffer_host_num, img_size, cudaMemcpyHostToDevice, stream));
+    }
 
-  AffineMatrix s2d, d2s;
-  float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
+    AffineMatrix s2d, d2s;
+    float scale = std::min(dst_height / (float)src_height, dst_width / (float)src_width);
 
-  s2d.value[0] = scale;
-  s2d.value[1] = 0;
-  s2d.value[2] = -scale * src_width  * 0.5  + dst_width * 0.5;
-  s2d.value[3] = 0;
-  s2d.value[4] = scale;
-  s2d.value[5] = -scale * src_height * 0.5 + dst_height * 0.5;
+    s2d.value[0] = scale;
+    s2d.value[1] = 0;
+    s2d.value[2] = -scale * src_width  * 0.5  + dst_width * 0.5;
+    s2d.value[3] = 0;
+    s2d.value[4] = scale;
+    s2d.value[5] = -scale * src_height * 0.5 + dst_height * 0.5;
 
-  cv::Mat m2x3_s2d(2, 3, CV_32F, s2d.value);
-  cv::Mat m2x3_d2s(2, 3, CV_32F, d2s.value);
-  cv::invertAffineTransform(m2x3_s2d, m2x3_d2s);
+    cv::Mat m2x3_s2d(2, 3, CV_32F, s2d.value);
+    cv::Mat m2x3_d2s(2, 3, CV_32F, d2s.value);
+    cv::invertAffineTransform(m2x3_s2d, m2x3_d2s);
 
-  memcpy(d2s.value, m2x3_d2s.ptr<float>(0), sizeof(d2s.value));
+    memcpy(d2s.value, m2x3_d2s.ptr<float>(0), sizeof(d2s.value));
 
-  int jobs = dst_height * dst_width;
-  int threads = 256;
-  int blocks = ceil(jobs / (float)threads);
+    int jobs = dst_height * dst_width;
+    int threads = 256;
+    int blocks = ceil(jobs / (float)threads);
 
-  warpaffine_kernel<<<blocks, threads, 0, stream>>>(
-      img_buffer_device, src_width * 3, src_width,
-      src_height, dst, dst_width,
-      dst_height, 128, d2s, jobs);
+    if (if_car){
+        warpaffine_kernel<<<blocks, threads, 0, stream>>>(
+                img_buffer_device_car, src_width * 3, src_width,
+                src_height, dst, dst_width,
+                dst_height, 128, d2s, jobs);
+    } else {
+        warpaffine_kernel<<<blocks, threads, 0, stream>>>(
+                img_buffer_device_num, src_width * 3, src_width,
+                src_height, dst, dst_width,
+                dst_height, 128, d2s, jobs);
+    }
 }
 
 void cuda_batch_preprocess(std::vector<cv::Mat>& img_batch,
                            float* dst, int dst_width, int dst_height,
-                           cudaStream_t stream) {
-  int dst_size = dst_width * dst_height * 3;
-  for (size_t i = 0; i < img_batch.size(); i++) {
-    cuda_preprocess(img_batch[i].ptr(), img_batch[i].cols, img_batch[i].rows, &dst[dst_size * i], dst_width, dst_height, stream);
-    CUDA_CHECK(cudaStreamSynchronize(stream));
-  }
+                           cudaStream_t stream, bool if_car = true) {
+    int dst_size = dst_width * dst_height * 3;
+    for (size_t i = 0; i < img_batch.size(); i++) {
+        cuda_preprocess(img_batch[i].ptr(), img_batch[i].cols,
+                    img_batch[i].rows, &dst[dst_size * i], dst_width, dst_height, stream, if_car);
+        CUDA_CHECK(cudaStreamSynchronize(stream));
+    }
 }
 
-void cuda_preprocess_init(int max_image_size) {
-  // prepare input data in pinned memory
-  CUDA_CHECK(cudaMallocHost((void**)&img_buffer_host, max_image_size * 3));
-  // prepare input data in device memory
-  CUDA_CHECK(cudaMalloc((void**)&img_buffer_device, max_image_size * 3));
+void cuda_preprocess_init(int max_image_size, bool if_car = true) {
+    if (if_car) {
+        // prepare input data in pinned memory
+        CUDA_CHECK(cudaMallocHost((void**)&img_buffer_host_car, max_image_size * 3));
+        // prepare input data in device memory
+        CUDA_CHECK(cudaMalloc((void**)&img_buffer_device_car, max_image_size * 3));
+    } else {
+        // prepare input data in pinned memory
+        CUDA_CHECK(cudaMallocHost((void**)&img_buffer_host_num, max_image_size * 3));
+        // prepare input data in device memory
+        CUDA_CHECK(cudaMalloc((void**)&img_buffer_device_num, max_image_size * 3));
+    }
 }
 
-void cuda_preprocess_destroy() {
-  CUDA_CHECK(cudaFree(img_buffer_device));
-  CUDA_CHECK(cudaFreeHost(img_buffer_host));
+void cuda_preprocess_destroy(bool if_car = true) {
+    if (if_car) {
+        CUDA_CHECK(cudaFree(img_buffer_device_car));
+        CUDA_CHECK(cudaFreeHost(img_buffer_host_car));
+    } else {
+        CUDA_CHECK(cudaFree(img_buffer_device_num));
+        CUDA_CHECK(cudaFreeHost(img_buffer_host_num));
+    }
+
 }
 

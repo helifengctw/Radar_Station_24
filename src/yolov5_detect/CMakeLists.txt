@@ -66,6 +66,8 @@ add_executable(Hello_world src/Hello_world.cpp)
 target_include_directories(Hello_world PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+target_link_libraries(Hello_world ${OpenCV_LIBS})
+
 
 add_executable(yolov5_detect ${SRCS})
 target_include_directories(yolov5_detect PUBLIC

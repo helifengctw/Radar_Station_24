@@ -3,7 +3,11 @@
   "output_dir": "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_c/radar_interfaces",
   "template_dir": "/opt/ros/foxy/share/rosidl_generator_c/cmake/../resource",
   "idl_tuples": [
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/YoloPub.idl"
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/Point.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/DistPoint.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/YoloPub.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/Points.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/DistPoints.idl"
   ],
   "target_dependencies": [
     "/opt/ros/foxy/share/rosidl_generator_c/cmake/../../../lib/rosidl_generator_c/rosidl_generator_c",
@@ -19,6 +23,10 @@
     "/opt/ros/foxy/share/rosidl_generator_c/cmake/../resource/msg__struct.h.em",
     "/opt/ros/foxy/share/rosidl_generator_c/cmake/../resource/msg__type_support.h.em",
     "/opt/ros/foxy/share/rosidl_generator_c/cmake/../resource/srv__type_support.h.em",
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/YoloPub.idl"
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/Point.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/DistPoint.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/YoloPub.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/Points.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/DistPoints.idl"
   ]
 }

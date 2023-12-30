@@ -2,7 +2,7 @@
 # rosidl_cmake/cmake/template/rosidl_cmake_export_typesupport_libraries.cmake.in
 
 set(_exported_typesupport_libraries
-  "__rosidl_typesupport_fastrtps_c:yolov5_detect__rosidl_typesupport_fastrtps_c;__rosidl_typesupport_fastrtps_cpp:yolov5_detect__rosidl_typesupport_fastrtps_cpp")
+  "__rosidl_typesupport_fastrtps_c:radar_interfaces__rosidl_typesupport_fastrtps_c;__rosidl_typesupport_fastrtps_cpp:radar_interfaces__rosidl_typesupport_fastrtps_cpp")
 
 # populate radar_interfaces_LIBRARIES_<suffix>
 if(NOT _exported_typesupport_libraries STREQUAL "")

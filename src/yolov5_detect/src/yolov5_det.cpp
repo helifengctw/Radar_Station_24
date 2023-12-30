@@ -22,6 +22,19 @@ using std::placeholders::_1;
 static Logger gLogger;
 const static int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
 
+std::vector<cv::Mat> img_batch_num;
+int car_detect_count = 0;
+const int car_detect_batch = 4;
+
+float* gpu_buffers_car[2];
+float* gpu_buffers_num[2];
+float* cpu_output_buffer_car = nullptr;
+float* cpu_output_buffer_num = nullptr;
+cudaStream_t stream_car;
+cudaStream_t stream_num;
+IExecutionContext* context_car = nullptr;
+IExecutionContext* context_num = nullptr;
+
 bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bool& is_p6, float& gd, float& gw, std::string& img_dir) {
     if (argc < 4) return false;
     if (std::string(argv[1]) == "-s" && (argc == 5 || argc == 7)) {
@@ -61,7 +74,8 @@ bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bo
     return true;
 }
 
-void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer, float** gpu_output_buffer, float** cpu_output_buffer) {
+void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer,
+                     float** gpu_output_buffer, float** cpu_output_buffer) {
     assert(engine->getNbBindings() == 2);  // deprecated for TensorRT version not correspond
     // In order to bind the buffers, we need to know the names of the input and output tensors.
     // Note that indices are guaranteed to be less than IEngine::getNbBindings()
@@ -139,7 +153,7 @@ void deserialize_engine(std::string& engine_name, IRuntime** runtime, ICudaEngin
     delete[] serialized_engine;
 }
 
-/// custom utils function
+/* custom utils function */
 void FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
                       std::string * return_car_engine, std::string * return_num_engine){
     std::string data_dir = "/home/hlf/Desktop/radar24_ws/src/yolov5_detect/data";
@@ -169,16 +183,6 @@ cv::Mat GetCarRoi(cv::Mat src_raw, Detection det){
     return roi_car;
 }
 
-std::vector<cv::Mat> img_batch_num;
-float* gpu_buffers_car[2];
-float* gpu_buffers_num[2];
-float* cpu_output_buffer_car = nullptr;
-float* cpu_output_buffer_num = nullptr;
-cudaStream_t stream_car;
-cudaStream_t stream_num;
-IExecutionContext* context_car = nullptr;
-IExecutionContext* context_num = nullptr;
-
 
 class ImageSubscriber : public rclcpp::Node {
 public:
@@ -201,14 +205,14 @@ int main(int argc, char** argv) {
     FilePreparation(false, false, false,
                      &car_engine_name, &num_engine_name);
 
-    // Deserialize the engine_car from file
     IRuntime* runtime = nullptr;
 
+    // Deserialize the engine_car from file
     ICudaEngine* car_engine = nullptr;
     deserialize_engine(car_engine_name, &runtime, &car_engine, &context_car);
     CUDA_CHECK(cudaStreamCreate(&stream_car))
     // Init CUDA preprocessing
-    cuda_preprocess_init(kMaxInputImageSize);
+    cuda_preprocess_init(kMaxInputImageSize, true);
     // Prepare cpu and gpu buffers
     prepare_buffers(car_engine, &gpu_buffers_car[0],
                     &gpu_buffers_car[1], &cpu_output_buffer_car);
@@ -218,7 +222,7 @@ int main(int argc, char** argv) {
     deserialize_engine(num_engine_name, &runtime, &num_engine, &context_num);
     CUDA_CHECK(cudaStreamCreate(&stream_num));
     // Init CUDA preprocessing
-    cuda_preprocess_init(kMaxInputImageSize);
+    cuda_preprocess_init(kMaxInputImageSize, false);
     // Prepare cpu and gpu buffers
     prepare_buffers(num_engine, &gpu_buffers_num[0],
                     &gpu_buffers_num[1], &cpu_output_buffer_num);
@@ -284,7 +288,8 @@ int main(int argc, char** argv) {
     CUDA_CHECK(cudaFree(gpu_buffers_num[1]));
     delete[] cpu_output_buffer_num;
 
-    cuda_preprocess_destroy();
+    cuda_preprocess_destroy(true);
+    cuda_preprocess_destroy(false);
     
     // Destroy the engine
     context_num->destroy();
@@ -292,6 +297,7 @@ int main(int argc, char** argv) {
     
     context_car->destroy();
     car_engine->destroy();
+
     runtime->destroy();
 
     return 0;
@@ -307,7 +313,7 @@ void ImageSubscriber::ImageCallback(const sensor_msgs::msg::Image::SharedPtr msg
     img_batch_car.push_back(src);
 
     // Preprocess
-    cuda_batch_preprocess(img_batch_car, gpu_buffers_car[0], kInputW, kInputH, stream_car);
+    cuda_batch_preprocess(img_batch_car, gpu_buffers_car[0], kInputW, kInputH, stream_car, true);
 
     // Run inference
     auto start_time_car = std::chrono::system_clock::now();
@@ -326,30 +332,39 @@ void ImageSubscriber::ImageCallback(const sensor_msgs::msg::Image::SharedPtr msg
     draw_bbox(img_batch_car, res_batch_car);
 //    cv::imshow("view", src);
 
-    for (auto ii : res_batch_car){
+    for (const auto& ii : res_batch_car){
         for (auto i : ii){
+            std::cout << "car_detect_count : " << car_detect_count << std::endl;
             cv::Mat roi_car = GetCarRoi(src_raw, i);
             img_batch_num.push_back(roi_car);
-            if (img_batch_num.size() >= 4){
-                // Preprocess
-                cuda_batch_preprocess(img_batch_num, gpu_buffers_num[0], kInputW, kInputH, stream_num);
-                // Run inference
-                auto start_num = std::chrono::system_clock::now();
-                infer(*context_num, stream_num, (void**)gpu_buffers_num,
-                      cpu_output_buffer_num, kBatchSize);
-                auto end_num = std::chrono::system_clock::now();
-                std::cout << "num inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end_num - start_num).count() << "ms" << std::endl;
 
-                // NMS
-                std::vector<std::vector<Detection>> res_batch_num;
-                batch_nms(res_batch_num, cpu_output_buffer_num, img_batch_num.size(),
-                          kOutputSize, kConfThresh, kNmsThresh);
+            // Preprocess
+            cuda_batch_preprocess(img_batch_num, gpu_buffers_num[0], kInputW, kInputH, stream_num, false);
 
-                // Draw bounding boxes
-                draw_bbox(img_batch_num, res_batch_num);
-                cv::imshow("view", *img_batch_num.end());
-                img_batch_num.clear();
-            }
+//            if (++car_detect_count < car_detect_batch) {
+//                continue;
+//            }
+
+            // Run inference
+            auto start_time_num = std::chrono::system_clock::now();
+            infer(*context_num, stream_num, (void**)gpu_buffers_num,
+                  cpu_output_buffer_num, kBatchSize);
+            auto end_time_num = std::chrono::system_clock::now();
+            std::cout << "num inference time: " <<
+            std::chrono::duration_cast<std::chrono::milliseconds>(end_time_num - start_time_num).count()
+            << "ms" << std::endl;
+
+            // NMS
+            std::vector<std::vector<Detection>> res_batch_num;
+            batch_nms(res_batch_num, cpu_output_buffer_num, img_batch_num.size(),
+                      kOutputSize, kConfThresh, kNmsThresh);
+
+            // Draw bounding boxes
+            draw_bbox(img_batch_num, res_batch_num);
+            cv::imshow("view", roi_car);
+
+            car_detect_count = 0;
+            img_batch_num.clear();
         }
     }
 }

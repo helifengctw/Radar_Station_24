@@ -23,9 +23,14 @@ find_package(rosidl_default_generators REQUIRED)
 
 
 # generate msg and srv files
-rosidl_generate_interfaces(yolov5_detect
-	"msg/YoloPub.msg"
+rosidl_generate_interfaces(radar_interfaces
+      "msg/Point.msg"
+      "msg/DistPoint.msg"
+      "msg/YoloPub.msg"
+      "msg/Points.msg"
+      "msg/DistPoints.msg"
 )
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
