@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "radar_interfaces__py",
+		"source" : "cmake-build-debug/radar_interfaces__py"
+	}
+}
