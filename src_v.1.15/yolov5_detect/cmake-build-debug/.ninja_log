@@ -1,0 +1,12 @@
+# ninja log v5
+0	1202	1703751842198994362	CMakeFiles/Hello_world.dir/src/Hello_world.cpp.o	aa21a3b0fad301d4
+2	1634	1703679090985132810	CMakeFiles/yolov5_detect.dir/src/postprocess.cpp.o	ad503ddbe05a9cf2
+1740	1779	1703679091132987982	libmyplugins.so	b2abee1e98ba3a24
+1	1561	1703387038225660594	CMakeFiles/yolov5_detect.dir/src/calibrator.cpp.o	73a2694841b9cce5
+1	421	1703987064107179801	build.ninja	b588400c8bb85a9
+121	152	1703736141913026592	Hello_world	64d51f672a372e79
+4309	4769	1703750289380205970	yolov5_detect	55943e8805a2539f
+1	4309	1703750288920546165	CMakeFiles/yolov5_detect.dir/src/yolov5_det.cpp.o	e4f9dfb09ab64cd0
+1	6176	1703748470723738837	CMakeFiles/yolov5_detect.dir/src/preprocess.cu.o	e16ce12033be1a4e
+2	600	1703679089954148439	CMakeFiles/yolov5_detect.dir/src/model.cpp.o	ee0b415f2f41378b
+1	1740	1703679091089031005	CMakeFiles/myplugins.dir/src/yololayer.cu.o	2b48a00d1429a68a

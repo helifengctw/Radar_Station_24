@@ -1,0 +1,22 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from radar_interfaces/msg/YoloPoint.msg
+// generated code does not contain a copyright notice
+
+
+module radar_interfaces {
+  module msg {
+    struct YoloPoint {
+      uint8 id;
+
+      int16 x;
+
+      int16 y;
+
+      int16 width;
+
+      int16 height;
+
+      boolean color;
+    };
+  };
+};
