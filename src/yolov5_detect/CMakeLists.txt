@@ -12,7 +12,7 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options() #  -Wpedantic-Wextra -Wall
+  add_compile_options( -Wpedantic -Wextra -Wall) #
 endif()
 
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
@@ -36,6 +36,8 @@ find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
+#　set(radar_interfaces_DIR ~/Desktop/radar24_ws/install/radar_interfaces/share/radar_interfaces/cmake)
+find_package(radar_interfaces REQUIRED)
 
 
 ### "include_directories(${***_INCLUDE_DIRS})" is required additionally, 
@@ -73,7 +75,7 @@ add_executable(yolov5_detect ${SRCS})
 target_include_directories(yolov5_detect PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(yolov5_detect rclcpp std_msgs sensor_msgs cv_bridge image_transport)
+ament_target_dependencies(yolov5_detect rclcpp std_msgs sensor_msgs cv_bridge image_transport radar_interfaces)
 target_link_libraries(yolov5_detect nvinfer)
 target_link_libraries(yolov5_detect cudart)
 target_link_libraries(yolov5_detect myplugins)
@@ -88,6 +90,7 @@ install(TARGETS Hello_world
   DESTINATION lib/${PROJECT_NAME})
 install(TARGETS yolov5_detect
   DESTINATION lib/${PROJECT_NAME})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

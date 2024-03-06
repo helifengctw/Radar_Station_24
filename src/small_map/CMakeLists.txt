@@ -28,7 +28,7 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 
-add_executable(small_map src/main.cpp)
+add_executable(small_map src/small_map.cpp)
 target_include_directories(small_map PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -39,13 +39,13 @@ target_link_libraries(small_map ${OpenCV_LIBS})
 install(TARGETS small_map
   DESTINATION lib/${PROJECT_NAME})
   
-install(
-	DIRECTORY launch
-	DESTINATION share/${PROJECT_NAME})
-	
-install(
-	DIRECTORY config
-	DESTINATION share/${PROJECT_NAME})
+#install(
+#	DIRECTORY launch
+#	DESTINATION share/${PROJECT_NAME}/)
+#
+#install(
+#	DIRECTORY config
+#	DESTINATION share/${PROJECT_NAME}/)
   
 
 if(BUILD_TESTING)

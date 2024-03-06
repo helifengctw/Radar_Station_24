@@ -26,11 +26,28 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(radar_interfaces
       "msg/Point.msg"
       "msg/DistPoint.msg"
+      "msg/YoloPoint.msg"
       "msg/YoloPub.msg"
       "msg/Points.msg"
       "msg/DistPoints.msg"
+      "msg/YoloPoints.msg"
+      "msg/GameState.msg"
+      "msg/RefereeWarning.msg"
+      "msg/SupplyProjectileAction.msg"
+      "msg/BattleColor.msg"
+      "msg/PnpResult.msg"
+      DEPENDENCIES std_msgs
 )
 
+ament_export_dependencies(rosidl_default_runtime)
+
+install(
+        DIRECTORY launch
+        DESTINATION share/${PROJECT_NAME}/)
+
+install(
+        DIRECTORY config
+        DESTINATION share/${PROJECT_NAME}/)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

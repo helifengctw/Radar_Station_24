@@ -6,9 +6,12 @@
 #include "model.h"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/header.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "cv_bridge/cv_bridge.h"
 #include "image_transport/image_transport.h"
+#include "radar_interfaces/msg/yolo_point.hpp"
+#include "radar_interfaces/msg/yolo_points.hpp"
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -22,9 +25,7 @@ using std::placeholders::_1;
 static Logger gLogger;
 const static int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
 
-std::vector<cv::Mat> img_batch_num;
-int car_detect_count = 0;
-const int car_detect_batch = 4;
+const int kNumDetectBatchSize = 5;
 
 float* gpu_buffers_car[2];
 float* gpu_buffers_num[2];
@@ -35,44 +36,12 @@ cudaStream_t stream_num;
 IExecutionContext* context_car = nullptr;
 IExecutionContext* context_num = nullptr;
 
-bool parse_args(int argc, char** argv, std::string& wts, std::string& engine, bool& is_p6, float& gd, float& gw, std::string& img_dir) {
-    if (argc < 4) return false;
-    if (std::string(argv[1]) == "-s" && (argc == 5 || argc == 7)) {
-        wts = std::string(argv[2]);
-        engine = std::string(argv[3]);
-        auto net = std::string(argv[4]);
-        if (net[0] == 'n') {
-            gd = 0.33;
-            gw = 0.25;
-        } else if (net[0] == 's') {
-            gd = 0.33;
-            gw = 0.50;
-        } else if (net[0] == 'm') {
-            gd = 0.67;
-            gw = 0.75;
-        } else if (net[0] == 'l') {
-            gd = 1.0;
-            gw = 1.0;
-        } else if (net[0] == 'x') {
-            gd = 1.33;
-            gw = 1.25;
-        } else if (net[0] == 'c' && argc == 7) {
-            gd = atof(argv[5]);
-            gw = atof(argv[6]);
-        } else {
-            return false;
-        }
-        if (net.size() == 2 && net[1] == '6') {
-            is_p6 = true;
-        }
-    } else if (std::string(argv[1]) == "-d" && argc == 4) {
-        engine = std::string(argv[2]);
-        img_dir = std::string(argv[3]);
-    } else {
-        return false;
-    }
-    return true;
-}
+std::map<std::string, cv::Scalar> color_table = {
+        {"White", cv::Scalar(0xfa, 0xfa, 0xff)}, {"Red", cv::Scalar(0x00, 0x00, 0xff)},
+        {"Green_light", cv::Scalar(0xcc, 0xff, 0xcc)}, {"Orange", cv::Scalar(0x00, 0x8c, 0xff)},
+        {"Blue", cv::Scalar(0xff, 0x90, 0x1e)}, {"Yellow", cv::Scalar(0x00, 0xff, 0xff)}
+};
+
 
 void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer,
                      float** gpu_output_buffer, float** cpu_output_buffer) {
@@ -90,7 +59,8 @@ void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer,
     *cpu_output_buffer = new float[kBatchSize * kOutputSize];
 }
 
-void infer(IExecutionContext& context, cudaStream_t& stream, void** gpu_buffers, float* output, int batchsize) {
+void infer(IExecutionContext& context, cudaStream_t& stream, void** gpu_buffers,
+           float* output, int batchsize) {
     context.enqueue(batchsize, gpu_buffers, stream, nullptr);
     CUDA_CHECK(cudaMemcpyAsync(output, gpu_buffers[1], batchsize * kOutputSize * sizeof(float), cudaMemcpyDeviceToHost, stream));
     cudaStreamSynchronize(stream);
@@ -154,7 +124,7 @@ void deserialize_engine(std::string& engine_name, IRuntime** runtime, ICudaEngin
 }
 
 /* custom utils function */
-void FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
+bool FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
                       std::string * return_car_engine, std::string * return_num_engine){
     std::string data_dir = "/home/hlf/Desktop/radar24_ws/src/yolov5_detect/data";
     std::string car_wts_name = data_dir + "/weights/car_23_stable.wts";
@@ -172,29 +142,46 @@ void FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num,
     if (!num_wts_name.empty() && if_serialize_engine_num) {
         serialize_engine(kBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
     }
-}
-
-cv::Mat GetCarRoi(cv::Mat src_raw, Detection det){
-    cv::Mat roi_car;
-    cv::Rect rect_car = get_rect(src_raw, det.bbox);
-    cv::Mat mask_car = cv::Mat::zeros(src_raw.rows, src_raw.cols, CV_8UC1);
-    rectangle(mask_car, rect_car, cv::Scalar(255), -1);
-    src_raw.copyTo(roi_car, mask_car);
-    return roi_car;
+    if (if_serialize_engine_car || if_serialize_engine_num) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
 class ImageSubscriber : public rclcpp::Node {
 public:
     ImageSubscriber() : Node("image_subscriber") {
-        subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/sensor_far/image_raw", 10, std::bind(&ImageSubscriber::ImageCallback, this, _1));
+        far_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+                "/sensor_far/image_raw", 10, std::bind(&ImageSubscriber::FarImageCallback, this, _1));
+        close_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
+                "/sensor_close/image_raw", 10, std::bind(&ImageSubscriber::CloseImageCallback, this, _1));
+        
+        far_rect_publisher_ = this->create_publisher<radar_interfaces::msg::YoloPoints>(
+                "far_rectangles", 1);
+        close_rect_publisher_ = this->create_publisher<radar_interfaces::msg::YoloPoints>(
+                "close_rectangles", 1);
+        far_yolo_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
+                "/yolo_far", 1);
+        close_yolo_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(
+                "/yolo_close", 1);
     }
 
 private:
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
-    void ImageCallback(sensor_msgs::msg::Image::SharedPtr) const;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr far_subscription_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr close_subscription_;
+
+    rclcpp::Publisher<radar_interfaces::msg::YoloPoints>::SharedPtr far_rect_publisher_;
+    rclcpp::Publisher<radar_interfaces::msg::YoloPoints>::SharedPtr close_rect_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr far_yolo_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr close_yolo_publisher_;
+
+    void FarImageCallback(sensor_msgs::msg::Image::SharedPtr) const;
+    void CloseImageCallback(sensor_msgs::msg::Image::SharedPtr) const;
 };
+
+long int write_count = 0, valid_count = 0, write_count_close = 0, valid_count_far = 0;
 
 int main(int argc, char** argv) {
     cudaSetDevice(kGpuId);
@@ -202,8 +189,9 @@ int main(int argc, char** argv) {
     std::string car_engine_name;
     std::string num_engine_name;
     // if necessary, serialize the wts file to an engine file, and return the directory of engine file
-    FilePreparation(false, false, false,
-                     &car_engine_name, &num_engine_name);
+    if (FilePreparation(false, false, false,&car_engine_name, &num_engine_name)) {
+        return 0;
+    }
 
     IRuntime* runtime = nullptr;
 
@@ -227,7 +215,9 @@ int main(int argc, char** argv) {
     prepare_buffers(num_engine, &gpu_buffers_num[0],
                     &gpu_buffers_num[1], &cpu_output_buffer_num);
 
-    cv::namedWindow("view");
+    cv::namedWindow("sensor_far_view");
+    cv::namedWindow("sensor_close_view");
+//    cv::namedWindow("test");
     cv::startWindowThread();
 
     //Read images from camera
@@ -235,47 +225,6 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<ImageSubscriber>());
     rclcpp::shutdown();
-
-
-    // Read images from directory
-//    std::vector<std::string> file_names;
-//    if (read_files_in_dir(img_dir.c_str(), file_names) < 0) {
-//        std::cerr << "read_files_in_dir failed." << std::endl;
-//        return -1;
-//    }
-
-    // batch predict
-//    for (size_t i = 0; i < file_names.size(); i += kBatchSize) {
-//        // Get a batch of images
-//        std::vector<cv::Mat> img_batch_car;
-//        std::vector<std::string> img_name_batch;
-//        for (size_t j = i; j < i + kBatchSize && j < file_names.size(); j++) {
-//            cv::Mat img = cv::imread(img_dir + "/" + file_names[j]);
-//            img_batch_car.push_back(img);
-//            img_name_batch.push_back(file_names[j]);
-//        }
-//
-//        // Preprocess
-//        cuda_batch_preprocess(img_batch_car, gpu_buffers[0], kInputW, kInputH, stream);
-//
-//        // Run inference
-//        auto start = std::chrono::system_clock::now();
-//        infer(*context, stream, (void**)gpu_buffers, cpu_output_buffer, kBatchSize);
-//        auto end = std::chrono::system_clock::now();
-//        std::cout << "inference time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-//
-//        // NMS
-//        std::vector<std::vector<Detection>> res_batch_car;
-//        batch_nms(res_batch_car, cpu_output_buffer, img_batch_car.size(), kOutputSize, kConfThresh, kNmsThresh);
-//
-//        // Draw bounding boxes
-//        draw_bbox(img_batch_car, res_batch_car);
-//
-//        // Save images
-//        for (size_t j = 0; j < img_batch_car.size(); j++) {
-//                cv::imwrite("_" + img_name_batch[j], img_batch_car[j]);
-//        }
-//    }
 
     // Release stream and buffers
     cudaStreamDestroy(stream_car);
@@ -304,67 +253,448 @@ int main(int argc, char** argv) {
 }
 
 
-void ImageSubscriber::ImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
-    std::cout << "enter callback function............" << std::endl;
-    std::vector<cv::Mat> img_batch_car;
+//cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(3, 3));
+//auto model = cv::createBackgroundSubtractorMOG2();
+
+//void ImageSubscriber::CloseImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
+//    cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
+//    cv::Mat src_raw;
+//    src.copyTo(src_raw);
+//
+//    cv::Mat fgmk;
+//    model->apply(src_raw, fgmk);
+//    cv::morphologyEx(fgmk, fgmk, cv::MORPH_OPEN, kernel);
+//
+//    std::vector<std::vector<cv::Point>> contours;
+//    cv::findContours(fgmk, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+//    for (auto c : contours) {
+//        if (cv::contourArea(c) < 1500) continue;
+//        cv::Rect rec;
+//        rec = cv::boundingRect(c);
+//        cv::rectangle(src_raw, rec, cv::Scalar(0, 255, 0), 2);
+//    }
+//
+//    cv::imshow("sensor_far_view", fgmk);
+//    cv::imshow("sensor_close_view", src_raw);
+//
+//}
+
+void ImageSubscriber::FarImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
+    std::vector<cv::Mat> img_car_batch;
     cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
     cv::Mat src_raw;
     src.copyTo(src_raw);
-    img_batch_car.push_back(src);
+    img_car_batch.push_back(src);
 
     // Preprocess
-    cuda_batch_preprocess(img_batch_car, gpu_buffers_car[0], kInputW, kInputH, stream_car, true);
+    cuda_batch_preprocess(img_car_batch, gpu_buffers_car[0], kInputW, kInputH, stream_car, true);
 
     // Run inference
-    auto start_time_car = std::chrono::system_clock::now();
+    auto start_time = std::chrono::system_clock::now();
     infer(*context_car, stream_car, (void**)gpu_buffers_car,
           cpu_output_buffer_car, kBatchSize);
-    auto end_time_car = std::chrono::system_clock::now();
-    std::cout << "car inference time: " <<
-    std::chrono::duration_cast<std::chrono::milliseconds>(end_time_car - start_time_car).count() << "ms" << std::endl;
 
     // NMS
     std::vector<std::vector<Detection>> res_batch_car;
-    batch_nms(res_batch_car, cpu_output_buffer_car, img_batch_car.size(),
+    batch_nms(res_batch_car, cpu_output_buffer_car, (int)img_car_batch.size(),
               kOutputSize, kConfThresh, kNmsThresh);
 
-    // Draw bounding boxes
-    draw_bbox(img_batch_car, res_batch_car);
-//    cv::imshow("view", src);
+//    draw_bbox(img_car_batch, res_batch_car);
 
-    for (const auto& ii : res_batch_car){
-        for (auto i : ii){
-            std::cout << "car_detect_count : " << car_detect_count << std::endl;
-            cv::Mat roi_car = GetCarRoi(src_raw, i);
-            img_batch_num.push_back(roi_car);
+    radar_interfaces::msg::YoloPoints rect_msg;
+    int iter_res_car = 0, num_batch_size = 0, num_batch_count = 0;
+    std::vector<Detection> res_cars = res_batch_car[0];
+    std::vector<cv::Mat> img_num_batch;
 
-            // Preprocess
-            cuda_batch_preprocess(img_batch_num, gpu_buffers_num[0], kInputW, kInputH, stream_num, false);
+    for (auto res_car : res_cars){
+//        std::cout << std::endl << res_cars.size() << " : " << iter_res_car << "   [" << num_batch_count << ", " << num_batch_size << "]" << std::endl;
 
-//            if (++car_detect_count < car_detect_batch) {
-//                continue;
-//            }
-
-            // Run inference
-            auto start_time_num = std::chrono::system_clock::now();
-            infer(*context_num, stream_num, (void**)gpu_buffers_num,
-                  cpu_output_buffer_num, kBatchSize);
-            auto end_time_num = std::chrono::system_clock::now();
-            std::cout << "num inference time: " <<
-            std::chrono::duration_cast<std::chrono::milliseconds>(end_time_num - start_time_num).count()
-            << "ms" << std::endl;
-
-            // NMS
-            std::vector<std::vector<Detection>> res_batch_num;
-            batch_nms(res_batch_num, cpu_output_buffer_num, img_batch_num.size(),
-                      kOutputSize, kConfThresh, kNmsThresh);
-
-            // Draw bounding boxes
-            draw_bbox(img_batch_num, res_batch_num);
-            cv::imshow("view", roi_car);
-
-            car_detect_count = 0;
-            img_batch_num.clear();
+        cv::Mat roi_car;
+        cv::Rect rect_res_car = get_rect(src_raw, res_car.bbox);
+        if (rect_res_car.x < 0) {
+            rect_res_car.x = 0;
         }
+        if (rect_res_car.y < 0) {
+            rect_res_car.y = 0;
+        }
+        if ((rect_res_car.x + rect_res_car.width) > src_raw.cols) {
+            rect_res_car.width = src_raw.cols - rect_res_car.x;
+        }
+        if ((rect_res_car.y + rect_res_car.height) > src_raw.rows) {
+            rect_res_car.height = src_raw.rows - rect_res_car.y;
+        }
+        src_raw(rect_res_car).copyTo(roi_car);
+
+        ++iter_res_car;
+        if (roi_car.empty()) continue;
+        img_num_batch.push_back(roi_car);
+//        if (++valid_count >= 10) {
+//            if (cv::imwrite("/home/hlf/Downloads/myFiles/RM24/datasets_num/_" + std::to_string(write_count) + ".jpg", roi_car)) {
+//                write_count++;
+//            }
+//            valid_count = 0;
+//        }
+        if (++num_batch_size < kNumDetectBatchSize && iter_res_car < (int)res_cars.size()) continue;
+
+        // Preprocess
+        cuda_batch_preprocess(img_num_batch, gpu_buffers_num[0],roi_car.cols,
+                              roi_car.rows, stream_num, false);
+
+        // Run inference
+        infer(*context_num, stream_num, (void**)gpu_buffers_num,
+              cpu_output_buffer_num, kBatchSize); // , kNumDetectBatchSize
+
+        // NMS
+        std::vector<std::vector<Detection>> res_batch_num;
+        batch_nms(res_batch_num, cpu_output_buffer_num, (int)img_num_batch.size(),
+                  kOutputSize, kConfThresh, kNmsThresh);
+
+//        draw_bbox(img_num_batch, res_batch_num);
+//        cv::imshow("sensor_far_view", img_num_batch[0]);
+
+        int iter_num_batch = 0;
+        for (auto res_nums : res_batch_num) {
+            Detection car_for_this_iter = res_cars[num_batch_count * kNumDetectBatchSize + iter_num_batch];
+            cv::Rect rough_rect = get_rect(
+                    src_raw, car_for_this_iter.bbox); // 用装甲板来代替raw图像中的车
+            Detection real_res;
+            real_res.conf = 0;
+            real_res.class_id = 14;
+            cv::Rect real_rect(0, 0, 0, 0);
+            for (size_t m = 0; m < res_nums.size(); m++) {
+                cv::Rect number_in_roi = get_rect(img_num_batch[iter_num_batch], res_nums[m].bbox);
+                cv::Rect number_in_img = number_in_roi;
+                number_in_img.x += rough_rect.x;
+                number_in_img.y += rough_rect.y;
+                // 选出正对雷达站的装甲板
+                if (number_in_img.area() > real_rect.area()) {
+                    real_rect = number_in_img;
+                }
+//                cv::putText(src_raw, std::to_string((int)res_nums[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+                if (res_nums[m].conf > real_res.conf) {
+                    real_res = res_nums[m];
+                }
+            }
+
+            //根据装甲板ID修改车的ID（14是未识别出，12是红方未识别出，13是蓝方未识别出，其他编号一致）
+            if ((int) real_res.class_id == 14) {
+                if ((int) car_for_this_iter.class_id == 0) {
+                    car_for_this_iter.class_id = 12;
+                } else {
+                    car_for_this_iter.class_id = 13;
+                }
+            } else {
+                car_for_this_iter.class_id = real_res.class_id;
+            }
+            //根据装甲板的rect修改车的rect
+            if (real_rect.area() > 0) {
+                rough_rect = real_rect;
+            } else {
+                int change = rough_rect.width * 0.2;
+                rough_rect.x += change;
+                rough_rect.width -= 2 * change;
+                change = rough_rect.height * 0.2;
+                rough_rect.y += change;
+                rough_rect.height -= 2 * change;
+            }
+            cv::rectangle(src_raw, rough_rect, color_table["Orange"], 2);
+            car_for_this_iter.conf = real_res.conf;
+
+            std::string str_2_print;
+            switch ((int) car_for_this_iter.class_id) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4: {
+                    str_2_print = std::string("red ") + std::to_string(char(car_for_this_iter.class_id + 1));
+                    break;
+                } case 5: {
+                    str_2_print = "red guard ";
+                    break;
+                } case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10: {
+                    str_2_print = std::string("blue ") + std::to_string(char(car_for_this_iter.class_id - 5));
+                    break;
+                } case 11: {
+                    str_2_print = "blue guard ";
+                    break;
+                } case 12: {
+                    str_2_print = "red X";
+                    break;
+                } case 13: {
+                    str_2_print = "blue X";
+                    break;
+                }
+                default: str_2_print = "===";
+            }
+            cv::putText(src_raw, str_2_print,cv::Point(rough_rect.x, rough_rect.y - 1),
+                        cv::FONT_HERSHEY_PLAIN, 1,color_table["Green_light"], 1);
+
+            radar_interfaces::msg::YoloPoint yolo_msg;
+            yolo_msg.id = car_for_this_iter.class_id;
+            if (yolo_msg.id <= 5 || yolo_msg.id == 12) {
+                yolo_msg.color = false;
+            } else {
+                yolo_msg.color = true;
+            }
+            yolo_msg.x = (int16_t) rough_rect.x;
+            yolo_msg.y = (int16_t) rough_rect.y;
+            yolo_msg.width = (int16_t) rough_rect.width;
+            yolo_msg.height = (int16_t) rough_rect.height;
+            rect_msg.data.push_back(yolo_msg);
+
+            ++iter_num_batch;
+        }
+
+        std::vector<cv::Mat>().swap(img_num_batch);
+        num_batch_size = 0;
+        ++num_batch_count;
     }
+
+    auto end_time = std::chrono::system_clock::now();
+//    std::cout << "far inference time: " <<
+//              std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+//              << "ms" << std::endl;
+
+    // 将yolo识别的矩形发布
+    if (rect_msg.data.size() != 0) {
+        this->far_rect_publisher_->publish(rect_msg);
+    } else {
+        radar_interfaces::msg::YoloPoints rect_msg_4_none;
+        rect_msg_4_none.text = "none";
+        this->far_rect_publisher_->publish(rect_msg_4_none);
+    }
+
+    // 将yolo检图像测结果发布
+    cv_bridge::CvImage yolo_result_img;
+    yolo_result_img.encoding = "bgr8";
+    yolo_result_img.header.stamp = this->now();
+    yolo_result_img.image = src_raw;
+    sensor_msgs::msg::Image yolo_result_msg;
+    yolo_result_img.toImageMsg(yolo_result_msg);
+    this->far_yolo_publisher_->publish(yolo_result_msg);
+
+    cv::imshow("sensor_far_view", src_raw);
+//    valid_count_far++;
+//    if (valid_count_far >= 1) {
+//        valid_count_far = 0;
+//        write_count_far++;
+//        cv::imwrite("/home/hlf/Downloads/myFiles/test/far/" + std::to_string(write_count_far) + ".jpg", src);
+//    }
+}
+
+void ImageSubscriber::CloseImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
+    std::vector<cv::Mat> img_car_batch;
+    cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
+    cv::Mat src_raw;
+    src.copyTo(src_raw);
+    img_car_batch.push_back(src);
+
+    // Preprocess
+    cuda_batch_preprocess(img_car_batch, gpu_buffers_car[0], kInputW, kInputH, stream_car, true);
+
+    // Run inference
+    auto start_time = std::chrono::system_clock::now();
+    infer(*context_car, stream_car, (void**)gpu_buffers_car,
+          cpu_output_buffer_car, kBatchSize);
+
+    // NMS
+    std::vector<std::vector<Detection>> res_batch_car;
+    batch_nms(res_batch_car, cpu_output_buffer_car, (int)img_car_batch.size(),
+              kOutputSize, kConfThresh, kNmsThresh);
+
+    draw_bbox(img_car_batch, res_batch_car);
+//    cv::imshow("sensor_far_view", src);
+
+    radar_interfaces::msg::YoloPoints rect_msg;
+    int iter_res_car = 0, num_batch_size = 0, num_batch_count = 0;
+    std::vector<Detection> res_cars = res_batch_car[0];
+    std::vector<cv::Mat> img_num_batch;
+
+    for (auto res_car : res_cars){
+//        std::cout << std::endl << res_cars.size() << " : " << iter_res_car << "   [" << num_batch_count << ", " << num_batch_size << "]" << std::endl;
+
+        cv::Mat roi_car;
+        cv::Rect rect_res_car = get_rect(src_raw, res_car.bbox);
+        if (rect_res_car.x < 0) {
+            rect_res_car.x = 0;
+        }
+        if (rect_res_car.y < 0) {
+            rect_res_car.y = 0;
+        }
+        if ((rect_res_car.x + rect_res_car.width) > src_raw.cols) {
+            rect_res_car.width = src_raw.cols - rect_res_car.x;
+        }
+        if ((rect_res_car.y + rect_res_car.height) > src_raw.rows) {
+            rect_res_car.height = src_raw.rows - rect_res_car.y;
+        }
+        src_raw(rect_res_car).copyTo(roi_car);
+
+        ++iter_res_car;
+        if (roi_car.empty()) continue;
+        img_num_batch.push_back(roi_car);
+//        if (++valid_count >= 10) {
+//            if (cv::imwrite("/home/hlf/Downloads/myFiles/RM24/datasets_num/_" + std::to_string(write_count) + ".jpg", roi_car)) {
+//                write_count++;
+//            }
+//            valid_count = 0;
+//        }
+        if (++num_batch_size < kNumDetectBatchSize && iter_res_car < (int)res_cars.size()) continue;
+
+        // Preprocess
+        cuda_batch_preprocess(img_num_batch, gpu_buffers_num[0],roi_car.cols,
+                              roi_car.rows, stream_num, false);
+
+        // Run inference
+        infer(*context_num, stream_num, (void**)gpu_buffers_num,
+              cpu_output_buffer_num, kBatchSize); // , kNumDetectBatchSize
+
+        // NMS
+        std::vector<std::vector<Detection>> res_batch_num;
+        batch_nms(res_batch_num, cpu_output_buffer_num, (int)img_num_batch.size(),
+                  kOutputSize, kConfThresh, kNmsThresh);
+
+//        draw_bbox(img_num_batch, res_batch_num);
+//        cv::imshow("sensor_far_view", img_num_batch[0]);
+
+        int iter_num_batch = 0;
+        for (auto res_nums : res_batch_num) {
+            Detection car_for_this_iter = res_cars[num_batch_count * kNumDetectBatchSize + iter_num_batch];
+            cv::Rect rough_rect = get_rect(
+                    src_raw, car_for_this_iter.bbox); // 用装甲板来代替raw图像中的车
+            Detection real_res;
+            real_res.conf = 0;
+            real_res.class_id = 14;
+            cv::Rect real_rect(0, 0, 0, 0);
+            for (size_t m = 0; m < res_nums.size(); m++) {
+                std::cout << res_nums[m].class_id << std::endl;
+
+                cv::Rect number_in_roi = get_rect(img_num_batch[iter_num_batch], res_nums[m].bbox);
+                cv::Rect number_in_img = number_in_roi;
+                number_in_img.x += rough_rect.x;
+                number_in_img.y += rough_rect.y;
+                // 选出正对雷达站的装甲板
+                if (number_in_img.area() > real_rect.area()) {
+                    real_rect = number_in_img;
+                }
+//                cv::putText(src_raw, std::to_string((int)res_nums[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
+                if (res_nums[m].conf > real_res.conf) {
+                    real_res = res_nums[m];
+                }
+            }
+
+            //根据装甲板ID修改车的ID（14是未识别出，12是红方未识别出，13是蓝方未识别出，其他编号一致）
+            if ((int) real_res.class_id == 14) {
+                if ((int) car_for_this_iter.class_id == 0) {
+                    car_for_this_iter.class_id = 12;
+                } else {
+                    car_for_this_iter.class_id = 13;
+                }
+            } else {
+                car_for_this_iter.class_id = real_res.class_id;
+            }
+            //根据装甲板的rect修改车的rect
+            if (real_rect.area() > 0) {
+                rough_rect = real_rect;
+            } else {
+                int change = rough_rect.width * 0.2;
+                rough_rect.x += change;
+                rough_rect.width -= 2 * change;
+                change = rough_rect.height * 0.2;
+                rough_rect.y += change;
+                rough_rect.height -= 2 * change;
+            }
+            cv::rectangle(src_raw, rough_rect, color_table["Orange"], 2);
+            car_for_this_iter.conf = real_res.conf;
+
+            std::string str_2_print;
+            switch ((int) car_for_this_iter.class_id) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4: {
+                    str_2_print = std::string("red ") + std::to_string(char(car_for_this_iter.class_id + 1));
+                    break;
+                } case 5: {
+                    str_2_print = "red guard ";
+                    break;
+                } case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10: {
+                    str_2_print = std::string("blue ") + std::to_string(char(car_for_this_iter.class_id - 5));
+                    break;
+                } case 11: {
+                    str_2_print = "blue guard ";
+                    break;
+                } case 12: {
+                    str_2_print = "red X";
+                    break;
+                } case 13: {
+                    str_2_print = "blue X";
+                    break;
+                }
+                default: str_2_print = "===";
+            }
+            str_2_print += "r_id: " + std::to_string(real_res.class_id);
+            cv::putText(src_raw, str_2_print,cv::Point(rough_rect.x, rough_rect.y - 1),
+                        cv::FONT_HERSHEY_PLAIN, 1,color_table["Green_light"], 1);
+
+            radar_interfaces::msg::YoloPoint yolo_msg;
+            yolo_msg.id = car_for_this_iter.class_id;
+            if (yolo_msg.id <= 5 || yolo_msg.id == 12) {
+                yolo_msg.color = false;
+            } else {
+                yolo_msg.color = true;
+            }
+            yolo_msg.x = (int16_t) rough_rect.x;
+            yolo_msg.y = (int16_t) rough_rect.y;
+            yolo_msg.width = (int16_t) rough_rect.width;
+            yolo_msg.height = (int16_t) rough_rect.height;
+            rect_msg.data.push_back(yolo_msg);
+
+            ++iter_num_batch;
+        }
+
+        std::vector<cv::Mat>().swap(img_num_batch);
+        num_batch_size = 0;
+        ++num_batch_count;
+    }
+
+    auto end_time = std::chrono::system_clock::now();
+//    std::cout << "close inference time: " <<
+//              std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count()
+//              << "ms" << std::endl;
+
+    // 将yolo识别的矩形发布
+    if (rect_msg.data.size() != 0) {
+        this->close_rect_publisher_->publish(rect_msg);
+    } else {
+        radar_interfaces::msg::YoloPoints rect_msg_4_none;
+        rect_msg_4_none.text = "none";
+        this->close_rect_publisher_->publish(rect_msg_4_none);
+    }
+
+    // 将yolo检图像测结果发布
+    cv_bridge::CvImage yolo_result_img;
+    yolo_result_img.encoding = "bgr8";
+    yolo_result_img.header.stamp = this->now();
+    yolo_result_img.image = src_raw;
+    sensor_msgs::msg::Image yolo_result_msg;
+    yolo_result_img.toImageMsg(yolo_result_msg);
+    this->close_yolo_publisher_->publish(yolo_result_msg);
+
+    cv::imshow("sensor_close_view", src_raw);
+//    valid_count_close++;
+//    if (valid_count_close >= 1) {
+//        valid_count_close = 0;
+//        write_count_close++;
+//        cv::imwrite("/home/hlf/Downloads/myFiles/test/close/" + std::to_string(write_count_close) + ".jpg", src);
+//    }
 }

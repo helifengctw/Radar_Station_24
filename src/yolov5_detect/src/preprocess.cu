@@ -94,10 +94,8 @@ __global__ void warpaffine_kernel(
   *pdst_c2 = c2;
 }
 
-void cuda_preprocess(
-    uint8_t* src, int src_width, int src_height,
-    float* dst, int dst_width, int dst_height,
-    cudaStream_t stream, bool if_car = true) {
+void cuda_preprocess(uint8_t* src, int src_width, int src_height, float* dst, int dst_width,
+                     int dst_height, cudaStream_t stream, bool if_car = true) {
 
     int img_size = src_width * src_height * 3;
     if (if_car) {

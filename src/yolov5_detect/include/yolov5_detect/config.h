@@ -15,7 +15,7 @@ const static char* kInputTensorName = "data";
 const static char* kOutputTensorName = "prob";
 
 // Detection model and Segmentation model' number of classes
-constexpr static int kNumClass = 51;
+constexpr static int kNumClass = 12;
 
 // Classfication model's number of classes
 constexpr static int kClsNumClass = 1000;
@@ -23,8 +23,8 @@ constexpr static int kClsNumClass = 1000;
 constexpr static int kBatchSize = 1;
 
 // Yolo's input width and height must by divisible by 32
-constexpr static int kInputH = 640;
-constexpr static int kInputW = 640;
+constexpr static int kInputH = 640; // 1024
+constexpr static int kInputW = 640; // 1280
 
 // Classfication model's input shape
 constexpr static int kClsInputH = 224;

@@ -275,7 +275,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so"
-         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:"
+         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:/opt/ros/foxy/share/std_msgs/cmake/../../../lib:/opt/ros/foxy/share/builtin_interfaces/cmake/../../../lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so")
@@ -298,7 +298,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so"
-         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:"
+         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:/opt/ros/foxy/share/std_msgs/cmake/../../../lib:/opt/ros/foxy/share/builtin_interfaces/cmake/../../../lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_introspection_c.cpython-38-x86_64-linux-gnu.so")
@@ -321,7 +321,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so"
-         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:"
+         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces:/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:/opt/ros/foxy/share/std_msgs/cmake/../../../lib:/opt/ros/foxy/share/builtin_interfaces/cmake/../../../lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_c.cpython-38-x86_64-linux-gnu.so")
@@ -344,7 +344,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libradar_interfaces__python.so")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libradar_interfaces__python.so"
-         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/lib:"
+         OLD_RPATH "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug:/opt/ros/foxy/share/std_msgs/cmake/../../../lib:/opt/ros/foxy/share/builtin_interfaces/cmake/../../../lib:/opt/ros/foxy/lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libradar_interfaces__python.so")
@@ -364,6 +364,10 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/YoloPoint.idl")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/YoloPub.idl")
 endif()
 
@@ -376,11 +380,19 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/YoloPoints.idl")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/Point.msg")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/DistPoint.msg")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/YoloPoint.msg")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -393,6 +405,10 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/DistPoints.msg")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/YoloPoints.msg")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
