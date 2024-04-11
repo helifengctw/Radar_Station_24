@@ -1,0 +1,9 @@
+small_map:
+  ros__parameters:
+    small_map_params:
+      small_map_shift_X: 30
+      small_map_shift_Y: 5
+
+    battle_state:
+      battle_color: "red"
+      fps_mode: 0

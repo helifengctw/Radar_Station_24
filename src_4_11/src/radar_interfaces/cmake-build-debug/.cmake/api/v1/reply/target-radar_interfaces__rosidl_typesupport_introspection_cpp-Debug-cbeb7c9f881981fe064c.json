@@ -1,0 +1,889 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "libradar_interfaces__rosidl_typesupport_introspection_cpp.so"
+		}
+	],
+	"backtrace" : 5,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include",
+			"ament_execute_extensions",
+			"rosidl_generate_interfaces",
+			"install",
+			"target_link_libraries",
+			"ament_target_dependencies",
+			"set_target_properties",
+			"find_package",
+			"add_dependencies",
+			"add_definitions",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/cmake/rosidl_typesupport_introspection_cpp_generate_interfaces.cmake",
+			"/opt/ros/foxy/share/ament_cmake_core/cmake/core/ament_execute_extensions.cmake",
+			"/opt/ros/foxy/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake",
+			"CMakeLists.txt",
+			"/opt/ros/foxy/share/ament_cmake_target_dependencies/cmake/ament_target_dependencies.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/cmake/rosidl_typesupport_introspection_cppExport.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/cmake/ament_cmake_export_targets-extras.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_introspection_cpp/cmake/rosidl_typesupport_introspection_cppConfig.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_cpp/cmake/rosidl_typesupport_cpp-extras.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_cpp/cmake/rosidl_typesupport_cppConfig.cmake",
+			"/opt/ros/foxy/share/rosidl_default_runtime/cmake/rosidl_default_runtime-extras.cmake",
+			"/opt/ros/foxy/share/rosidl_default_runtime/cmake/rosidl_default_runtimeConfig.cmake",
+			"/opt/ros/foxy/share/builtin_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake",
+			"/opt/ros/foxy/share/builtin_interfaces/cmake/builtin_interfacesConfig.cmake",
+			"/opt/ros/foxy/share/std_msgs/cmake/ament_cmake_export_dependencies-extras.cmake",
+			"/opt/ros/foxy/share/std_msgs/cmake/std_msgsConfig.cmake",
+			"/opt/ros/foxy/share/std_msgs/cmake/std_msgs__rosidl_typesupport_cppExport.cmake",
+			"/opt/ros/foxy/share/std_msgs/cmake/ament_cmake_export_targets-extras.cmake",
+			"/opt/ros/foxy/share/std_msgs/cmake/std_msgs__rosidl_typesupport_cExport.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_c/cmake/rosidl_typesupport_cExport.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_c/cmake/ament_cmake_export_targets-extras.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_c/cmake/rosidl_typesupport_cConfig.cmake",
+			"/opt/ros/foxy/share/rosidl_runtime_c/cmake/rosidl_runtime_cExport.cmake",
+			"/opt/ros/foxy/share/rosidl_runtime_c/cmake/ament_cmake_export_targets-extras.cmake",
+			"/opt/ros/foxy/share/rosidl_runtime_c/cmake/rosidl_runtime_cConfig.cmake",
+			"/opt/ros/foxy/share/rcutils/cmake/rcutilsExport.cmake",
+			"/opt/ros/foxy/share/rcutils/cmake/ament_cmake_export_targets-extras.cmake",
+			"/opt/ros/foxy/share/rcutils/cmake/rcutilsConfig.cmake",
+			"/opt/ros/foxy/share/rosidl_runtime_c/cmake/ament_cmake_export_dependencies-extras.cmake",
+			"/opt/ros/foxy/share/ament_cmake_ros/cmake/ament_cmake_ros-extras.cmake",
+			"/opt/ros/foxy/share/ament_cmake_ros/cmake/ament_cmake_rosConfig.cmake",
+			"/opt/ros/foxy/share/rosidl_typesupport_fastrtps_c/cmake/rosidl_typesupport_fastrtps_c_generate_interfaces.cmake"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 3
+			},
+			{
+				"command" : 3,
+				"file" : 3,
+				"line" : 26,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 286,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 48,
+				"parent" : 2
+			},
+			{
+				"file" : 0,
+				"parent" : 3
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 86,
+				"parent" : 4
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 136,
+				"parent" : 4
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 111,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 4,
+				"line" : 145,
+				"parent" : 7
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 111,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 4,
+				"line" : 145,
+				"parent" : 9
+			},
+			{
+				"command" : 6,
+				"file" : 0,
+				"line" : 106,
+				"parent" : 4
+			},
+			{
+				"command" : 5,
+				"file" : 4,
+				"line" : 145,
+				"parent" : 11
+			},
+			{
+				"command" : 8,
+				"file" : 3,
+				"line" : 20,
+				"parent" : 0
+			},
+			{
+				"file" : 15,
+				"parent" : 13
+			},
+			{
+				"command" : 1,
+				"file" : 15,
+				"line" : 41,
+				"parent" : 14
+			},
+			{
+				"file" : 14,
+				"parent" : 15
+			},
+			{
+				"command" : 8,
+				"file" : 14,
+				"line" : 21,
+				"parent" : 16
+			},
+			{
+				"file" : 13,
+				"parent" : 17
+			},
+			{
+				"command" : 1,
+				"file" : 13,
+				"line" : 41,
+				"parent" : 18
+			},
+			{
+				"file" : 12,
+				"parent" : 19
+			},
+			{
+				"command" : 8,
+				"file" : 12,
+				"line" : 21,
+				"parent" : 20
+			},
+			{
+				"file" : 11,
+				"parent" : 21
+			},
+			{
+				"command" : 1,
+				"file" : 11,
+				"line" : 41,
+				"parent" : 22
+			},
+			{
+				"file" : 10,
+				"parent" : 23
+			},
+			{
+				"command" : 8,
+				"file" : 10,
+				"line" : 12,
+				"parent" : 24
+			},
+			{
+				"file" : 9,
+				"parent" : 25
+			},
+			{
+				"command" : 1,
+				"file" : 9,
+				"line" : 41,
+				"parent" : 26
+			},
+			{
+				"file" : 8,
+				"parent" : 27
+			},
+			{
+				"command" : 8,
+				"file" : 8,
+				"line" : 13,
+				"parent" : 28
+			},
+			{
+				"file" : 7,
+				"parent" : 29
+			},
+			{
+				"command" : 1,
+				"file" : 7,
+				"line" : 41,
+				"parent" : 30
+			},
+			{
+				"file" : 6,
+				"parent" : 31
+			},
+			{
+				"command" : 1,
+				"file" : 6,
+				"line" : 9,
+				"parent" : 32
+			},
+			{
+				"file" : 5,
+				"parent" : 33
+			},
+			{
+				"command" : 7,
+				"file" : 5,
+				"line" : 56,
+				"parent" : 34
+			},
+			{
+				"command" : 1,
+				"file" : 15,
+				"line" : 41,
+				"parent" : 14
+			},
+			{
+				"file" : 17,
+				"parent" : 36
+			},
+			{
+				"command" : 1,
+				"file" : 17,
+				"line" : 9,
+				"parent" : 37
+			},
+			{
+				"file" : 16,
+				"parent" : 38
+			},
+			{
+				"command" : 7,
+				"file" : 16,
+				"line" : 56,
+				"parent" : 39
+			},
+			{
+				"command" : 1,
+				"file" : 17,
+				"line" : 9,
+				"parent" : 37
+			},
+			{
+				"file" : 18,
+				"parent" : 41
+			},
+			{
+				"command" : 7,
+				"file" : 18,
+				"line" : 56,
+				"parent" : 42
+			},
+			{
+				"command" : 8,
+				"file" : 10,
+				"line" : 12,
+				"parent" : 24
+			},
+			{
+				"file" : 21,
+				"parent" : 44
+			},
+			{
+				"command" : 1,
+				"file" : 21,
+				"line" : 41,
+				"parent" : 45
+			},
+			{
+				"file" : 20,
+				"parent" : 46
+			},
+			{
+				"command" : 1,
+				"file" : 20,
+				"line" : 9,
+				"parent" : 47
+			},
+			{
+				"file" : 19,
+				"parent" : 48
+			},
+			{
+				"command" : 7,
+				"file" : 19,
+				"line" : 56,
+				"parent" : 49
+			},
+			{
+				"command" : 8,
+				"file" : 12,
+				"line" : 21,
+				"parent" : 20
+			},
+			{
+				"file" : 24,
+				"parent" : 51
+			},
+			{
+				"command" : 1,
+				"file" : 24,
+				"line" : 41,
+				"parent" : 52
+			},
+			{
+				"file" : 23,
+				"parent" : 53
+			},
+			{
+				"command" : 1,
+				"file" : 23,
+				"line" : 9,
+				"parent" : 54
+			},
+			{
+				"file" : 22,
+				"parent" : 55
+			},
+			{
+				"command" : 7,
+				"file" : 22,
+				"line" : 56,
+				"parent" : 56
+			},
+			{
+				"command" : 1,
+				"file" : 24,
+				"line" : 41,
+				"parent" : 52
+			},
+			{
+				"file" : 28,
+				"parent" : 58
+			},
+			{
+				"command" : 8,
+				"file" : 28,
+				"line" : 21,
+				"parent" : 59
+			},
+			{
+				"file" : 27,
+				"parent" : 60
+			},
+			{
+				"command" : 1,
+				"file" : 27,
+				"line" : 41,
+				"parent" : 61
+			},
+			{
+				"file" : 26,
+				"parent" : 62
+			},
+			{
+				"command" : 1,
+				"file" : 26,
+				"line" : 9,
+				"parent" : 63
+			},
+			{
+				"file" : 25,
+				"parent" : 64
+			},
+			{
+				"command" : 7,
+				"file" : 25,
+				"line" : 56,
+				"parent" : 65
+			},
+			{
+				"command" : 9,
+				"file" : 0,
+				"line" : 123,
+				"parent" : 4
+			},
+			{
+				"command" : 7,
+				"file" : 0,
+				"line" : 97,
+				"parent" : 4
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 48,
+				"parent" : 2
+			},
+			{
+				"file" : 31,
+				"parent" : 69
+			},
+			{
+				"command" : 8,
+				"file" : 31,
+				"line" : 15,
+				"parent" : 70
+			},
+			{
+				"file" : 30,
+				"parent" : 71
+			},
+			{
+				"command" : 1,
+				"file" : 30,
+				"line" : 41,
+				"parent" : 72
+			},
+			{
+				"file" : 29,
+				"parent" : 73
+			},
+			{
+				"command" : 10,
+				"file" : 29,
+				"line" : 25,
+				"parent" : 74
+			},
+			{
+				"command" : 11,
+				"file" : 0,
+				"line" : 102,
+				"parent" : 4
+			},
+			{
+				"command" : 11,
+				"file" : 4,
+				"line" : 141,
+				"parent" : 11
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g -std=gnu++14 -fPIC -fdiagnostics-color=always"
+				},
+				{
+					"backtrace" : 68,
+					"fragment" : "-Wall"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 12,
+					"define" : "RCUTILS_ENABLE_FAULT_INJECTION"
+				},
+				{
+					"backtrace" : 75,
+					"define" : "ROS_PACKAGE_NAME=\"radar_interfaces\""
+				},
+				{
+					"define" : "radar_interfaces__rosidl_typesupport_introspection_cpp_EXPORTS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 76,
+					"path" : "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_cpp"
+				},
+				{
+					"backtrace" : 77,
+					"isSystem" : true,
+					"path" : "/opt/ros/foxy/include"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					68
+				],
+				"standard" : "14"
+			},
+			"sourceIndexes" : 
+			[
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 67,
+			"id" : "radar_interfaces__cpp::@6890427a1f51a3e7e1df"
+		}
+	],
+	"id" : "radar_interfaces__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+	"install" : 
+	{
+		"destinations" : 
+		[
+			{
+				"backtrace" : 6,
+				"path" : "lib"
+			},
+			{
+				"backtrace" : 6,
+				"path" : "lib"
+			}
+		],
+		"prefix" : 
+		{
+			"path" : "/usr/local"
+		}
+	},
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/opt/ros/foxy/lib:",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 8,
+				"fragment" : "/opt/ros/foxy/lib/libstd_msgs__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 8,
+				"fragment" : "/opt/ros/foxy/lib/libstd_msgs__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 8,
+				"fragment" : "/opt/ros/foxy/lib/libstd_msgs__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 8,
+				"fragment" : "/opt/ros/foxy/lib/libstd_msgs__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 8,
+				"fragment" : "/opt/ros/foxy/lib/libstd_msgs__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/opt/ros/foxy/lib/libbuiltin_interfaces__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/opt/ros/foxy/lib/libbuiltin_interfaces__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/opt/ros/foxy/lib/libbuiltin_interfaces__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/opt/ros/foxy/lib/libbuiltin_interfaces__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 12,
+				"fragment" : "/opt/ros/foxy/lib/librosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 35,
+				"fragment" : "/opt/ros/foxy/lib/librosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/opt/ros/foxy/lib/libbuiltin_interfaces__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 40,
+				"fragment" : "/opt/ros/foxy/lib/librosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 43,
+				"fragment" : "/opt/ros/foxy/lib/librosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 12,
+				"fragment" : "/opt/ros/foxy/lib/librosidl_runtime_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 50,
+				"fragment" : "/opt/ros/foxy/lib/librcpputils.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 57,
+				"fragment" : "/opt/ros/foxy/lib/librcutils.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 66,
+				"fragment" : "-ldl",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "radar_interfaces__rosidl_typesupport_introspection_cpp",
+	"nameOnDisk" : "libradar_interfaces__rosidl_typesupport_introspection_cpp.so",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11
+			]
+		},
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				12,
+				13,
+				14,
+				15,
+				16,
+				17,
+				18,
+				19,
+				20,
+				21,
+				22,
+				23
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				24
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/point__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/dist_point__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_point__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_pub__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/points__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/dist_points__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_points__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/game_state__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/referee_warning__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/supply_projectile_action__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/battle_color__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/pnp_result__rosidl_typesupport_introspection_cpp.hpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/point__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/dist_point__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_point__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_pub__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/points__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/dist_points__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/yolo_points__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/game_state__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/referee_warning__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/supply_projectile_action__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/battle_color__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/pnp_result__type_support.cpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_introspection_cpp/radar_interfaces/msg/detail/point__rosidl_typesupport_introspection_cpp.hpp.rule",
+			"sourceGroupIndex" : 2
+		}
+	],
+	"type" : "SHARED_LIBRARY"
+}

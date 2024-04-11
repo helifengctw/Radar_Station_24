@@ -1,0 +1,17 @@
+{
+  "package_name": "radar_interfaces",
+  "non_idl_tuples": [
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/Point.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/DistPoint.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/YoloPoint.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/YoloPub.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/Points.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/DistPoints.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/YoloPoints.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/GameState.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/RefereeWarning.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/SupplyProjectileAction.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/BattleColor.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/PnpResult.msg"
+  ]
+}

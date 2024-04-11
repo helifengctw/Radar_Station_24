@@ -1,0 +1,14 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from radar_interfaces/msg/RefereeWarning.msg
+// generated code does not contain a copyright notice
+
+
+module radar_interfaces {
+  module msg {
+    struct RefereeWarning {
+      uint8 level;
+
+      uint8 foul_robot_id;
+    };
+  };
+};
