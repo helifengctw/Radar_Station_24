@@ -48,7 +48,7 @@ void close_mouse_callback(int event, int x, int y, int flags, void* param);
 
 Mat far_src, close_src;
 float smaller = 0.6;
-int pick_far_count = 0, pick_close_count = 0, valid_far_img_count = 0, valid_close_img_count = 0;
+int pick_far_count = 0, pick_close_count = 0, total_count = 5;
 Scalar GREEN(0, 255, 0);
 bool far_receiving = true, close_receiving = true;
 radar_interfaces::msg::Points far_points_msg, close_points_msg;
@@ -78,8 +78,8 @@ int main(int argc, char ** argv)
             }
         }
     }
-    cout << "please enter the number of wanted far four points :" << endl;
-    for (int i = 0; i < 4; i++) {
+    cout << "please enter the number of wanted far " << total_count << " points :" << endl;
+    for (int i = 0; i < total_count; i++) {
         int j = 0;
         cout << "the " << i << "th one:" << endl;
         cin >> j;
@@ -103,8 +103,8 @@ int main(int argc, char ** argv)
             }
         }
     }
-    cout << "please enter the number of wanted close four points :" << endl;
-    for (int i = 0; i < 4; i++) {
+    cout << "please enter the number of wanted close " << total_count << " points :" << endl;
+    for (int i = 0; i < total_count; i++) {
         int j = 0;
         cout << "the " << i << "th one:" << endl;
         cin >> j;

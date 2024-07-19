@@ -14,21 +14,20 @@ using namespace cv;
 using std::placeholders::_1;
 
 int red_or_blue = 0; // 0 stands for red, 1 stands for blue
-int imgCols = 1440, imgRows = 1080;
+int imgCols = 1920, imgRows = 1200;
 bool far_received_one = false, close_received_one = false;
 
-int X_shift = 0;
-int Y_shift = 0;
-vector<cv::Point3d> far_objectPoints(4);
-vector<cv::Point2f> far_imagePoints(4);
+int X_shift = 0, Y_shift = 0, total_count = 5;
+vector<cv::Point3d> far_objectPoints(total_count);
+vector<cv::Point2f> far_imagePoints(total_count);
 cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
 cv::Mat far_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat far_Rjacob = Mat::zeros(3, 1, CV_64FC1);
 Mat far_R = Mat::eye(3, 3, CV_64FC1);
 Mat far_T = Mat::zeros(3, 1, CV_64FC1);
 
-vector<cv::Point3d> close_objectPoints(4);
-vector<cv::Point2f> close_imagePoints(4);
+vector<cv::Point3d> close_objectPoints(total_count);
+vector<cv::Point2f> close_imagePoints(total_count);
 cv::Mat close_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
 cv::Mat close_distCoeffs_ = Mat::zeros(5, 1, CV_64FC1);
 Mat close_Rjacob = Mat::zeros(3, 1, CV_64FC1);
@@ -151,7 +150,7 @@ void PnpSolver::LoadPnpParams() {
     cout << endl << "far_imagePoints and close_imagesPoints:" << endl;
     // loop 4 times to get 4 corner points
     //世界坐标
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < total_count; i++) {
         string parent_name_far = "calibrate_default_points.farCam.world_points.point";
         string parent_name_close = "calibrate_default_points.closeCam.world_points.point";
         string param_name_far_x = parent_name_far + to_string(i+1) + ".x";
@@ -180,7 +179,7 @@ void PnpSolver::LoadPnpParams() {
     }
 
     // 图像坐标
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < total_count; i++) {
         string parent_name_far = "calibrate_default_points.farCam.image_points.point";
         string param_name_x_far = parent_name_far + to_string(i+1) + ".x";
         string param_name_y_far = parent_name_far + to_string(i+1) + ".y";
@@ -239,7 +238,7 @@ void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr m
         cout << far_imagePoints[count].x << ", " << far_imagePoints[count].y << endl;
         count++;
     }
-    cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
+    cout << "已经选出了 " << total_count << " 个点!下面进行SolvePnP求解外参矩阵。" << endl;
     cv::Mat inlier;
     int suc = cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_, far_Rjacob,
                                  far_T,
@@ -264,7 +263,7 @@ void PnpSolver::close_calibration(const radar_interfaces::msg::Points::SharedPtr
         cout << close_imagePoints[count] << endl;
         count++;
     }
-    cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
+    cout << "已经选出了 " << total_count << " 个点!下面进行SolvePnP求解外参矩阵。" << endl;
     cv::Mat inlier;
     cout << "close obj points:" << close_objectPoints << endl;
     int suc = cv::solvePnPRansac(close_objectPoints, close_imagePoints, close_CamMatrix_, close_distCoeffs_,
