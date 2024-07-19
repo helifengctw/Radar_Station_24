@@ -30,24 +30,6 @@ def generate_launch_description():
         respawn=True
     )
 
-    Node_yolov5_detect = Node(
-        package="yolov5_detect",
-        executable="yolov5_detect_test",
-        name="yolov5_detect_test",
-        output="screen",
-        emulate_tty=True,
-        respawn=True
-    )
-
-    Node_get_depth = Node(
-        package="get_depth",
-        executable="get_depth",
-        name="get_depth",
-        output="screen",
-        emulate_tty=True,
-        respawn=True
-    )
-
     Node_small_map = Node(
         package="small_map",
         executable="small_map",

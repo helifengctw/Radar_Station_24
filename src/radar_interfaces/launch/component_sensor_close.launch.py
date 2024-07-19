@@ -52,21 +52,19 @@ def generate_launch_description():
                     namespace='sensor_close',
                     parameters=[
                       {
-                        "show_by_cv_or_msg": 0
-
-,
+                        "show_by_cv_or_msg": 0,
                         "camera_name": "sensor_close"
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]
                 ),
-                ComposableNode(
-                    package='livox_ros2_driver',
-                    plugin='livox_ros::LivoxDriver',
-                    name='close_livox_ros2_driver',
-                    namespace='sensor_close',
-                    extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                # ComposableNode(
+                #     package='livox_ros2_driver',
+                #     plugin='livox_ros::LivoxDriver',
+                #     name='close_livox_ros2_driver',
+                #     namespace='sensor_close',
+                #     extra_arguments=[{'use_intra_process_comms': True}]
+                # ),
                 ComposableNode(
                     package='get_depth',
                     plugin='get_depth::DepthSensor',

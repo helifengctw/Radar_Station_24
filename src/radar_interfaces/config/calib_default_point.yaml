@@ -4,17 +4,17 @@ pnp_solver:
       farCam:
         image_points:
           point1:
-            x: 0.5286
-            y: 0.590833
+            x: 0.07552
+            y: 0.84583
           point2:
-            x: 0.43125
-            y: 0.435
+            x: 0.685417
+            y: 0.84583
           point3:
-            x: 0.6484
-            y: 0.47625
+            x: 0.95104
+            y: 0.59417
           point4:
-            x: 0.72
-            y: 0.4675
+            x: 0.8484375
+            y: 0.4175
         world_points:
           point1:
             x: 5800.0
@@ -36,17 +36,17 @@ pnp_solver:
       closeCam:
         image_points:
           point1:
-            x: 0.07656
-            y: 0.7125
+            x: 0.33229
+            y: 0.531667
           point2:
-            x: 0.4929
-            y: 0.7125
+            x: 0.261979
+            y: 0.12583
           point3:
-            x: 0.77265
-            y: 0.46875
+            x: 0.4296875
+            y: 0.18
           point4:
-            x: 0.71
-            y: 0.3375
+            x: 0.4921875
+            y: 0.19
         world_points:
           point1:
             x: 0.0

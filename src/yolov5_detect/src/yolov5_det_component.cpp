@@ -196,6 +196,7 @@ namespace yolov5_detect {
 
                 radar_interfaces::msg::YoloPoint yolo_point_msg;
                 yolo_point_msg.id = (uint8_t) detected_cars[car_count_in_batch].class_id;
+                yolo_point_msg.conf = detected_cars[car_count_in_batch].conf;
                 for (int iii = 0; iii < 12; iii++) {
                     if (yolo_point_msg.id == iii) {
                         yolo_point_msg.tracker_id = (int16_t) id_tracker_table[iii];
@@ -212,7 +213,6 @@ namespace yolov5_detect {
                 yolo_point_msg.width = (int16_t) detected_car_rect.width;
                 yolo_point_msg.height = (int16_t) detected_car_rect.height;
                 yolo_point_list_msg.data.push_back(yolo_point_msg);
-
                 ++iter_nums_batch;
             }
 
@@ -285,10 +285,10 @@ namespace yolov5_detect {
         if (!filter_yolo_point_list_msg.data.empty()) {
             this->rect_publisher_->publish(filter_yolo_point_list_msg);
             // TODO : cancel debug out
-//        std::cout << std::endl << "close_rectangles_publish_one_msg: " << std::endl;
-//        for (auto &i : rect_msg.data) {
-//            std::cout << "id: " << (int)i.id << " , [ " << i.x << " , " << i.y << " , (" << i.width << " , " << i.height << ") ]"<< std::endl;
-//        }
+//            std::cout << std::endl << "close_rectangles_publish_one_msg: " << std::endl;
+//            for (auto &i : rect_msg.data) {
+//                std::cout << "id: " << (int)i.id << " , [ " << i.x << " , " << i.y << " , (" << i.width << " , " << i.height << ") ]"<< std::endl;
+//            }
             // TODO : end at here
         } else {
             radar_interfaces::msg::YoloPoints rect_msg_4_none;

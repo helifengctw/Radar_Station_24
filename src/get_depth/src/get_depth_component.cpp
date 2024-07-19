@@ -71,6 +71,7 @@ namespace get_depth {
                 distPoint.dist = (float)GetDepthInRect(dist_rect, depth_queue, point.id);
                 distPoint.color = point.color;
                 distPoint.id = point.id;
+                distPoint.conf = point.conf;
                 distance_points.data.push_back(distPoint);
                 rectangle(depth_show, Rect(point.x, point.y, point.width,
                                            point.height), Scalar(255), 2);

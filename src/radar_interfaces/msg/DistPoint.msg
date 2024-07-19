@@ -4,4 +4,5 @@ float32 x
 float32 y
 float32 dist
 float32 last_dist
+float32 conf
 bool color

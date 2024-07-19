@@ -15,6 +15,7 @@ using std::placeholders::_1;
 
 int red_or_blue = 0; // 0 stands for red, 1 stands for blue
 int imgCols = 1440, imgRows = 1080;
+bool far_received_one = false, close_received_one = false;
 
 int X_shift = 0;
 int Y_shift = 0;
@@ -48,12 +49,10 @@ public:
 
         Pnp_result_publisher_ = this->create_publisher<radar_interfaces::msg::PnpResult>("pnp_result", 10);
 
-        timer_ = this->create_wall_timer(
-                5000ms, std::bind(&PnpSolver::timer_callback, this));
+        timer_ = this->create_wall_timer(5000ms, std::bind(&PnpSolver::timer_callback, this));
+        //因为参数是publish来更新的，如果small_map重启，并且没收到就无法再获得参数了
 
-        // declare params
         this->DeclareParams();
-        // Load Params
         this->LoadCameraParams();
         this->LoadPnpParams();
     }
@@ -147,7 +146,7 @@ void PnpSolver::LoadCameraParams() {
 }
 
 void PnpSolver::LoadPnpParams() {
-    //dovejh 读取默认pnp四点的坐标，保证求解所需参数值一直存在，防止意外重启造成pnp数据丢失。
+    //读取默认pnp四点的坐标，保证求解所需参数值一直存在，防止意外重启造成pnp数据丢失。
     double x = 0, y = 0;
     cout << endl << "far_imagePoints and close_imagesPoints:" << endl;
     // loop 4 times to get 4 corner points
@@ -178,15 +177,6 @@ void PnpSolver::LoadPnpParams() {
         close_objectPoints[i].x = this->get_parameter(param_name_close_x).as_double();
         close_objectPoints[i].y = this->get_parameter(param_name_close_y).as_double();
         close_objectPoints[i].z = this->get_parameter(param_name_close_z).as_double();
-
-//        // get params
-//        far_objectPoints[i].x = this->get_parameter(param_name_far_x).as_double() + 115;
-//        far_objectPoints[i].y = this->get_parameter(param_name_far_y).as_double() + 65;
-//        far_objectPoints[i].z = this->get_parameter(param_name_far_z).as_double() - 144;
-//
-//        close_objectPoints[i].x = this->get_parameter(param_name_close_x).as_double() + 115;
-//        close_objectPoints[i].y = this->get_parameter(param_name_close_y).as_double() + 65;
-//        close_objectPoints[i].z = this->get_parameter(param_name_close_z).as_double() - 144;
     }
 
     // 图像坐标
@@ -246,9 +236,7 @@ void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr m
     int count = 0;
     for (const auto &point: msg->data) {
         far_imagePoints[count] = cv::Point2f(point.x, point.y);
-//        far_imagePoints[count].x *= imgCols;
-//        far_imagePoints[count].y *= imgRows;
-        cout << far_imagePoints[count] << endl;
+        cout << far_imagePoints[count].x << ", " << far_imagePoints[count].y << endl;
         count++;
     }
     cout << "已经选出了4个点!下面进行SolvePnP求解外参矩阵。" << endl;
