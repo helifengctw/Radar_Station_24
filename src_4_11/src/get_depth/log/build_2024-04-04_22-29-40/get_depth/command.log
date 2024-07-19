@@ -1,4 +1,0 @@
-Invoking command in '/home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /home/hlf/.local/bin/cmake --build /home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth -- -j16 -l16
-Invoked command in '/home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /home/hlf/.local/bin/cmake --build /home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth -- -j16 -l16
-Invoking command in '/home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /home/hlf/.local/bin/cmake --install /home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth
-Invoked command in '/home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/foxy /home/hlf/.local/bin/cmake --install /home/hlf/Desktop/radar24_ws/src/get_depth/build/get_depth

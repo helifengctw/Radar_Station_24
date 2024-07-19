@@ -1,4 +1,0 @@
-source;share/yolov5_detect/local_setup.bash
-source;share/yolov5_detect/local_setup.dsv
-source;share/yolov5_detect/local_setup.sh
-source;share/yolov5_detect/local_setup.zsh

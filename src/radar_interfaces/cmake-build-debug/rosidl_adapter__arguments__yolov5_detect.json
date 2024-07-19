@@ -1,8 +1,0 @@
-{
-  "package_name": "radar_interfaces",
-  "non_idl_tuples": [
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/points.msg",
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/dist_points.msg",
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/YoloPub.msg"
-  ]
-}

@@ -1,9 +1,0 @@
-float64 e0_0
-float64 e0_1
-float64 e0_2
-float64 e1_0
-float64 e1_1
-float64 e1_2
-float64 e2_0
-float64 e2_1
-float64 e2_2
