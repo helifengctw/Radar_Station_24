@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-535a5ead4a18a972976f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "pnp_solver",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "icp_solver::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-icp_solver-Debug-f92d0b2c97227e63ba4a.json",
+					"name" : "icp_solver",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "pnp_solver::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-pnp_solver-Debug-a12154c446f6498117d6.json",
+					"name" : "pnp_solver",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "pnp_solver_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-pnp_solver_uninstall-Debug-7aaf53e06cd4bc2f3b20.json",
+					"name" : "pnp_solver_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-3cc60fabe0c87a69b467.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hlf/Desktop/radar24_ws/src/pnp_solver/cmake-build-debug",
+		"source" : "/home/hlf/Desktop/radar24_ws/src/pnp_solver"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

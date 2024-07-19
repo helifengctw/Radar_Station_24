@@ -1,0 +1,84 @@
+pnp_solver:
+  ros__parameters:
+    calibrate_default_points:
+      farCam:
+        image_points:
+          point1:
+            x: 0.5286
+            y: 0.590833
+          point2:
+            x: 0.43125
+            y: 0.435
+          point3:
+            x: 0.6484
+            y: 0.47625
+          point4:
+            x: 0.72
+            y: 0.4675
+        world_points:
+          point1:
+            x: 5800.0
+            y: 5000.0
+            z: 0.0
+          point2:
+            x: 5800.0
+            y: 9700.0
+            z: 0.0
+          point3:
+            x: 7600.0
+            y: 7350.0
+            z: 0.0
+          point4:
+            x: 8325.0
+            y: 7350.0
+            z: 0.0
+
+      closeCam:
+        image_points:
+          point1:
+            x: 0.07656
+            y: 0.7125
+          point2:
+            x: 0.4929
+            y: 0.7125
+          point3:
+            x: 0.77265
+            y: 0.46875
+          point4:
+            x: 0.71
+            y: 0.3375
+        world_points:
+          point1:
+            x: 0.0
+            y: 900.0
+            z: 0.0
+          point2:
+            x: 3000.0
+            y: 900.0
+            z: 0.0
+          point3:
+            x: 5800.0
+            y: 5000.0
+            z: 0.0
+          point4:
+            x: 5800.0
+            y: 9700.0
+            z: 0.0
+
+# point1:
+#             x: 720.0
+#             y: 7400.0
+#             z: 1470.0
+#           point2:
+#             x: 1700.0
+#             y: 6740.0
+#             z: 200.0
+#           point3:
+#             x: 3760.0
+#             y: 6740.0
+#             z: 400.0
+#           point4:
+#             x: 3660.0
+#             y: 4700.0
+#             z: 0.0
+

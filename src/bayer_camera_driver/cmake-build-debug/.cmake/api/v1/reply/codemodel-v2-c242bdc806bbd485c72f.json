@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-0aa3737be0fd68e1a4a2.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.8"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "bayer_camera_driver",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "bayer_camera_driver_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-bayer_camera_driver_uninstall-Debug-511ffe3becb097c9e1d5.json",
+					"name" : "bayer_camera_driver_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "hikvision_driver::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-hikvision_driver-Debug-cd1087d9ecb66a5c61f5.json",
+					"name" : "hikvision_driver",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "hikvision_driver_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-hikvision_driver_node-Debug-e51a122a9174e83ab11e.json",
+					"name" : "hikvision_driver_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-8de6339cc85ec6acc976.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hlf/Desktop/radar24_ws/src/bayer_camera_driver/cmake-build-debug",
+		"source" : "/home/hlf/Desktop/radar24_ws/src/bayer_camera_driver"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

@@ -1,0 +1,97 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-79f0bf3eea3cd4dbee5a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "get_depth",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "depth_sensor::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-depth_sensor-Debug-3b72c25c93fa24c6038b.json",
+					"name" : "depth_sensor",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "depth_sensor_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-depth_sensor_node-Debug-cc76ef0628e5abfa80b4.json",
+					"name" : "depth_sensor_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "get_depth::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-get_depth-Debug-795e6374bfba7e3feabc.json",
+					"name" : "get_depth",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "get_depth_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-get_depth_uninstall-Debug-a6db0bcb13ee603dd379.json",
+					"name" : "get_depth_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-1ff59df7235908aedad0.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hlf/Desktop/radar24_ws/src/get_depth/cmake-build-debug",
+		"source" : "/home/hlf/Desktop/radar24_ws/src/get_depth"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

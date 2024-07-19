@@ -1,0 +1,79 @@
+pnp_solver:
+  ros__parameters:
+    calibrate_default_points:
+      farCam:
+        image_points:
+          point1:
+            x: 0.247
+            y: 0.070
+          point2:
+            x: 0.541
+            y: 0.411
+          point3:
+            x: 0.632
+            y: 0.411
+          point4:
+            x: 0.614
+            y: 0.016
+        world_points:
+          point1:
+            x: 2421.0
+            y: 16666.0
+            z: 1381.0
+          point2:
+            x: 3313.5
+            y: 15785.43
+            z: 0.0
+          point3:
+            x: 5538.401
+            y: 16431.743
+            z: 735.0
+          point4:
+            x: 4592.339
+            y: 17783.34
+            z: 170.0
+
+      closeCam:
+        image_points:
+          point1:
+            x: 0.500
+            y: 0.073
+          point2:
+            x: 0.448
+            y: 0.281
+          point3:
+            x: 0.493
+            y: 0.281
+          point4:
+            x: 0.843
+            y: 0.189
+        world_points:
+          point1:
+            x: 8195.95
+            y: 8668.0
+            z: 735.0
+          point2:
+            x: 8195.95
+            y: 8668.0
+            z: 0.0
+          point3:
+            x: 11686.5
+            y: 10153.43
+            z: 0.0
+          point4:
+            x: 12579.0
+            y: 11128.0
+            z: 1439.0
+
+#  far(1440, 1080)
+# far count --0-- : ( 847 , 239 ) (0.5882, 0.2213)
+# far count --1-- : ( 674 , 266 ) (0.4680, 0.2463)
+# far count --2-- : ( 722 , 593 ) (0.5013, 0.5491)
+# far count --3-- : ( 1216 , 228 ) (0.8444, 0.2111)
+#
+#  close
+# close count --0-- : ( 869 , 350 ) (0.6222, 0.3241)
+# close count --1-- : ( 758 , 357 ) (0.5264, 0.3306)
+# close count --2-- : ( 1291 , 199 ) (0.8965, 0.1843)
+# close count --3-- : ( 1212 , 250 ) (0.8417, 0.2315)
+

@@ -1,0 +1,133 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-1c3beae3761614222d99.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "yolov5_detect",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Hello_world::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Hello_world-Debug-6dca4242c4f9b693ed9c.json",
+					"name" : "Hello_world",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "deepsort::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-deepsort-Debug-5b2d35b932d6d9eeedbc.json",
+					"name" : "deepsort",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "myplugins::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-myplugins-Debug-0d287ba8ab47c191676b.json",
+					"name" : "myplugins",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-af38e6c141ab89d6da73.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolov5_detect::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolov5_detect-Debug-6fe3c4fbda249aaedd08.json",
+					"name" : "yolov5_detect",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolov5_detect_test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolov5_detect_test-Debug-7f3aa5ddc47ec3bd2516.json",
+					"name" : "yolov5_detect_test",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolov5_detect_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolov5_detect_uninstall-Debug-a80b4e05c41dc2630843.json",
+					"name" : "yolov5_detect_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolov5_detector::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolov5_detector-Debug-e4050681aff53c3b725a.json",
+					"name" : "yolov5_detector",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "yolov5_detector_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-yolov5_detector_node-Debug-52ca76c5663e3c12a255.json",
+					"name" : "yolov5_detector_node",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hlf/Desktop/radar24_ws/src/yolov5_detect/cmake-build-debug",
+		"source" : "/home/hlf/Desktop/radar24_ws/src/yolov5_detect"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

@@ -1,0 +1,44 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from radar_interfaces/msg/CameraInfo.msg
+// generated code does not contain a copyright notice
+
+#include "builtin_interfaces/msg/Time.idl"
+#include "std_msgs/msg/Header.idl"
+
+module radar_interfaces {
+  module msg {
+    @verbatim (language="comment", text=
+      " header")
+    struct CameraInfo {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        " sensor stamp")
+      builtin_interfaces::msg::Time dev_stamp;
+
+      uint32 frame_num;
+
+      @verbatim (language="comment", text=
+        " acqusistion")
+      float gain;
+
+      boolean if_auto_gain;
+
+      float exposure_time;
+
+      boolean if_auto_exposure;
+
+      float min_exposure_time;
+
+      float max_exposure_time;
+
+      @verbatim (language="comment", text=
+        " white balance")
+      uint32 white_balance_red;
+
+      uint32 white_balance_green;
+
+      uint32 white_balance_blue;
+    };
+  };
+};

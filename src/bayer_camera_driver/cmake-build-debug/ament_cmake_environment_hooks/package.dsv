@@ -1,0 +1,4 @@
+source;share/bayer_camera_driver/local_setup.bash
+source;share/bayer_camera_driver/local_setup.dsv
+source;share/bayer_camera_driver/local_setup.sh
+source;share/bayer_camera_driver/local_setup.zsh
