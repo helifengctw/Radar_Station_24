@@ -21,7 +21,7 @@ def generate_launch_description():
         name="pnp_solver",
         output="screen",
         emulate_tty=True,
-        respawn=True,
+        respawn=False,
         parameters=[radar_params, calib_default_points]
     )
 

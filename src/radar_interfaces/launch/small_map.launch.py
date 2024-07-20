@@ -16,7 +16,7 @@ def generate_launch_description():
         name="small_map",
         output="screen",
         emulate_tty=True,
-        respawn=True,
+        respawn=False,
         parameters=[small_map_params]
     )
 

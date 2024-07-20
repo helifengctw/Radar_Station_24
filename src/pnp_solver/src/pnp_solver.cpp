@@ -8,16 +8,18 @@
 #include "radar_interfaces/msg/dist_points.hpp"
 #include "radar_interfaces/msg/pnp_result.hpp"
 #include "radar_interfaces/msg/battle_color.hpp"
+#include "radar_interfaces/srv/pnp_result.hpp"
 
 using namespace std;
 using namespace cv;
 using std::placeholders::_1;
+using std::placeholders::_2;
 
 int red_or_blue = 0; // 0 stands for red, 1 stands for blue
 int imgCols = 1920, imgRows = 1200;
 bool far_received_one = false, close_received_one = false;
 
-int X_shift = 0, Y_shift = 0, total_count = 5;
+int X_shift = 0, Y_shift = 0, total_count = 4;
 vector<cv::Point3d> far_objectPoints(total_count);
 vector<cv::Point2f> far_imagePoints(total_count);
 cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
@@ -45,69 +47,65 @@ public:
                 "/sensor_far/calibration", 1, std::bind(&PnpSolver::far_calibration, this, _1));
         close_calib_subscription_ = this->create_subscription<radar_interfaces::msg::Points>(
                 "/sensor_close/calibration", 1, std::bind(&PnpSolver::close_calibration, this, _1));
-
-        Pnp_result_publisher_ = this->create_publisher<radar_interfaces::msg::PnpResult>("pnp_result", 10);
-
-        timer_ = this->create_wall_timer(5000ms, std::bind(&PnpSolver::timer_callback, this));
-        //因为参数是publish来更新的，如果small_map重启，并且没收到就无法再获得参数了
+        pnp_service_ = this->create_service<radar_interfaces::srv::PnpResult>(
+                "pnp_results", std::bind(&PnpSolver::PnpResultCallback, this, _1, _2),
+                rmw_qos_profile_services_default, callback_group_organization);
+        pnp_result_response = std::make_shared<radar_interfaces::srv::PnpResult::Response>();
+        RCLCPP_INFO(this->get_logger(), "pnp result server Ready!!!.");
 
         this->DeclareParams();
         this->LoadCameraParams();
         this->LoadPnpParams();
-    }
-    void send_Pnp_result(radar_interfaces::msg::PnpResult &msg);
 
+        // start calculating
+        cout << endl << "已读取到closeCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
+        cout << "close obj points:" << std::endl << close_objectPoints << endl;
+        cv::solvePnPRansac(close_objectPoints, close_imagePoints, close_CamMatrix_, close_distCoeffs_,
+                           close_Rjacob, close_T,cv::SOLVEPNP_AP3P);
+        Rodrigues(close_Rjacob, close_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
+        cout << "旋转矩阵:" << endl << close_R << endl;
+        cout << "平移矩阵:" << endl << close_T << endl;
+
+        cout << endl << "已读取到farCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
+        cout << "far obj points:" << std::endl << far_objectPoints << endl;
+        cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_,
+                           far_Rjacob, far_T, cv::SOLVEPNP_AP3P);
+        Rodrigues(far_Rjacob, far_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
+        cout << "旋转矩阵:" << endl << far_R << endl;
+        cout << "平移矩阵:" << endl << far_T << endl;
+
+        write_far_Pnp_srv();
+        write_close_Pnp_srv();
+    }
 
 private:
 
     rclcpp::Subscription<radar_interfaces::msg::Points>::SharedPtr far_calib_subscription_;
     rclcpp::Subscription<radar_interfaces::msg::Points>::SharedPtr close_calib_subscription_;
+    rclcpp::CallbackGroup::SharedPtr callback_group_organization;
+    rclcpp::Service<radar_interfaces::srv::PnpResult>::SharedPtr pnp_service_;
+    std::shared_ptr<radar_interfaces::srv::PnpResult::Response> pnp_result_response;
 
-    rclcpp::Publisher<radar_interfaces::msg::PnpResult>::SharedPtr Pnp_result_publisher_;
-
-    rclcpp::TimerBase::SharedPtr timer_;
-
-    void far_calibration(radar_interfaces::msg::Points::SharedPtr) const;
-    void close_calibration(radar_interfaces::msg::Points::SharedPtr) const;
-    void timer_callback();
+    void far_calibration(radar_interfaces::msg::Points::SharedPtr);
+    void close_calibration(radar_interfaces::msg::Points::SharedPtr);
+    void PnpResultCallback(const radar_interfaces::srv::PnpResult::Request::SharedPtr request,
+                           radar_interfaces::srv::PnpResult::Response::SharedPtr response);
+    void write_far_Pnp_srv();
+    void write_close_Pnp_srv();
     void DeclareParams();
     void LoadCameraParams();
     void LoadPnpParams();
 };
 
 
-radar_interfaces::msg::PnpResult Pnp_result_msg;
-void write_far_Pnp_msg();
-void write_close_Pnp_msg();
-
-
 int main(int argc, char **argv) {
     std::cout << "ros node init" << std::endl;
     rclcpp::init(argc, argv);
     auto PS_node = std::make_shared<PnpSolver>("pnp_solver");
-
-    // start calculating
-    cout << endl << "已读取到closeCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
-    cout << "close obj points:" << std::endl << close_objectPoints << endl;
-    cv::solvePnPRansac(close_objectPoints, close_imagePoints, close_CamMatrix_, close_distCoeffs_,
-                       close_Rjacob, close_T,cv::SOLVEPNP_AP3P);
-    Rodrigues(close_Rjacob, close_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
-    cout << "旋转矩阵:" << endl << close_R << endl;
-    cout << "平移矩阵:" << endl << close_T << endl;
-
-    cout << endl << "已读取到farCam默认参数值!下面进行SolvePnP求解外参矩阵。" << endl;
-    cout << "far obj points:" << std::endl << far_objectPoints << endl;
-    cv::solvePnPRansac(far_objectPoints, far_imagePoints, far_CamMatrix_, far_distCoeffs_,
-                       far_Rjacob, far_T, cv::SOLVEPNP_AP3P);
-    Rodrigues(far_Rjacob, far_R); //将R从雅可比形式转换为罗德里格斯形式,输出的R是3x3的一个矩阵。
-    cout << "旋转矩阵:" << endl << far_R << endl;
-    cout << "平移矩阵:" << endl << far_T << endl;
-
-    write_far_Pnp_msg();
-    write_close_Pnp_msg();
-    PS_node->send_Pnp_result(Pnp_result_msg);
-
-    rclcpp::spin(PS_node);
+    // 把节点的执行器变成多线程执行器, 避免死锁
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(PS_node);
+    executor.spin();
     rclcpp::shutdown();
 }
 
@@ -141,14 +139,12 @@ void PnpSolver::LoadCameraParams() {
         close_distCoeffs_.at<double>(i, 0) = temp_array[i];
     }
     cout << endl << "close_distCoeffs_:" << endl << close_distCoeffs_ << endl;
-
 }
 
 void PnpSolver::LoadPnpParams() {
     //读取默认pnp四点的坐标，保证求解所需参数值一直存在，防止意外重启造成pnp数据丢失。
     double x = 0, y = 0;
     cout << endl << "far_imagePoints and close_imagesPoints:" << endl;
-    // loop 4 times to get 4 corner points
     //世界坐标
     for (int i = 0; i < total_count; i++) {
         string parent_name_far = "calibrate_default_points.farCam.world_points.point";
@@ -230,7 +226,7 @@ void PnpSolver::DeclareParams() {
     this->declare_parameter<std::vector<double>>("sensor_close.uni_matrix", {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 }
 
-void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr msg) const {
+void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr msg) {
     std::cout << std::endl << "far 选点接收：" << std::endl;
     int count = 0;
     for (const auto &point: msg->data) {
@@ -248,12 +244,11 @@ void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr m
     cout << "suc:" << suc << endl;
     cout << "旋转矩阵:" << far_R << endl;
     cout << "平移矩阵" << far_T << endl;
-    
-    write_far_Pnp_msg();
-    this->Pnp_result_publisher_->publish(Pnp_result_msg);
+
+    write_far_Pnp_srv();
 }
 
-void PnpSolver::close_calibration(const radar_interfaces::msg::Points::SharedPtr msg) const {
+void PnpSolver::close_calibration(const radar_interfaces::msg::Points::SharedPtr msg) {
     std::cout << std::endl << "close 选点接收：" << std::endl;
     int count = 0;
     for (const auto &point: msg->data) {
@@ -273,36 +268,42 @@ void PnpSolver::close_calibration(const radar_interfaces::msg::Points::SharedPtr
     cout << "suc:" << suc << endl;
     cout << "旋转矩阵:" << close_R << endl;
     cout << "平移矩阵" << close_T << endl;
-    write_close_Pnp_msg();
-    this->Pnp_result_publisher_->publish(Pnp_result_msg);
+    write_close_Pnp_srv();
 }
 
-void PnpSolver::timer_callback()
-{
-    this->send_Pnp_result(Pnp_result_msg);
-}
-
-void PnpSolver::send_Pnp_result(radar_interfaces::msg::PnpResult &msg) {
-    this->Pnp_result_publisher_->publish(msg);
-}
-
-void write_far_Pnp_msg(){
+void PnpSolver::write_far_Pnp_srv(){
     for (int i = 0; i < 3; i++) {
-        Pnp_result_msg.far_t[i] = far_T.at<double>(i);
+        pnp_result_response->far_t[i] = far_T.at<double>(i);
         for (int j = 0; j < 3; j++) {
-            Pnp_result_msg.far_cam_matrix[3*i + j] = far_CamMatrix_.at<double>(i, j);
-            Pnp_result_msg.far_r[3*i + j] = far_R.at<double>(i, j);
+            pnp_result_response->far_cam_matrix[3*i + j] = far_CamMatrix_.at<double>(i, j);
+            pnp_result_response->far_r[3*i + j] = far_R.at<double>(i, j);
         }
     }
 }
 
-void write_close_Pnp_msg(){
+void PnpSolver::write_close_Pnp_srv(){
     for (int i = 0; i < 3; i++) {
-        Pnp_result_msg.close_t[i] = close_T.at<double>(i);
+        pnp_result_response->close_t[i] = close_T.at<double>(i);
         for (int j = 0; j < 3; j++) {
-            Pnp_result_msg.close_cam_matrix[3*i + j] = close_CamMatrix_.at<double>(i, j);
-            Pnp_result_msg.close_r[3*i + j] = close_R.at<double>(i, j);
+            pnp_result_response->close_cam_matrix[3*i + j] = close_CamMatrix_.at<double>(i, j);
+            pnp_result_response->close_r[3*i + j] = close_R.at<double>(i, j);
         }
+    }
+}
+
+void PnpSolver::PnpResultCallback(const radar_interfaces::srv::PnpResult::Request::SharedPtr request,
+                                  radar_interfaces::srv::PnpResult::Response::SharedPtr response) {
+    RCLCPP_INFO(this->get_logger(), "Incoming request\nsmall_map_qidong: %d", request->small_map_qidong);
+    if (request->small_map_qidong) {
+        pnp_result_response->if_ok = true;
+        response->if_ok = pnp_result_response->if_ok;
+        response->far_t = pnp_result_response->far_t;
+        response->far_cam_matrix = pnp_result_response->far_cam_matrix;
+        response->far_r = pnp_result_response->far_r;
+        response->close_t = pnp_result_response->close_t;
+        response->close_cam_matrix = pnp_result_response->close_cam_matrix;
+        response->close_r = pnp_result_response->close_r;
+        RCLCPP_INFO(this->get_logger(), "sending back response:%lf", response->far_t[0]);
     }
 }
 

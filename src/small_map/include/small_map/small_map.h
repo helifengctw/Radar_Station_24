@@ -14,6 +14,7 @@
 #include "radar_interfaces/msg/pnp_result.hpp"
 #include "radar_interfaces/msg/battle_color.hpp"
 #include "radar_interfaces/msg/mark_data.hpp"
+#include "radar_interfaces/srv/pnp_result.hpp"
 
 using namespace std;
 using namespace cv;
@@ -43,12 +44,13 @@ private:
     rclcpp::Subscription<radar_interfaces::msg::PnpResult>::SharedPtr Icp_result_subscription_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr world_point_publisher_;
+    rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedPtr Pnp_result_client_;
+    std::shared_ptr<radar_interfaces::srv::PnpResult::Request> pnp_request;
 
-
+    void Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedFuture response);
     void TimerCallback();
     void far_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
     void close_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
-    void Pnp_resultCallback(radar_interfaces::msg::PnpResult::SharedPtr);
     void Icp_resultCallback(radar_interfaces::msg::PnpResult::SharedPtr);
 
     void load_param();
@@ -69,7 +71,8 @@ private:
     cv::Mat close_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
     Mat close_R = Mat::eye(3, 3, CV_64FC1);
     Mat close_T = Mat::zeros(3, 1, CV_64FC1);
-    Mat far_invR, close_invR, far_invM, close_invM;
+    Mat far_invR = Mat::zeros(3, 3, CV_64FC1), far_invM = Mat::zeros(3, 3, CV_64FC1);
+    Mat close_invR = Mat::zeros(3, 3, CV_64FC1), close_invM = Mat::zeros(3, 3, CV_64FC1);
     int X_shift = 0, Y_shift = 0, red_or_blue = 0; // 0 : red, 1 : blue
     vector<Point2f> left_region = {Point(0, 0), Point(0, img_show_height),
                                    Point(168, img_show_height), Point(278, 0)};

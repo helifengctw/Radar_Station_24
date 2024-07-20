@@ -5,15 +5,9 @@ int main(int argc, char **argv) {
     std::cout << "ros node init" << std::endl;
     rclcpp::init(argc, argv);
     auto SM_node = std::make_shared<SmallMap>("small_map");
-
-//    rclcpp::Rate loop_rate(40);
-//    while (rclcpp::ok()) {
-//        rclcpp::spin_some(SM_node);
-//
-//        waitKey(1);
-//        loop_rate.sleep();
-//    }
-    rclcpp::spin(SM_node);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(SM_node);
+    executor.spin();
     rclcpp::shutdown();
     return 0;
 }
@@ -25,14 +19,13 @@ SmallMap::SmallMap(string name) : Node(name) {
             "/sensor_far/distance_point", 1, std::bind(&SmallMap::far_distPointCallback, this, _1));
     close_distant_point_subscription_ = this->create_subscription<radar_interfaces::msg::DistPoints>(
             "/sensor_close/distance_point", 1, std::bind(&SmallMap::close_distPointCallback, this, _1));
-    Pnp_result_subscription_ = this->create_subscription<radar_interfaces::msg::PnpResult>(
-            "pnp_result", 1, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
     Icp_result_subscription_ = this->create_subscription<radar_interfaces::msg::PnpResult>(
             "icp_result", 1, std::bind(&SmallMap::Icp_resultCallback, this, _1));
     timer_ = this->create_wall_timer(25ms, std::bind(&SmallMap::TimerCallback, this));
     world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 10);
-    this->load_param();
+    Pnp_result_client_ = this->create_client<radar_interfaces::srv::PnpResult>("pnp_results");
 
+    this->load_param();
     if (red_or_blue == 0) {
         std::string small_map_png =
                 std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/red_smallmap.png";
@@ -47,6 +40,23 @@ SmallMap::SmallMap(string name) : Node(name) {
     small_map.copyTo(small_map_copy);
     cv::namedWindow("small_map");
     cv::startWindowThread();
+
+    //等待服务端上线
+    while (!Pnp_result_client_->wait_for_service(1s))
+    {
+        if (!rclcpp::ok()) {
+            RCLCPP_ERROR(this->get_logger(), "等待被打断, 不等了");
+            rclcpp::shutdown();
+            break;
+        }
+        RCLCPP_INFO(this->get_logger(), "Request for pnp result");
+    }
+
+    pnp_request = std::make_shared<radar_interfaces::srv::PnpResult::Request>();
+    pnp_request->small_map_qidong = true;
+    RCLCPP_INFO(this->get_logger(), "small_map qidong: %d", pnp_request->small_map_qidong);
+    //发送异步请求，然后等待返回，返回时调用回调函数
+    Pnp_result_client_->async_send_request(pnp_request, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
 }
 
 SmallMap::~SmallMap() {
@@ -141,19 +151,19 @@ void SmallMap::close_distPointCallback(const radar_interfaces::msg::DistPoints::
     }
 }
 
-
-void SmallMap::Pnp_resultCallback(const radar_interfaces::msg::PnpResult::SharedPtr msg) {
+void SmallMap::Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedFuture response) {
+    auto& result = response.get();
     for (int i = 0; i < 3; i++) {
-        far_T.at<double>(i) = msg->far_t[i];
-        close_T.at<double>(i) = msg->close_t[i];
+        far_T.at<double>(i) = result->far_t[i];
+        close_T.at<double>(i) = result->close_t[i];
         for (int j = 0; j < 3; j++) {
-            far_CamMatrix_.at<double>(i, j) = msg->far_cam_matrix[3 * i + j];
-            far_R.at<double>(i, j) = msg->far_r[3 * i + j];
-            close_CamMatrix_.at<double>(i, j) = msg->close_cam_matrix[3 * i + j];
-            close_R.at<double>(i, j) = msg->close_r[3 * i + j];
+            far_CamMatrix_.at<double>(i, j) = result->far_cam_matrix[3 * i + j];
+            far_R.at<double>(i, j) = result->far_r[3 * i + j];
+            close_CamMatrix_.at<double>(i, j) = result->close_cam_matrix[3 * i + j];
+            close_R.at<double>(i, j) = result->close_r[3 * i + j];
         }
     }
-    cout << "pnp result received" << endl;
+    cout << "pnp result if ok?: " << result->if_ok;
     cout << endl << "far R matrix load done!" << endl << far_R << endl;
     cout << endl << "far T matrix load done!" << endl << far_T << endl;
     cout << endl << "close R matrix load done!" << endl << close_R << endl;
@@ -193,12 +203,12 @@ void SmallMap::add_grid(cv::Mat &src) {
 }
 
 void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image) {
-    Scalar scalar;
+    Scalar color;
     string id;
-    if (point.id <= 5 || point.id == 12) scalar = color_table["Red"];//Scalar(0, 0, 255);
-    else scalar = color_table["Blue"];
+    if (point.id <= 5 || point.id == 12) color = color_table["Red"];//Scalar(0, 0, 255);
+    else color = color_table["Blue"];
     circle(image, calculate_pixel_codi(point), 10,
-           scalar, -1, LINE_8, 0);
+           color, -1, LINE_8, 0);
     if (point.id != 12 && point.id != 13) {
         if (point.id <= 5) id = to_string(point.id + 1);
         if (point.id == 5) id = "G";
@@ -209,8 +219,7 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
     }
 }
 
-void SmallMap::remove_duplicate() {
-    vector<radar_interfaces::msg::Point>().swap(result_points.data);
+void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(result_points.data);
 //    std::vector<std::vector<radar_interfaces::msg::Point>::iterator> far_remove_list, close_remove_list ;
 //    for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
 //        for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
@@ -381,9 +390,9 @@ void SmallMap::remove_duplicate() {
 //    }
 }
 
-radar_interfaces::msg::Point
-SmallMap::calculate_relative_codi(const Point3f &guard, const radar_interfaces::msg::Point &enemy,
-                                  uint8_t priority_id) {
+radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &guard,
+                                                               const radar_interfaces::msg::Point &enemy,
+                                                               uint8_t priority_id) {
     radar_interfaces::msg::Point re_codi;
     re_codi.x = enemy.x * field_height - guard.x;
     re_codi.y = enemy.y * field_width - guard.y;
@@ -433,13 +442,16 @@ bool SmallMap::is_enemy_car(uint8_t id) {
 }
 
 void SmallMap::load_param() {
-    this->declare_parameter<int>("small_map_params.small_map_shift_X", 0);
-    this->declare_parameter<int>("small_map_params.small_map_shift_Y", 0);
-    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
+//    this->declare_parameter<int>("small_map_params.small_map_shift_X", 0);
+//    this->declare_parameter<int>("small_map_params.small_map_shift_Y", 0);
+//    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
 
-    X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
-    Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
-    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
+//    X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
+//    Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
+//    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
+    X_shift = 0;
+    Y_shift = 0;
+    string btlcolor = "blue";
     cout << endl << "Load X_shift, Y_shift, red_or_blue : " << endl;
     cout << "\t" << X_shift << "\t" << Y_shift << "\t" << btlcolor << endl;
     if (btlcolor == "red") red_or_blue = 0;

@@ -38,6 +38,7 @@ rosidl_generate_interfaces(radar_interfaces
       "msg/PnpResult.msg"
       "msg/MarkData.msg"
       "msg/CameraInfo.msg"
+      "srv/PnpResult.srv"
       DEPENDENCIES std_msgs
 )
 

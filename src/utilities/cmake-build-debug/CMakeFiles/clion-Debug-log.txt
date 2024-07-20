@@ -22,6 +22,6 @@
 -- Added test 'uncrustify' to check C / C++ code style
 -- Configured uncrustify additional arguments: 
 -- Added test 'xmllint' to check XML markup files
--- Configuring done (1.3s)
+-- Configuring done (1.2s)
 -- Generating done (0.0s)
 -- Build files have been written to: /home/hlf/Desktop/radar24_ws/src/utilities/cmake-build-debug
