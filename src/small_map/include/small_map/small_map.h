@@ -79,8 +79,8 @@ private:
     vector<Point2f> right_region = {Point(278, 0), Point(168, img_show_height),
                                     Point(img_show_width, img_show_height), Point(img_show_width, 0)};
 
-    double field_width = 15, field_height = 28;
-    int img_show_width = 15*30, img_show_height = 28*30;
+    double field_width = 14.0, field_height = 15.0;
+    int img_show_width = (int)field_width*30, img_show_height = (int)field_height*30;
     double imgCols = 1920.0, imgRows = 1200.0;
     double dist_threshold = 0.8;
 

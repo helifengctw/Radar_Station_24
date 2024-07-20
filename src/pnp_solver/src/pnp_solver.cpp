@@ -19,7 +19,7 @@ int red_or_blue = 0; // 0 stands for red, 1 stands for blue
 int imgCols = 1920, imgRows = 1200;
 bool far_received_one = false, close_received_one = false;
 
-int X_shift = 0, Y_shift = 0, total_count = 4;
+int X_shift = 0, Y_shift = 0, total_count = 5;
 vector<cv::Point3d> far_objectPoints(total_count);
 vector<cv::Point2f> far_imagePoints(total_count);
 cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);

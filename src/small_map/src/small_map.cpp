@@ -109,8 +109,8 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             x8_pixel *= (1000 * input->data[i].dist);  // input->data[i].dist -- *10m
             Mat calcWorld = far_invR * (far_invM * x8_pixel - far_T); //2D-3D变换
             calcWorld /= 1000; // 单位：mm => m
-            double x = calcWorld.at<double>(0, 0) / field_width;
-            double y = calcWorld.at<double>(1, 0) / field_height;
+            double x = calcWorld.at<double>(0, 0) / field_height;
+            double y = calcWorld.at<double>(1, 0) / field_width;
             radar_interfaces::msg::Point point;
             point.x = (float) x;
             point.y = (float) y;
@@ -120,7 +120,7 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             point.tracker_id = input->data[i].tracker_id;
             if (point.id == 66) {
                 mouse_click_flag = true;
-                mouse_point = Point2f(x * field_width, y * field_height);
+                mouse_point = Point2f(x * field_height, y * field_width);
             }
             far_points.data.push_back(point);
         }
@@ -136,8 +136,8 @@ void SmallMap::close_distPointCallback(const radar_interfaces::msg::DistPoints::
             x8_pixel *= (1000 * input->data[i].dist);
             Mat calcWorld = close_invR * (close_invM * x8_pixel - close_T); //2D-3D变换
             calcWorld /= 1000;
-            double x = calcWorld.at<double>(0, 0) / field_width;
-            double y = calcWorld.at<double>(1, 0) / field_height;
+            double x = calcWorld.at<double>(0, 0) / field_height;
+            double y = calcWorld.at<double>(1, 0) / field_width;
             radar_interfaces::msg::Point point;
             point.x = (float) x;
             point.y = (float) y;
@@ -220,42 +220,42 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
 }
 
 void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(result_points.data);
-//    std::vector<std::vector<radar_interfaces::msg::Point>::iterator> far_remove_list, close_remove_list ;
-//    for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
-//        for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
-//            if (pf_iter->id == pc_iter->id && pc_iter->id < 12 && pf_iter->id < 12) { // 去除两侧同序号的点
-//                double dist_m = calculate_dist(*pf_iter, *pc_iter);
-//                radar_interfaces::msg::Point center;
-//                if (dist_m < dist_threshold) {
-//                    center.id = pf_iter->id;
-//                    center.x = (pf_iter->x + pc_iter->x) / 2;
-//                    center.y = (pf_iter->y + pf_iter->y) / 2;
-//                } else {
-//                    if (pf_iter->conf > pc_iter->conf) {
-//                        center.id = pf_iter->id;
-//                        center.x = pf_iter->x;
-//                        center.y = pf_iter->y;
-//                    } else {
-//                        center.id = pc_iter->id;
-//                        center.x = pc_iter->x;
-//                        center.y = pc_iter->y;
-//                    }
-//                }
-//                result_points.data.emplace_back(center);
-//                far_remove_list.push_back(pf_iter);
-//                close_remove_list.push_back(pc_iter);
-//                break;
-//            }
-//        }
-//    }
-//    if (!far_remove_list.empty() && !close_remove_list.empty()) {
-//        for (auto i : far_remove_list) {
-//            far_points.data.erase(i);
-//        }
-//        for (auto j : close_remove_list) {
-//            close_points.data.erase(j);
-//        }
-//    }
+    std::vector<std::vector<radar_interfaces::msg::Point>::iterator> far_remove_list, close_remove_list ;
+    for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
+        for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
+            if (pf_iter->id == pc_iter->id && pc_iter->id < 12 && pf_iter->id < 12) { // 去除两侧同序号的点
+                double dist_m = calculate_dist(*pf_iter, *pc_iter);
+                radar_interfaces::msg::Point center;
+                if (dist_m < dist_threshold) {
+                    center.id = pf_iter->id;
+                    center.x = (pf_iter->x + pc_iter->x) / 2;
+                    center.y = (pf_iter->y + pf_iter->y) / 2;
+                } else {
+                    if (pf_iter->conf > pc_iter->conf) {
+                        center.id = pf_iter->id;
+                        center.x = pf_iter->x;
+                        center.y = pf_iter->y;
+                    } else {
+                        center.id = pc_iter->id;
+                        center.x = pc_iter->x;
+                        center.y = pc_iter->y;
+                    }
+                }
+                result_points.data.emplace_back(center);
+                far_remove_list.push_back(pf_iter);
+                close_remove_list.push_back(pc_iter);
+                break;
+            }
+        }
+    }
+    if (!far_remove_list.empty() && !close_remove_list.empty()) {
+        for (auto i : far_remove_list) {
+            far_points.data.erase(i);
+        }
+        for (auto j : close_remove_list) {
+            close_points.data.erase(j);
+        }
+    }
     for (auto i : far_points.data) {
         result_points.data.push_back(i);
     }
@@ -406,15 +406,17 @@ radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &gu
  */
 Point2f SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point) {
     Point2f res;
-    res.x = point.x * img_show_width - (float) X_shift;
-    res.y = (1 - point.y) * img_show_height - (float) Y_shift;
+    res.x = (1 - point.y) * img_show_width - (float) X_shift;
+    res.y = (1 - point.x) * img_show_height - (float) Y_shift;
+//    res.x = point.x * img_show_width - (float) X_shift;
+//    res.y = point.y * img_show_height - (float) Y_shift;
     return res;
 }
 
 Point2f SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &point) {
     Point2f res;
-    res.x = point.x * img_show_width - (float) X_shift - 7;
-    res.y = (1 - point.y) * img_show_height - (float) Y_shift + 7;
+    res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;
+    res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
     return res;
 }
 
@@ -451,7 +453,7 @@ void SmallMap::load_param() {
 //    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
     X_shift = 0;
     Y_shift = 0;
-    string btlcolor = "blue";
+    string btlcolor = "red";
     cout << endl << "Load X_shift, Y_shift, red_or_blue : " << endl;
     cout << "\t" << X_shift << "\t" << Y_shift << "\t" << btlcolor << endl;
     if (btlcolor == "red") red_or_blue = 0;
