@@ -61,8 +61,8 @@ private:
     double calculate_dist(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b);
     double Point2PointDist(const radar_interfaces::msg::Point &a, const Point3f &b);
     radar_interfaces::msg::Point calculate_relative_codi(const Point3f &guard, const radar_interfaces::msg::Point &enemy, uint8_t priority_id);
-    Point2f calculate_pixel_codi(const radar_interfaces::msg::Point &point);
-    Point2f calculate_pixel_text_codi(const radar_interfaces::msg::Point &point);
+    Point2d calculate_pixel_codi(const radar_interfaces::msg::Point &point);
+    Point2d calculate_pixel_text_codi(const radar_interfaces::msg::Point &point);
     void add_grid(cv::Mat &src);
     bool check_same_color(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b);
 

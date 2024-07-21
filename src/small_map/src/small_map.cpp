@@ -27,7 +27,8 @@ SmallMap::SmallMap(string name) : Node(name) {
 
     this->load_param();
 
-    img_show_width = (int)field_width*30, img_show_height = (int)field_height*30;
+    img_show_width = (int)field_width*30;
+    img_show_height = (int)field_height*30;
     small_map = cv::imread(small_map_png_path);
     if (small_map.empty()) RCLCPP_ERROR(this->get_logger(), "small map load failed!!!");
     cv::resize(small_map, small_map, Size(img_show_width, img_show_height));
@@ -219,7 +220,7 @@ void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(r
                 }
             }
         }
-        if (dist_threshold - min_dist < 0.05) break;// 最小的距离都小于阀值，退出循环
+        if (dist_threshold <= min_dist) break;// 最小的距离都小于阀值，退出循环
         else if (min_dist < dist_threshold) {
             int admit_condition = 0; // 0:both, 1:conf, 2:center
             radar_interfaces::msg::Point far_tp = *far_target_iter, close_tp = *close_target_iter;
@@ -229,12 +230,12 @@ void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(r
                 } else if ((far_tp.id == 12 && close_tp.id == 12) || (far_tp.id == 13 && close_tp.id == 13)) {
                     bool far_find_same_color = false, close_find_same_color = false;
                     for (auto i : close_points.data) {
-                        if (calculate_dist(far_tp, i) < dist_threshold+0.5, check_same_color(i, far_tp)) {
+                        if (calculate_dist(far_tp, i) < dist_threshold+1.0 && check_same_color(i, far_tp)) {
                             far_find_same_color = true;
                         }
                     }
                     for (auto i : far_points.data) {
-                        if (calculate_dist(close_tp, i) < dist_threshold+0.5 && check_same_color(i, close_tp)) {
+                        if (calculate_dist(close_tp, i) < dist_threshold+1.0 && check_same_color(i, close_tp)) {
                             close_find_same_color = true;
                         }
                     }
@@ -243,20 +244,16 @@ void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(r
                 } else { // 两车同色，异号或者其中一个未知
                     bool far_find_same_id = false, far_find_same_color = false,
                     close_find_same_id = false, close_find_same_color = false;
-                    if (far_tp.id < 12) {
-                        for (auto i : close_points.data) {
-                            if (calculate_dist(far_tp, i) < dist_threshold+0.5) {
-                                if (i.id == far_tp.id) far_find_same_id = true;
-                                if (check_same_color(i, far_tp)) far_find_same_color = true;
-                            }
+                    for (auto i : close_points.data) {
+                        if (calculate_dist(far_tp, i) < dist_threshold+1.0) {
+                            if (i.id == far_tp.id && far_tp.id < 12) far_find_same_id = true;
+                            if (check_same_color(i, far_tp)) far_find_same_color = true;
                         }
                     }
-                    if (close_tp.id < 12) {
-                        for (auto i : far_points.data) {
-                            if (calculate_dist(close_tp, i) < dist_threshold+0.5) {
-                                if (i.id == close_tp.id) close_find_same_id = true;
-                                if (check_same_color(i, close_tp)) close_find_same_color = true;
-                            }
+                    for (auto i : far_points.data) {
+                        if (calculate_dist(close_tp, i) < dist_threshold+1.0) {
+                            if (i.id == close_tp.id && close_tp.id < 12) close_find_same_id = true;
+                            if (check_same_color(i, close_tp)) close_find_same_color = true;
                         }
                     }
                     if (far_find_same_id || close_find_same_id) admit_condition = 0; // 同色异号，认为是两辆车
@@ -284,6 +281,7 @@ void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(r
             close_points.data.erase(close_target_iter);
         }
     }
+    std::cout << "loop_count: " << loop_count << endl;
     for (auto i : far_points.data) {
         result_points.data.push_back(i);
     }
@@ -306,31 +304,31 @@ radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &gu
 /*
  * 把result_points 里面归一化的点转换成小地图(450*840)图像中的像素座标
  */
-Point2f SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point) {
-    Point2f res;
-    if (!red_or_blue) {
-        res.x = (1 - point.y) * img_show_width - (float) X_shift;
-        res.y = (1 - point.x) * img_show_height - (float) Y_shift;
-    } else {
-        res.x = point.y * img_show_width - (float) X_shift;
-        res.y = point.x * img_show_height - (float) Y_shift;
-    }
-//    res.x = point.x * img_show_width - (float) X_shift;
-//    res.y = point.y * img_show_height - (float) Y_shift;
+Point2d SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point) {
+    Point2d res;
+    res.x = (1 - point.y) * img_show_width - X_shift;
+    res.y = (1 - point.x) * img_show_height - Y_shift;
+//    if (!red_or_blue) {
+//        res.x = (1 - point.y) * img_show_width - X_shift;
+//        res.y = (1 - point.x) * img_show_height - Y_shift;
+//    } else {
+//        res.x = point.y * img_show_width - X_shift;
+//        res.y = point.x * img_show_height - Y_shift;
+//    }
     return res;
 }
 
-Point2f SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &point) {
-    Point2f res;
-    if (!red_or_blue) {
-        res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;;
-        res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
-    } else {
-        res.x = point.y * img_show_width - (float) X_shift - 7;;
-        res.y = point.x * img_show_height - (float) Y_shift + 7;
-    }
-//    res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;
-//    res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
+Point2d SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &point) {
+    Point2d res;
+    res.x = (1 - point.y) * img_show_width - X_shift - 7;;
+    res.y = (1 - point.x) * img_show_height - Y_shift + 7;
+//    if (!red_or_blue) {
+//        res.x = (1 - point.y) * img_show_width - X_shift - 7;;
+//        res.y = (1 - point.x) * img_show_height - Y_shift + 7;
+//    } else {
+//        res.x = point.y * img_show_width - X_shift - 7;;
+//        res.y = point.x * img_show_height - Y_shift + 7;
+//    }
     return res;
 }
 
@@ -367,7 +365,7 @@ bool SmallMap::check_same_color(const radar_interfaces::msg::Point &a, const rad
 void SmallMap::load_param() {
     this->declare_parameter<int>("small_map_params.small_map_shift_X", 0);
     this->declare_parameter<int>("small_map_params.small_map_shift_Y", 0);
-    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
+    this->declare_parameter<std::string>("battle_state.our_color", "empty");
     this->declare_parameter<double>("small_map_params.dist_threshold", 0.0);
     this->declare_parameter<double>("small_map_params.field_width", 0.0);
     this->declare_parameter<double>("small_map_params.field_height", 0.0);
@@ -376,14 +374,14 @@ void SmallMap::load_param() {
 
     X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
     Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
-    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
+    string btlcolor = this->get_parameter("battle_state.our_color").as_string();
     dist_threshold = this->get_parameter("small_map_params.dist_threshold").as_double();  // =1.6
     field_width = this->get_parameter("small_map_params.field_width").as_double();  // =14.0
     field_height = this->get_parameter("small_map_params.field_height").as_double();  // =15.0
     imgCols = this->get_parameter("small_map_params.imgCols").as_double();  // =1920.0
     imgRows = this->get_parameter("small_map_params.imgRows").as_double();  // =1200.0
 
-    RCLCPP_INFO(this->get_logger(), "Load X_shift--%d, Y_shift--%d, red_or_blue--%s", X_shift, Y_shift, btlcolor.c_str());
+    RCLCPP_INFO(this->get_logger(), "Load X_shift--%d, Y_shift--%d, our_color--%s", X_shift, Y_shift, btlcolor.c_str());
     RCLCPP_INFO(this->get_logger(), "field_width--%f, field_height--%f", field_width, field_height);
     RCLCPP_INFO(this->get_logger(), "imgCols--%f, imgRows--%f", imgCols, imgRows);
     RCLCPP_INFO(this->get_logger(), "dist_threshold--%f", dist_threshold);

@@ -410,12 +410,10 @@ This warning is for project developers.  Use -Wno-dev to suppress it.
 -- Configured cppcheck exclude dirs and/or files: 
 -- Added test 'cpplint' to check C / C++ code against the Google style
 -- Configured cpplint exclude dirs and/or files: 
--- Added test 'flake8' to check Python code syntax and style conventions
 -- Added test 'lint_cmake' to check CMake code style
--- Added test 'pep257' to check Python code against some of the style conventions in PEP 257
 -- Added test 'uncrustify' to check C / C++ code style
 -- Configured uncrustify additional arguments: 
 -- Added test 'xmllint' to check XML markup files
--- Configuring done (1.2s)
+-- Configuring done (1.3s)
 -- Generating done (0.1s)
 -- Build files have been written to: /home/hlf/Desktop/radar24_ws/src/get_depth/cmake-build-debug
