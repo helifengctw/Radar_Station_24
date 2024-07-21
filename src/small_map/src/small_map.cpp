@@ -26,15 +26,9 @@ SmallMap::SmallMap(string name) : Node(name) {
     Pnp_result_client_ = this->create_client<radar_interfaces::srv::PnpResult>("pnp_results");
 
     this->load_param();
-    if (red_or_blue == 0) {
-        std::string small_map_png =
-                std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/red_smallmap.png";
-        small_map = cv::imread(small_map_png);
-    } else {
-        std::string small_map_png =
-                std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/blue_smallmap.png";
-        small_map = cv::imread(small_map_png);
-    }
+
+    img_show_width = (int)field_width*30, img_show_height = (int)field_height*30;
+    small_map = cv::imread(small_map_png_path);
     if (small_map.empty()) RCLCPP_ERROR(this->get_logger(), "small map load failed!!!");
     cv::resize(small_map, small_map, Size(img_show_width, img_show_height));
     small_map.copyTo(small_map_copy);
@@ -70,24 +64,6 @@ void SmallMap::TimerCallback() {
     for (auto &i: result_points.data) {
         draw_point_on_map(i, small_map_copy);
     }
-//    vector<radar_interfaces::msg::Point>().swap(filtered_result_points.data);
-//    //根据裁判系统的标记进度，确定哪些tracker_id需要锁定
-//    for (auto &i: result_points.data) {
-//        if (is_enemy_car(i.id)) {
-//            if (red_or_blue == 0 && i.id <= 5) {
-//                filtered_result_points.data.emplace_back(i);
-//                // TODO : cancel debug out
-//                std::cout << "id : " << (int) i.id << ", [ " << i.x << " , " << i.y << " , " << i.z << " ]" << std::endl;
-//                // TODO : end at here
-//            } else if (red_or_blue == 1 && i.id >= 6 && i.id <= 11) { // id >= 6 || id == 13
-//                filtered_result_points.data.emplace_back(i);
-//                // TODO : cancel debug out
-//                std::cout << "id : " << (int) i.id << ", [ " << i.x << " , " << i.y << " , " << i.z << " ]" << std::endl;
-//                // TODO : end at here
-//            }
-//        }
-//        draw_point_on_map(i, small_map_copy);
-//    }
     this->world_point_publisher_->publish(result_points);
 
     if (mouse_click_flag) {
@@ -109,8 +85,15 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             x8_pixel *= (1000 * input->data[i].dist);  // input->data[i].dist -- *10m
             Mat calcWorld = far_invR * (far_invM * x8_pixel - far_T); //2D-3D变换
             calcWorld /= 1000; // 单位：mm => m
-            double x = calcWorld.at<double>(0, 0) / field_height;
-            double y = calcWorld.at<double>(1, 0) / field_width;
+            double x, y;
+            if (red_or_blue) {
+                x = calcWorld.at<double>(0, 0) / field_height;
+                y = calcWorld.at<double>(1, 0) / field_width;
+            } else {
+                x = (1 - calcWorld.at<double>(0, 0)) / field_height;
+                y = (1 - calcWorld.at<double>(1, 0)) / field_width;
+            }
+
             radar_interfaces::msg::Point point;
             point.x = (float) x;
             point.y = (float) y;
@@ -220,174 +203,93 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
 }
 
 void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(result_points.data);
-    std::vector<std::vector<radar_interfaces::msg::Point>::iterator> far_remove_list, close_remove_list ;
-    for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
-        for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
-            if (pf_iter->id == pc_iter->id && pc_iter->id < 12 && pf_iter->id < 12) { // 去除两侧同序号的点
+    vector<radar_interfaces::msg::Point>().swap(result_points.data);
+    std::vector<radar_interfaces::msg::Point>::iterator far_target_iter, close_target_iter;
+    int loop_count = 0, loop_max = 7;
+    while (true) {
+        if (loop_count++ > loop_max) break;
+        double min_dist = dist_threshold; // dist 经过计算后是以米为单位的
+        for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
+            for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
                 double dist_m = calculate_dist(*pf_iter, *pc_iter);
-                radar_interfaces::msg::Point center;
-                if (dist_m < dist_threshold) {
-                    center.id = pf_iter->id;
-                    center.x = (pf_iter->x + pc_iter->x) / 2;
-                    center.y = (pf_iter->y + pf_iter->y) / 2;
-                } else {
-                    if (pf_iter->conf > pc_iter->conf) {
-                        center.id = pf_iter->id;
-                        center.x = pf_iter->x;
-                        center.y = pf_iter->y;
-                    } else {
-                        center.id = pc_iter->id;
-                        center.x = pc_iter->x;
-                        center.y = pc_iter->y;
-                    }
+                if (dist_m < min_dist) {
+                    min_dist = dist_m;
+                    far_target_iter = pf_iter;
+                    close_target_iter = pc_iter;
                 }
-                result_points.data.emplace_back(center);
-                far_remove_list.push_back(pf_iter);
-                close_remove_list.push_back(pc_iter);
-                break;
             }
         }
-    }
-    if (!far_remove_list.empty() && !close_remove_list.empty()) {
-        for (auto i : far_remove_list) {
-            far_points.data.erase(i);
-        }
-        for (auto j : close_remove_list) {
-            close_points.data.erase(j);
+        if (dist_threshold - min_dist < 0.05) break;// 最小的距离都小于阀值，退出循环
+        else if (min_dist < dist_threshold) {
+            int admit_condition = 0; // 0:both, 1:conf, 2:center
+            radar_interfaces::msg::Point far_tp = *far_target_iter, close_tp = *close_target_iter;
+            if (check_same_color(far_tp, close_tp)) { // 两车同色
+                if (far_tp.id == close_tp.id) {
+                    admit_condition = 2;
+                } else if ((far_tp.id == 12 && close_tp.id == 12) || (far_tp.id == 13 && close_tp.id == 13)) {
+                    bool far_find_same_color = false, close_find_same_color = false;
+                    for (auto i : close_points.data) {
+                        if (calculate_dist(far_tp, i) < dist_threshold+0.5, check_same_color(i, far_tp)) {
+                            far_find_same_color = true;
+                        }
+                    }
+                    for (auto i : far_points.data) {
+                        if (calculate_dist(close_tp, i) < dist_threshold+0.5 && check_same_color(i, close_tp)) {
+                            close_find_same_color = true;
+                        }
+                    }
+                    if (far_find_same_color && close_find_same_color) admit_condition = 0;
+                    else admit_condition = 1;
+                } else { // 两车同色，异号或者其中一个未知
+                    bool far_find_same_id = false, far_find_same_color = false,
+                    close_find_same_id = false, close_find_same_color = false;
+                    if (far_tp.id < 12) {
+                        for (auto i : close_points.data) {
+                            if (calculate_dist(far_tp, i) < dist_threshold+0.5) {
+                                if (i.id == far_tp.id) far_find_same_id = true;
+                                if (check_same_color(i, far_tp)) far_find_same_color = true;
+                            }
+                        }
+                    }
+                    if (close_tp.id < 12) {
+                        for (auto i : far_points.data) {
+                            if (calculate_dist(close_tp, i) < dist_threshold+0.5) {
+                                if (i.id == close_tp.id) close_find_same_id = true;
+                                if (check_same_color(i, close_tp)) close_find_same_color = true;
+                            }
+                        }
+                    }
+                    if (far_find_same_id || close_find_same_id) admit_condition = 0; // 同色异号，认为是两辆车
+                    else {
+                        if (far_find_same_color && close_find_same_color) admit_condition = 0;
+                        else admit_condition = 1;
+                    }
+                }
+            } else admit_condition = 0; //两车异色，认为是两辆车
+
+            if (admit_condition == 0) { // 0:both, 1:conf, 2:center
+                result_points.data.emplace_back(far_tp);
+                result_points.data.emplace_back(close_tp);
+            } else if (admit_condition == 1) {
+                if (far_tp.conf > close_tp.conf) result_points.data.emplace_back(far_tp);
+                else result_points.data.emplace_back(close_tp);
+            } else if (admit_condition == 2) {
+                radar_interfaces::msg::Point center;
+                center.id = far_tp.id;
+                center.x = (far_tp.x + close_tp.x) / 2;
+                center.y = (far_tp.y + close_tp.y) / 2;
+                result_points.data.emplace_back(center);
+            }
+            far_points.data.erase(far_target_iter);
+            close_points.data.erase(close_target_iter);
         }
     }
     for (auto i : far_points.data) {
         result_points.data.push_back(i);
     }
-    for (auto j : close_points.data) {
-        result_points.data.push_back(j);
+    for (auto i : close_points.data) {
+        result_points.data.push_back(i);
     }
-
-
-//    radar_interfaces::msg::Points left_may_overlap_points;
-//    radar_interfaces::msg::Points right_may_overlap_points;
-//    for (auto &i: far_points.data) {
-//        double test = pointPolygonTest(left_region, calculate_pixel_codi(i), false);
-//        double test2 = pointPolygonTest(right_region, calculate_pixel_codi(i), false);
-//        if (test > 0 && test2 < 0) {
-//            result_points.data.emplace_back(i);
-//        } else if (test == 0 && i.x != 200) {
-//            result_points.data.emplace_back(i);
-//        } else if (test2 <= 0) {
-//            left_may_overlap_points.data.emplace_back(i);
-//        }
-//    }
-//    for (auto &i: close_points.data) {
-//        double test = pointPolygonTest(right_region, calculate_pixel_codi(i), false);
-//        double test2 = pointPolygonTest(left_region, calculate_pixel_codi(i), false);
-//        if (test > 0) {
-//            result_points.data.emplace_back(i);
-//        } else if (test == 0 && i.x != 255) {
-//            result_points.data.emplace_back(i);
-//        } else if (test2 <= 0) {
-//            right_may_overlap_points.data.emplace_back(i);
-//        }
-//    }
-
-    //    for (auto it_left_a = left_may_overlap_points.data.begin(); it_left < left_may_overlap_points.data.end();) {
-//        for (auto it_left_b = right_may_overlap_points.data.begin(); it_right < right_may_overlap_points.data.end();) {
-//            if (it_left->id == it_right->id && it_left->id == 12 && calculate_dist(*it_left, *it_right) < 5) {
-//                radar_interfaces::msg::Point center;
-//                center.id = 12;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty()) left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty()) right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            } else if (it_left->id == it_right->id && it_left->id == 13 && calculate_dist(*it_left, *it_right) < 5) {
-//                radar_interfaces::msg::Point center;
-//                center.id = 13;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty())left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty())right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            } else if (it_left->id == it_right->id && it_left->id < 12 && it_left->id > 0) {
-//                radar_interfaces::msg::Point center;
-//                center.id = it_left->id;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty())left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty())right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            }
-//            if (inner_erase_flag == 1) {
-//                inner_erase_flag = 0;
-//                continue;
-//            }
-//            it_right++;
-//        }
-//        if (outer_erase_flag == 1) {
-//            outer_erase_flag = 0;
-//            continue;
-//        }
-//        it_left++;
-//    }
-
-//    uint8_t inner_erase_flag = 0;
-//    uint8_t outer_erase_flag = 0;
-//    for (auto it_left = left_may_overlap_points.data.begin(); it_left < left_may_overlap_points.data.end();) {
-//        for (auto it_right = right_may_overlap_points.data.begin(); it_right < right_may_overlap_points.data.end();) {
-//            if (it_left->id == it_right->id && it_left->id == 12 && calculate_dist(*it_left, *it_right) < 5) {
-//                radar_interfaces::msg::Point center;
-//                center.id = 12;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty()) left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty()) right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            } else if (it_left->id == it_right->id && it_left->id == 13 && calculate_dist(*it_left, *it_right) < 5) {
-//                radar_interfaces::msg::Point center;
-//                center.id = 13;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty())left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty())right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            } else if (it_left->id == it_right->id && it_left->id < 12 && it_left->id > 0) {
-//                radar_interfaces::msg::Point center;
-//                center.id = it_left->id;
-//                center.x = (it_left->x + it_right->x) / 2;
-//                center.y = (it_left->y + it_right->y) / 2;
-//                result_points.data.emplace_back(center);
-//                if (!left_may_overlap_points.data.empty())left_may_overlap_points.data.erase(it_left);
-//                if (!right_may_overlap_points.data.empty())right_may_overlap_points.data.erase(it_right);
-//                inner_erase_flag = 1;
-//                outer_erase_flag = 1;
-//            }
-//            if (inner_erase_flag == 1) {
-//                inner_erase_flag = 0;
-//                continue;
-//            }
-//            it_right++;
-//        }
-//        if (outer_erase_flag == 1) {
-//            outer_erase_flag = 0;
-//            continue;
-//        }
-//        it_left++;
-//    }
-//    for (auto &i: left_may_overlap_points.data) {
-//        result_points.data.emplace_back(i);
-//    }
-//    for (auto &i: right_may_overlap_points.data) {
-//        result_points.data.emplace_back(i);
-//    }
 }
 
 radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &guard,
@@ -406,8 +308,13 @@ radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &gu
  */
 Point2f SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point) {
     Point2f res;
-    res.x = (1 - point.y) * img_show_width - (float) X_shift;
-    res.y = (1 - point.x) * img_show_height - (float) Y_shift;
+    if (!red_or_blue) {
+        res.x = (1 - point.y) * img_show_width - (float) X_shift;
+        res.y = (1 - point.x) * img_show_height - (float) Y_shift;
+    } else {
+        res.x = point.y * img_show_width - (float) X_shift;
+        res.y = point.x * img_show_height - (float) Y_shift;
+    }
 //    res.x = point.x * img_show_width - (float) X_shift;
 //    res.y = point.y * img_show_height - (float) Y_shift;
     return res;
@@ -415,8 +322,15 @@ Point2f SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point
 
 Point2f SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &point) {
     Point2f res;
-    res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;
-    res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
+    if (!red_or_blue) {
+        res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;;
+        res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
+    } else {
+        res.x = point.y * img_show_width - (float) X_shift - 7;;
+        res.y = point.x * img_show_height - (float) Y_shift + 7;
+    }
+//    res.x = (1 - point.y) * img_show_width - (float) X_shift - 7;
+//    res.y = (1 - point.x) * img_show_height - (float) Y_shift + 7;
     return res;
 }
 
@@ -426,7 +340,7 @@ double SmallMap::Point2PointDist(const radar_interfaces::msg::Point &a, const Po
 }
 
 double SmallMap::calculate_dist(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b) {
-    cv::Point2d p1(a.x * field_width, a.y * field_height), p2(b.x * field_width, b.y * field_height);
+    cv::Point2d p1(a.x * field_height, a.y * field_width), p2(b.x * field_height, b.y * field_width);
     double res = sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
     return res;
 }
@@ -443,19 +357,37 @@ bool SmallMap::is_enemy_car(uint8_t id) {
     }
 }
 
-void SmallMap::load_param() {
-//    this->declare_parameter<int>("small_map_params.small_map_shift_X", 0);
-//    this->declare_parameter<int>("small_map_params.small_map_shift_Y", 0);
-//    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
+bool SmallMap::check_same_color(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b) {
+    return (
+            ((a.id < 6 || a.id == 12) && (b.id < 6 || b.id == 12)) ||
+    (((b.id >= 6 && b.id < 12) || b.id == 13) && ((a.id >= 6 && a.id < 12) || a.id == 13))
+    );
+}
 
-//    X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
-//    Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
-//    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
-    X_shift = 0;
-    Y_shift = 0;
-    string btlcolor = "red";
-    cout << endl << "Load X_shift, Y_shift, red_or_blue : " << endl;
-    cout << "\t" << X_shift << "\t" << Y_shift << "\t" << btlcolor << endl;
+void SmallMap::load_param() {
+    this->declare_parameter<int>("small_map_params.small_map_shift_X", 0);
+    this->declare_parameter<int>("small_map_params.small_map_shift_Y", 0);
+    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
+    this->declare_parameter<double>("small_map_params.dist_threshold", 0.0);
+    this->declare_parameter<double>("small_map_params.field_width", 0.0);
+    this->declare_parameter<double>("small_map_params.field_height", 0.0);
+    this->declare_parameter<double>("small_map_params.imgCols", 0.0);
+    this->declare_parameter<double>("small_map_params.imgRows", 0.0);
+
+    X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
+    Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
+    string btlcolor = this->get_parameter("battle_state.battle_color").as_string();
+    dist_threshold = this->get_parameter("small_map_params.dist_threshold").as_double();  // =1.6
+    field_width = this->get_parameter("small_map_params.field_width").as_double();  // =14.0
+    field_height = this->get_parameter("small_map_params.field_height").as_double();  // =15.0
+    imgCols = this->get_parameter("small_map_params.imgCols").as_double();  // =1920.0
+    imgRows = this->get_parameter("small_map_params.imgRows").as_double();  // =1200.0
+
+    RCLCPP_INFO(this->get_logger(), "Load X_shift--%d, Y_shift--%d, red_or_blue--%s", X_shift, Y_shift, btlcolor.c_str());
+    RCLCPP_INFO(this->get_logger(), "field_width--%f, field_height--%f", field_width, field_height);
+    RCLCPP_INFO(this->get_logger(), "imgCols--%f, imgRows--%f", imgCols, imgRows);
+    RCLCPP_INFO(this->get_logger(), "dist_threshold--%f", dist_threshold);
     if (btlcolor == "red") red_or_blue = 0;
     else if (btlcolor == "blue") red_or_blue = 1;
+    small_map_png_path =std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/red_smallmap.png";
 }

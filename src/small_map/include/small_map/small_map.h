@@ -64,6 +64,7 @@ private:
     Point2f calculate_pixel_codi(const radar_interfaces::msg::Point &point);
     Point2f calculate_pixel_text_codi(const radar_interfaces::msg::Point &point);
     void add_grid(cv::Mat &src);
+    bool check_same_color(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b);
 
     cv::Mat far_CamMatrix_ = Mat::zeros(3, 3, CV_64FC1);
     Mat far_R = Mat::eye(3, 3, CV_64FC1);
@@ -79,10 +80,9 @@ private:
     vector<Point2f> right_region = {Point(278, 0), Point(168, img_show_height),
                                     Point(img_show_width, img_show_height), Point(img_show_width, 0)};
 
-    double field_width = 14.0, field_height = 15.0;
-    int img_show_width = (int)field_width*30, img_show_height = (int)field_height*30;
-    double imgCols = 1920.0, imgRows = 1200.0;
-    double dist_threshold = 0.8;
+    double field_width, field_height, imgCols, imgRows, dist_threshold;
+    int img_show_width, img_show_height;
+    std::string small_map_png_path;
 
     Mat small_map, small_map_copy;
     radar_interfaces::msg::Points far_points, close_points, result_points, filtered_result_points;

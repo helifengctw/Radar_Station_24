@@ -1,9 +1,27 @@
-//
-// Created by hlf on 24-4-10.
-//
+#ifndef SERIAL_PORT_H
+#define SERIAL_PORT_H
 
-#ifndef SERIAL_PORT_SERIAL_PORT_H
-#define SERIAL_PORT_SERIAL_PORT_H
+#include <cstdio>
+#include <opencv2/opencv.hpp>
+#include <memory>
+#include <serial/serial.h>
+#include <iostream>
+
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "CRC8_CRC16.h"
+#include "CRC.h"
+#include "radar_interfaces/msg/point.hpp"
+#include "radar_interfaces/msg/points.hpp"
+#include "radar_interfaces/msg/game_state.hpp"
+#include "radar_interfaces/msg/supply_projectile_action.hpp"
+#include "radar_interfaces/msg/referee_warning.hpp"
+#include "radar_interfaces/msg/mark_data.hpp"
+#include "chrono"
+
+using namespace cv;
+using std::placeholders::_1;
+using namespace std::chrono_literals;
 
 //消息头
 struct frame_header
@@ -15,21 +33,28 @@ struct frame_header
 } __attribute__((packed));
 
 //小地图消息数据 10hz 发送
-struct map_data
+struct map_robot_data
 {
-    uint16_t target_robot_id;
-    float target_position_x;
-    float target_position_y;
+    uint16_t hero_position_x;
+    uint16_t hero_position_y;
+    uint16_t engineer_position_x;
+    uint16_t engineer_position_y;
+    uint16_t infantry_3_position_x;
+    uint16_t infantry_3_position_y;
+    uint16_t infantry_4_position_x;
+    uint16_t infantry_4_position_y;
+    uint16_t infantry_5_position_x;
+    uint16_t infantry_5_position_y;
+    uint16_t sentry_position_x;
+    uint16_t sentry_position_y;
 } __attribute__((packed));
-
-
 
 struct map_msg {
     frame_header head;
     uint16_t cmd_id = 0x0305;
-    map_data data;
+    map_robot_data data;
     uint16_t crc;
-} __attribute__((packed));
+} __attribute__((packed)); // 最大5hz发送
 
 struct mark_data {
     uint8_t mark_hero_progress;
@@ -40,14 +65,6 @@ struct mark_data {
     uint8_t mark_sentry_progress;
 } __attribute__((packed));
 
-struct double_buff_info_data {
-    uint8_t radar_info;
-} __attribute__((packed));
-
-struct double_buff_cmd_data {
-    uint8_t radar_cmd;
-} __attribute__((packed));
-
 struct mark_msg {
     frame_header head;
     uint16_t cmd_id = 0x020c;
@@ -55,12 +72,19 @@ struct mark_msg {
     uint16_t crc;
 } __attribute__((packed));
 
+struct double_buff_info_data {
+    uint8_t radar_info;
+} __attribute__((packed));
 
 struct double_buff_info_msg {
     frame_header head;
     uint16_t cmd_id = 0x020e;
     double_buff_info_data double_buff_info;
     uint16_t crc;
+} __attribute__((packed));
+
+struct double_buff_cmd_data {
+    uint8_t radar_cmd;
 } __attribute__((packed));
 
 struct double_buff_cmd_msg {
@@ -79,74 +103,10 @@ struct robot_interactive_data//最大10HZ 发送和接收
     uint8_t content[113];
 } __attribute__((packed));
 
-struct graphic_data_struct_t
-{
-    uint8_t graphic_name[3];
-    uint32_t operate_tpye:3;
-    uint32_t graphic_tpye:3;
-    uint32_t layer:4;
-    uint32_t color:4;
-    uint32_t start_angle:9;
-    uint32_t end_angle:9;
-    uint32_t width:10;
-    uint32_t start_x:11;
-    uint32_t start_y:11;
-    uint32_t radius:10;
-    uint32_t end_x:11;
-    uint32_t end_y:11;
-} __attribute__((packed));
-
-struct client_ui_data//最大10HZ 发送和接收
-{
-    uint16_t cmd_id;
-    uint16_t sender_id;
-    uint16_t receiver_id;
-    graphic_data_struct_t data;
-} __attribute__((packed));
-
-struct client_ui_msgs {
-    frame_header head;
-    uint16_t cmd_id = 0x0301;
-    client_ui_data data;
-    uint16_t crc;
-} __attribute__((packed));
-
-struct _graphic_delete_t {
-    uint8_t operate_type;
-    uint8_t layer;
-} __attribute__((packed));
-
-//最大10HZ 发送和接收
-struct client_ui_delete_data {
-    uint16_t cmd_id;
-    uint16_t sender_id;
-    uint16_t receiver_id;
-    _graphic_delete_t data;
-} __attribute__((packed));
-
-struct client_ui_delete_msgs {
-    frame_header head;
-    uint16_t cmd_id = 0x0301;
-    client_ui_delete_data data;
-    uint16_t crc;
-} __attribute__((packed));
-
 struct robot_interactive_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0301;
     robot_interactive_data data;
-    uint16_t crc;
-} __attribute__((packed));
-
-// 自定义控制消息
-// 30HZ 发送和接收
-struct robot_interactive_control_data {
-    uint8_t content[30];
-} __attribute__((packed));
-struct robot_interactive_control_msgs {
-    frame_header head;
-    uint16_t cmd_id = 0x0302;
-    robot_interactive_control_data data;
     uint16_t crc;
 } __attribute__((packed));
 
@@ -179,7 +139,6 @@ struct robot_health_msgs {
     robot_health_data data;
     uint16_t crc;
 } __attribute__((packed));
-
 
 
 //比赛状态信息
@@ -246,21 +205,6 @@ struct site_event_msgs {
     uint16_t crc;
 } __attribute__((packed));
 
-//补给站消息
-// 触发时发送 接收
-struct supply_projectile_action_data {
-    uint8_t supply_projectile_id; //补给站口ID 1一号补给口 2二号补给口
-    uint8_t supply_robot_id; //补弹机器人ID
-    uint8_t supply_projectile_step; //出弹口开闭状态 0关闭 1子弹准备中 2子弹下落
-    uint8_t supply_projectile_num; //补单数量 50:50颗子弹 100:100颗子弹 150...... 200......
-} __attribute__((packed));
-
-struct supply_projectile_action_msg {
-    frame_header head;
-    uint16_t cmd_id = 0x0102;
-    supply_projectile_action_data data;
-    uint16_t crc;
-} __attribute__((packed));
 
 //裁判判罚消息
 //触发时发送 接收
@@ -276,24 +220,51 @@ struct referee_warning_msg {
     uint16_t crc;
 } __attribute__((packed));
 
-//飞镖闸门关闭倒计时
-// 1hz 接收
-struct dart_remaining_time_data {
-    uint8_t dart_remaining_time; //15s倒计时
-} __attribute__((packed));
 
-struct dart_remaining_time_msg {
-    frame_header head;
-    uint16_t cmd_id = 0x0105;
-    dart_remaining_time_data data;
-    uint16_t crc;
-} __attribute__((packed));
 
-struct car_point {
-    uint16_t id;
-    cv::Point2f point;
-    bool color; //红色为0 蓝色为1
+class SerialPort : public rclcpp::Node {
+public:
+    SerialPort(std::string name);
+    ~SerialPort();
+
+private:
+    rclcpp::Subscription<radar_interfaces::msg::Points>::SharedPtr world_point_subscription_;
+    rclcpp::Publisher<radar_interfaces::msg::MarkData>::SharedPtr mark_data_publisher_;
+    rclcpp::TimerBase::SharedPtr timer_;
+
+    int ser_init();
+    void worldPointsCallback(radar_interfaces::msg::Points::SharedPtr);
+    void load_params();
+
+    serial::Serial ser;
+    map_msg mapMsg;
+    map_robot_data mapRobotData;
+    mark_msg markMsg;
+    double_buff_info_msg doubleBuffInfoMsg;
+    double_buff_cmd_msg doubleBuffCmdMsg;
+    robot_interactive_msgs robotInteractiveMsgs;
+    robot_health_msgs robotHealthMsgs;
+    game_result_msg gameResultMsg;
+    site_event_msgs siteEventMsgs;
+    referee_warning_msg refereeWarningMsg;
+    game_status_msgs gameStatusMsgs;
+
+    radar_interfaces::msg::GameState gameStateRosMsg;
+    radar_interfaces::msg::RefereeWarning refereeWarningRosMsg;
+    radar_interfaces::msg::MarkData markDataRosMsg;
+
+    uint8_t receiveData[1024];
+    int double_buff_chance = 0, used_double_buff_chance = 0, detected_enemy_count = 0;
+    float field_height = 2800, field_width = 1500;
+    bool if_enemy_red = false, if_double_buff_exerting = false, if_receive = false;
+    mark_data referee_mark_data, last_referee_mark_data;
+
+    void TimerCallback();
+    bool sendMapMsgs();
+    bool sendInteractiveMsgs(uint16_t);
+    bool TriggerDoubleBuffOnce();
+    bool receiveMsgs();
+    void publish_mark_data();
 };
 
-
-#endif //SERIAL_PORT_SERIAL_PORT_H
+#endif //SERIAL_PORT_H

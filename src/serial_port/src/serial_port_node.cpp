@@ -14,7 +14,6 @@
 #include "radar_interfaces/msg/supply_projectile_action.hpp"
 #include "radar_interfaces/msg/referee_warning.hpp"
 #include "chrono"
-#include "serial_port.h"
 
 using namespace cv;
 using std::placeholders::_1;
@@ -28,7 +27,7 @@ uint8_t warn_state;
  */
 class SerialPort : public rclcpp::Node {
 public:
-    int serial_port_init();
+    int ser_init();
 
     SerialPort(std::string name) : Node (name){
 //        RCLCPP_INFO(this->get_logger(), "Successfully initialize serial port node :serial_port !!!");
@@ -190,7 +189,7 @@ void SerialPort::LoadBattleColor() {
  * 串口初始化
  * @return
  */
-int SerialPort::serial_port_init() {
+int SerialPort::ser_init() {
     //串口初始化
     try {
         ser.setPort("/dev/ttyUSB0");

@@ -7,7 +7,7 @@
 				{
 					"build" : ".",
 					"hasInstallRule" : true,
-					"jsonFile" : "directory-.-Debug-21b3b06b199db54286a8.json",
+					"jsonFile" : "directory-.-Debug-238ef5fa0b207c314365.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.5"
@@ -18,8 +18,7 @@
 					[
 						0,
 						1,
-						2,
-						3
+						2
 					]
 				}
 			],
@@ -36,8 +35,7 @@
 					[
 						0,
 						1,
-						2,
-						3
+						2
 					]
 				}
 			],
@@ -45,16 +43,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "serial_port::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-serial_port-Debug-ad138da9546a8410c27e.json",
-					"name" : "serial_port",
-					"projectIndex" : 0
-				},
-				{
-					"directoryIndex" : 0,
-					"id" : "serial_port_test::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-serial_port_test-Debug-aea4ffe56e1569907d75.json",
-					"name" : "serial_port_test",
+					"id" : "serial_port_new::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-serial_port_new-Debug-d2e9915fdc15d411e5b8.json",
+					"name" : "serial_port_new",
 					"projectIndex" : 0
 				},
 				{

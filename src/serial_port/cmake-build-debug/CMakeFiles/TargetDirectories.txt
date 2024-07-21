@@ -1,7 +1,6 @@
 /home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/uninstall.dir
 /home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/serial_port_uninstall.dir
-/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/serial_port.dir
-/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/serial_port_test.dir
+/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/serial_port_new.dir
 /home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/test.dir
 /home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/edit_cache.dir
 /home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/CMakeFiles/rebuild_cache.dir

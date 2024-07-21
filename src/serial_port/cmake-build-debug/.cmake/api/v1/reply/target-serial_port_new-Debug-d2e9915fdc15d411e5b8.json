@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "serial_port"
+			"path" : "serial_port_new"
 		}
 	],
 	"backtrace" : 1,
@@ -65,19 +65,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 30,
+				"line" : 38,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 46,
+				"line" : 47,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 35,
+				"line" : 42,
 				"parent" : 0
 			},
 			{
@@ -95,7 +95,7 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 36,
+				"line" : 43,
 				"parent" : 0
 			},
 			{
@@ -477,7 +477,7 @@
 			{
 				"command" : 9,
 				"file" : 0,
-				"line" : 32,
+				"line" : 39,
 				"parent" : 0
 			},
 			{
@@ -581,7 +581,7 @@
 			]
 		}
 	],
-	"id" : "serial_port::@6890427a1f51a3e7e1df",
+	"id" : "serial_port_new::@6890427a1f51a3e7e1df",
 	"install" : 
 	{
 		"destinations" : 
@@ -1130,8 +1130,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "serial_port",
-	"nameOnDisk" : "serial_port",
+	"name" : "serial_port_new",
+	"nameOnDisk" : "serial_port_new",
 	"paths" : 
 	{
 		"build" : ".",
@@ -1145,13 +1145,6 @@
 			[
 				0
 			]
-		},
-		{
-			"name" : "Header Files",
-			"sourceIndexes" : 
-			[
-				1
-			]
 		}
 	],
 	"sources" : 
@@ -1159,13 +1152,8 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/serial_port_node.cpp",
+			"path" : "src/serial_port_new_node.cpp",
 			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"path" : "include/serial_port/serial_port.h",
-			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"

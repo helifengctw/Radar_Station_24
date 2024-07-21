@@ -43,41 +43,21 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new")
     file(RPATH_CHECK
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port"
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new"
          RPATH "")
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/serial_port" TYPE EXECUTABLE FILES "/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/serial_port")
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/serial_port" TYPE EXECUTABLE FILES "/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/serial_port_new")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new")
     file(RPATH_CHANGE
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port"
+         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new"
          OLD_RPATH "/opt/ros/foxy/lib:/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib:/home/hlf/Desktop/radar24_ws/install/serial/lib:"
          NEW_RPATH "")
     if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port")
-    endif()
-  endif()
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test")
-    file(RPATH_CHECK
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test"
-         RPATH "")
-  endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/serial_port" TYPE EXECUTABLE FILES "/home/hlf/Desktop/radar24_ws/src/serial_port/cmake-build-debug/serial_port_test")
-  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test")
-    file(RPATH_CHANGE
-         FILE "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test"
-         OLD_RPATH "/opt/ros/foxy/lib:/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib:/home/hlf/Desktop/radar24_ws/install/serial/lib:"
-         NEW_RPATH "")
-    if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_test")
+      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/serial_port/serial_port_new")
     endif()
   endif()
 endif()

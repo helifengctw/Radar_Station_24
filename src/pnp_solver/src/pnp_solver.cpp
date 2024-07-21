@@ -208,10 +208,7 @@ void PnpSolver::LoadPnpParams() {
 }
 
 void PnpSolver::DeclareParams() {
-//    this->declare_parameter<int>("small_map_param.small_map_shift_X", 0);
-//    this->declare_parameter<int>("small_map_param.small_map_shift_Y", 0);
-//
-    this->declare_parameter<std::string>("battle_state.battle_color", "empty");
+this->declare_parameter<std::string>("battle_state.battle_color", "empty");
 
     this->declare_parameter<int>("length_of_cloud_queue", 0);
     this->declare_parameter<int>("image_width", 0);

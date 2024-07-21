@@ -27,7 +27,7 @@ def generate_launch_description():
         output="screen",
         emulate_tty=True,
         parameters=[radar_params, calib_default_points],
-        respawn=True
+        respawn=False
     )
 
     Node_small_map = Node(
@@ -36,7 +36,7 @@ def generate_launch_description():
         name="small_map",
         output="screen",
         emulate_tty=True,
-        respawn=True,
+        respawn=False,
         parameters=[small_map_params]
     )
 

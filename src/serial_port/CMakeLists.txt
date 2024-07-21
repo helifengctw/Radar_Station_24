@@ -27,25 +27,24 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/include/serial_port/)
 
-add_executable(serial_port src/serial_port_node.cpp
-        include/serial_port/serial_port.h)
-target_include_directories(serial_port PUBLIC
+#add_executable(serial_port src/serial_port_node.cpp
+#        include/serial_port/serial_port.h)
+#target_include_directories(serial_port PUBLIC
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#        $<INSTALL_INTERFACE:include>)
+#ament_target_dependencies(serial_port rclcpp std_msgs serial radar_interfaces)
+#target_link_libraries(serial_port ${OpenCV_LIBS})
+
+add_executable(serial_port_new src/serial_port_new_node.cpp)
+target_include_directories(serial_port_new PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(serial_port rclcpp std_msgs serial radar_interfaces)
-target_link_libraries(serial_port ${OpenCV_LIBS})
+ament_target_dependencies(serial_port_new rclcpp std_msgs serial radar_interfaces)
+target_link_libraries(serial_port_new ${OpenCV_LIBS})
 
-add_executable(serial_port_test src/test.cpp
-        include/serial_port/serial_port.h)
-target_include_directories(serial_port_test PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(serial_port_test rclcpp std_msgs serial radar_interfaces)
-target_link_libraries(serial_port_test ${OpenCV_LIBS})
-
-install(TARGETS serial_port
-        DESTINATION lib/${PROJECT_NAME})
-install(TARGETS serial_port_test
+#install(TARGETS serial_port
+#        DESTINATION lib/${PROJECT_NAME})
+install(TARGETS serial_port_new
         DESTINATION lib/${PROJECT_NAME})
 
 
