@@ -88,11 +88,11 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             calcWorld /= 1000; // 单位：mm => m
             double x, y;
             if (red_or_blue) {
-                x = calcWorld.at<double>(0, 0) / field_height;
-                y = calcWorld.at<double>(1, 0) / field_width;
-            } else {
                 x = (1 - calcWorld.at<double>(0, 0)) / field_height;
                 y = (1 - calcWorld.at<double>(1, 0)) / field_width;
+            } else {
+                x = calcWorld.at<double>(0, 0) / field_height;
+                y = calcWorld.at<double>(1, 0) / field_width;
             }
 
             radar_interfaces::msg::Point point;
@@ -319,13 +319,6 @@ Point2d SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point
     Point2d res;
     res.x = (1 - point.y) * img_show_width - X_shift;
     res.y = (1 - point.x) * img_show_height - Y_shift;
-//    if (!red_or_blue) {
-//        res.x = (1 - point.y) * img_show_width - X_shift;
-//        res.y = (1 - point.x) * img_show_height - Y_shift;
-//    } else {
-//        res.x = point.y * img_show_width - X_shift;
-//        res.y = point.x * img_show_height - Y_shift;
-//    }
     return res;
 }
 
@@ -333,13 +326,6 @@ Point2d SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &
     Point2d res;
     res.x = (1 - point.y) * img_show_width - X_shift - 7;;
     res.y = (1 - point.x) * img_show_height - Y_shift + 7;
-//    if (!red_or_blue) {
-//        res.x = (1 - point.y) * img_show_width - X_shift - 7;;
-//        res.y = (1 - point.x) * img_show_height - Y_shift + 7;
-//    } else {
-//        res.x = point.y * img_show_width - X_shift - 7;;
-//        res.y = point.x * img_show_height - Y_shift + 7;
-//    }
     return res;
 }
 
@@ -356,13 +342,9 @@ double SmallMap::calculate_dist(const radar_interfaces::msg::Point &a, const rad
 
 bool SmallMap::is_enemy_car(uint8_t id) {
     if (red_or_blue == 0) {
-        if ((id >= 6 && id <= 11) || id == 13)
-            return true;
-        else return false;
+        return ((id >= 6 && id <= 11) || id == 13);
     } else {
-        if (id <= 5 || id == 12)
-            return true;
-        else return false;
+        return (id <= 5 || id == 12);
     }
 }
 

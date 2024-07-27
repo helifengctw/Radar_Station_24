@@ -82,14 +82,6 @@ namespace get_depth {
                         FONT_HERSHEY_COMPLEX_SMALL, 2,
                         Scalar(255), 2, 8, 0);
             }
-//        frame_point_match(last_close_distance_it, close_distance_it);
-//        for (auto &i: close_distance_it.data) {
-//            if (abs(i.dist - i.last_dist) > 0.3){
-//                i.dist = i.last_dist;
-//            } else {
-//                i.dist = i.dist * 0.8 + i.last_dist * 0.2;
-//            }
-//        }
         }
         this->dist_point_publisher->publish(distance_points);
 
