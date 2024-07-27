@@ -9,7 +9,8 @@ namespace yolov5_detect {
             deepsort_(Deepsort_engine, 128, 256, 0, &gLogger_) {
         cudaSetDevice(kGpuId);
 
-        if (FilePreparation(false, false, false, &car_engine_name, &num_engine_name)) {
+        if (FilePreparation(false, false, false,
+                            &car_engine_name, &num_engine_name)) {
             RCLCPP_ERROR(this->get_logger(), "failed to prepare engine!!!!!");
         }
 
@@ -100,7 +101,7 @@ namespace yolov5_detect {
             src = cv_bridge::toCvShare(msg, "bgr8")->image;
         }
         src.copyTo(src_raw);
-//        tune_img(src);
+        tune_img(src);
         img_batch.push_back(src);
 
         // 第一层识别开始，Preprocess
@@ -130,7 +131,6 @@ namespace yolov5_detect {
         // process for second yolo model
         for (auto detected_car: detected_cars) {
             ++iter_detected_car;
-
             cv::Rect detected_rect_of_car = get_rect(src_raw, detected_car.bbox);
             if (detected_rect_of_car.x < 0) {
                 detected_rect_of_car.x = 0;
@@ -156,13 +156,14 @@ namespace yolov5_detect {
                                   kInputH, stream_num, false);
             // Run inference
             infer(*context_num, stream_num, (void **) gpu_buffers_num,
-                  cpu_output_buffer_num, kBatchSize); // , kNumDetectBatchSize
+                  cpu_output_buffer_num, kNumDetectBatchSize);
             // NMS
             std::vector<std::vector<Detection>> result_Detection_batch_num;
             batch_nms(result_Detection_batch_num, cpu_output_buffer_num, (int) img_car_batch.size(),
                       kOutputSize, kConfThresh, kNmsThresh);
             int iter_nums_batch = 0, car_count_in_batch = 0;
             // 这个for循环先把把这个car中的正对的装甲板找出来，然后再进行一系列判断
+            std::cout << result_Detection_batch_num.size() << ":  ";
             for (auto result_Detection_nums: result_Detection_batch_num) {
 //            Detection& car_for_this_iter = detected_cars[car_count_in_batch];
                 car_count_in_batch = car_batches_count * kNumDetectBatchSize + iter_nums_batch;
@@ -174,7 +175,6 @@ namespace yolov5_detect {
                 cv::Rect best_num_rect(0, 0, 0, 0);
                 // 对一张装甲板图像识别出的数字进行迭代，选出正对雷达站的装甲板
                 for (auto &result_Detection_num: result_Detection_nums) {
-//                std::cout << result_Detection_nums[m].class_id << std::endl;
                     cv::Rect number_in_roi = get_rect(img_car_batch[iter_nums_batch], result_Detection_num.bbox);
                     cv::Rect number_in_img = number_in_roi;
                     number_in_img.x += detected_car_rect.x;
@@ -182,15 +182,10 @@ namespace yolov5_detect {
                     if (number_in_img.area() > best_num_rect.area()) {
                         best_num_rect = number_in_img;
                         best_num_detection = result_Detection_num;
-//                        if (best_num_detection.class_id == 4) best_num_detection.class_id = 2;
                     }
-//                cv::putText(src_raw, std::to_string((int)result_Detection_nums[m].class_id), cv::Point(number_in_img.x, number_in_img.y - 1), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(0xFF, 0xFF, 0xFF), 2);
-//                if (result_Detection_nums[m].conf > best_num_detection.conf) {
-//                    best_num_detection = result_Detection_nums[m];
-//                }
                 }
                 //根据装甲板ID修改车的ID（14是未识别出，12是红方未识别出，13是蓝方未识别出，其他编号一致）
-                int if_is_blue = int(detected_cars[car_count_in_batch].class_id), tracker_id;
+                int if_is_blue = int(detected_cars[car_count_in_batch].class_id);
                 if ((int) best_num_detection.class_id == 14) {  // 第二层yolo没识别出来
                     // TODO: 检查当前是否有工程且距离较近，如果有就是一个工程给了两个框，直接去掉
                     detected_cars[car_count_in_batch].class_id = float(12 + if_is_blue);
@@ -215,6 +210,7 @@ namespace yolov5_detect {
                 ++iter_nums_batch;
             }
 
+            std::cout << std::endl;
             std::vector<cv::Mat>().swap(img_car_batch);
             car_batch_length = 0;
             ++car_batches_count;
@@ -294,14 +290,13 @@ namespace yolov5_detect {
         if (if_car) {
             CUDA_CHECK(cudaMalloc((void **) gpu_input_buffer, kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
             CUDA_CHECK(cudaMalloc((void **) gpu_output_buffer, kBatchSize * kOutputSize * sizeof(float)));
+            *cpu_output_buffer = new float[kBatchSize * kOutputSize];
         } else {
             CUDA_CHECK(cudaMalloc((void **) gpu_input_buffer,
                                   kNumDetectBatchSize * 3 * kInputH * kInputW * sizeof(float)));
             CUDA_CHECK(cudaMalloc((void **) gpu_output_buffer, kNumDetectBatchSize * kOutputSize * sizeof(float)));
+            *cpu_output_buffer = new float[kNumDetectBatchSize * kOutputSize];
         }
-
-
-        *cpu_output_buffer = new float[kBatchSize * kOutputSize];
     }
 
     void Yolov5Detector::infer(IExecutionContext &context, cudaStream_t &stream, void **gpu_buffers,
@@ -377,8 +372,8 @@ namespace yolov5_detect {
         std::string car_wts_name = data_dir + "/weights/car_7_18_1_3k.wts";
         std::string car_engine_name = data_dir + "/engine/car_7_18_1_3k.engine";
         *return_car_engine = car_engine_name;
-        std::string num_wts_name = data_dir + "/weights/bestnum_5_26_1_5w.wts";
-        std::string num_engine_name = data_dir + "/engine/bestnum_5_26_1_5w.engine";
+        std::string num_wts_name = data_dir + "/weights/num_1_5w.wts";
+        std::string num_engine_name = data_dir + "/engine/num_1_5w.engine";
         *return_num_engine = num_engine_name;
         float gd = 0.33f, gw = 0.50f;  //extracted from parse_args()
 
@@ -387,7 +382,7 @@ namespace yolov5_detect {
             serialize_engine(kBatchSize, is_p6, gd, gw, car_wts_name, car_engine_name);
         }
         if (!num_wts_name.empty() && if_serialize_engine_num) {
-            serialize_engine(kBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
+            serialize_engine(kNumDetectBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
         }
         if (if_serialize_engine_car || if_serialize_engine_num) {
             return true;

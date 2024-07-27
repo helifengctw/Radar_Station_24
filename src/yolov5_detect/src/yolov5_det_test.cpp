@@ -70,9 +70,9 @@ class Yolov5_Detect_Node : public rclcpp::Node {
 public:
     Yolov5_Detect_Node() : Node("image_subscriber") {
         far_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/sensor_far/image_raw", 10, std::bind(&Yolov5_Detect_Node::FarImageCallback, this, _1));
+                "/sensor_far/raw/image", 10, std::bind(&Yolov5_Detect_Node::FarImageCallback, this, _1));
         close_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/sensor_close/image_raw", 10, std::bind(&Yolov5_Detect_Node::CloseImageCallback, this, _1));
+                "/sensor_close/raw/image", 10, std::bind(&Yolov5_Detect_Node::CloseImageCallback, this, _1));
 
         far_rect_publisher_ = this->create_publisher<radar_interfaces::msg::YoloPoints>(
                 "far_rectangles", 1);
@@ -568,11 +568,9 @@ void Yolov5_Detect_Node::CloseImageCallback(const sensor_msgs::msg::Image::Share
         // Preprocess
         cuda_batch_preprocess(img_num_batch, gpu_buffers_num[0],kInputW,
                               kInputH, stream_num, false);
-
         // Run inference
         infer(*context_num, stream_num, (void**)gpu_buffers_num,
-              cpu_output_buffer_num, kBatchSize); // , kNumDetectBatchSize
-
+              cpu_output_buffer_num, kNumDetectBatchSize); // , kBatchSize
         // NMS
         std::vector<std::vector<Detection>> result_batch_num;
         batch_nms(result_batch_num, cpu_output_buffer_num, (int)img_num_batch.size(),
@@ -811,13 +809,12 @@ void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer,
     if (if_car) {
         CUDA_CHECK(cudaMalloc((void**)gpu_input_buffer, kBatchSize * 3 * kInputH * kInputW * sizeof(float)));
         CUDA_CHECK(cudaMalloc((void**)gpu_output_buffer, kBatchSize * kOutputSize * sizeof(float)));
+        *cpu_output_buffer = new float[kBatchSize * kOutputSize];
     } else {
         CUDA_CHECK(cudaMalloc((void**)gpu_input_buffer, kNumDetectBatchSize * 3 * kInputH * kInputW * sizeof(float)));
         CUDA_CHECK(cudaMalloc((void**)gpu_output_buffer, kNumDetectBatchSize * kOutputSize * sizeof(float)));
+        *cpu_output_buffer = new float[kNumDetectBatchSize * kOutputSize];
     }
-
-
-    *cpu_output_buffer = new float[kBatchSize * kOutputSize];
 }
 
 void infer(IExecutionContext& context, cudaStream_t& stream, void** gpu_buffers,
@@ -891,8 +888,8 @@ bool FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num,
     std::string car_wts_name = data_dir + "/weights/car_7_18_1_3k.wts";
     std::string car_engine_name = data_dir + "/engine/car_7_18_1_3k.engine";
     * return_car_engine = car_engine_name;
-    std::string num_wts_name = data_dir + "/weights/bestnum_light_1k.wts";
-    std::string num_engine_name = data_dir + "/engine/bestnum_light_1k.engine";
+    std::string num_wts_name = data_dir + "/weights/num_1_5w.wts";
+    std::string num_engine_name = data_dir + "/engine/num_1_5w.engine";
     * return_num_engine = num_engine_name;
     float gd = 0.33f, gw = 0.50f;  //extracted from parse_args()
 
@@ -901,7 +898,7 @@ bool FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num,
         serialize_engine(kBatchSize, is_p6, gd, gw, car_wts_name, car_engine_name);
     }
     if (!num_wts_name.empty() && if_serialize_engine_num) {
-        serialize_engine(kBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
+        serialize_engine(kNumDetectBatchSize, is_p6, gd, gw, num_wts_name, num_engine_name);
     }
     if (if_serialize_engine_car || if_serialize_engine_num) {
         return true;
