@@ -203,7 +203,8 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
     }
 }
 
-void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(result_points.data);
+void SmallMap::remove_duplicate() {
+    vector<radar_interfaces::msg::Point>().swap(result_points.data);
     vector<radar_interfaces::msg::Point>().swap(result_points.data);
     std::vector<radar_interfaces::msg::Point>::iterator far_target_iter, close_target_iter;
     int loop_count = 0, loop_max = 7;
@@ -267,27 +268,37 @@ void SmallMap::remove_duplicate() {vector<radar_interfaces::msg::Point>().swap(r
             if (admit_condition == 0) { // 0:both, 1:conf, 2:center
                 result_points.data.emplace_back(far_tp);
                 result_points.data.emplace_back(close_tp);
-            } else if (admit_condition == 1) {
-                if (far_tp.conf > close_tp.conf) result_points.data.emplace_back(far_tp);
-                else result_points.data.emplace_back(close_tp);
-            } else if (admit_condition == 2) {
+            } else if (admit_condition == 1 || admit_condition == 2) {
                 radar_interfaces::msg::Point center;
                 center.id = far_tp.id;
                 center.x = (far_tp.x + close_tp.x) / 2;
                 center.y = (far_tp.y + close_tp.y) / 2;
-                result_points.data.emplace_back(center);
+                double far_dist = Point2PointDist(center, center_far);
+                double close_dist = Point2PointDist(center, center_close);
+                if (far_dist < close_dist) result_points.data.emplace_back(far_tp);
+                else result_points.data.emplace_back(close_tp);
             }
+//            } else if (admit_condition == 1) {
+//                if (far_tp.conf > close_tp.conf) result_points.data.emplace_back(far_tp);
+//                else result_points.data.emplace_back(close_tp);
+//            } else if (admit_condition == 2) {
+//                radar_interfaces::msg::Point center;
+//                center.id = far_tp.id;
+//                center.x = (far_tp.x + close_tp.x) / 2;
+//                center.y = (far_tp.y + close_tp.y) / 2;
+//                result_points.data.emplace_back(center);
+//            }
             far_points.data.erase(far_target_iter);
             close_points.data.erase(close_target_iter);
         }
     }
-    std::cout << "loop_count: " << loop_count << endl;
     for (auto i : far_points.data) {
         result_points.data.push_back(i);
     }
     for (auto i : close_points.data) {
         result_points.data.push_back(i);
     }
+    std::cout << "result_points size: " << result_points.data.size() << endl;
 }
 
 radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &guard,
@@ -332,7 +343,7 @@ Point2d SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &
     return res;
 }
 
-double SmallMap::Point2PointDist(const radar_interfaces::msg::Point &a, const Point3f &b) {
+double SmallMap::Point2PointDist(const radar_interfaces::msg::Point &a, const Point2d &b) {
     double res = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
     return res;
 }
@@ -371,6 +382,10 @@ void SmallMap::load_param() {
     this->declare_parameter<double>("small_map_params.field_height", 0.0);
     this->declare_parameter<double>("small_map_params.imgCols", 0.0);
     this->declare_parameter<double>("small_map_params.imgRows", 0.0);
+    this->declare_parameter<float>("small_map_params.center_far.x", 0.0);
+    this->declare_parameter<float>("small_map_params.center_far.y", 0.0);
+    this->declare_parameter<float>("small_map_params.center_close.x", 0.0);
+    this->declare_parameter<float>("small_map_params.center_close.y", 0.0);
 
     X_shift = this->get_parameter("small_map_params.small_map_shift_X").as_int();  // =30
     Y_shift = this->get_parameter("small_map_params.small_map_shift_Y").as_int();  // =5
@@ -380,11 +395,17 @@ void SmallMap::load_param() {
     field_height = this->get_parameter("small_map_params.field_height").as_double();  // =15.0
     imgCols = this->get_parameter("small_map_params.imgCols").as_double();  // =1920.0
     imgRows = this->get_parameter("small_map_params.imgRows").as_double();  // =1200.0
+    center_far.x = this->get_parameter("small_map_params.center_far.x").as_double();  // =0.0
+    center_far.y = this->get_parameter("small_map_params.center_far.y").as_double();  // =0.0
+    center_close.x = this->get_parameter("small_map_params.center_close.x").as_double();  // =0.0
+    center_close.y = this->get_parameter("small_map_params.center_close.y").as_double();  // =0.0
 
-    RCLCPP_INFO(this->get_logger(), "Load X_shift--%d, Y_shift--%d, our_color--%s", X_shift, Y_shift, btlcolor.c_str());
-    RCLCPP_INFO(this->get_logger(), "field_width--%f, field_height--%f", field_width, field_height);
-    RCLCPP_INFO(this->get_logger(), "imgCols--%f, imgRows--%f", imgCols, imgRows);
-    RCLCPP_INFO(this->get_logger(), "dist_threshold--%f", dist_threshold);
+    RCLCPP_INFO(this->get_logger(), "Load X_shift[%d], Y_shift[%d], our_color[%s]", X_shift, Y_shift, btlcolor.c_str());
+    RCLCPP_INFO(this->get_logger(), "field_width[%f], field_height[%f]", field_width, field_height);
+    RCLCPP_INFO(this->get_logger(), "imgCols[%f], imgRows[%f]", imgCols, imgRows);
+    RCLCPP_INFO(this->get_logger(), "dist_threshold[%f]", dist_threshold);
+    RCLCPP_INFO(this->get_logger(), "center_far[%f, %f]", center_far.x, center_far.y);
+    RCLCPP_INFO(this->get_logger(), "center_close[%f, %f]", center_close.x, center_close.y);
     if (btlcolor == "red") red_or_blue = 0;
     else if (btlcolor == "blue") red_or_blue = 1;
     small_map_png_path =std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/red_smallmap.png";

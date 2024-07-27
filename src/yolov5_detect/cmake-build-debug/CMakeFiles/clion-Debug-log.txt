@@ -1,18 +1,47 @@
 /home/hlf/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/hlf/.local/share/JetBrains/Toolbox/apps/clion/bin/ninja/linux/x64/ninja -G Ninja -S /home/hlf/Desktop/radar24_ws/src/yolov5_detect -B /home/hlf/Desktop/radar24_ws/src/yolov5_detect/cmake-build-debug
+-- The C compiler identification is GNU 9.4.0
+-- The CXX compiler identification is GNU 9.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The CUDA compiler identification is NVIDIA 11.8.89
+-- Detecting CUDA compiler ABI info
+-- Detecting CUDA compiler ABI info - done
+-- Check for working CUDA compiler: /usr/local/cuda/bin/nvcc - skipped
+-- Detecting CUDA compile features
+-- Detecting CUDA compile features - done
 -- Found ament_cmake: 0.9.12 (/opt/ros/foxy/share/ament_cmake/cmake)
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3") 
 -- Using PYTHON_EXECUTABLE: /usr/bin/python3
 -- Found ament_cmake_auto: 0.9.12 (/opt/ros/foxy/share/ament_cmake_auto/cmake)
 -- Found rclcpp: 2.4.3 (/opt/ros/foxy/share/rclcpp/cmake)
 -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
 -- Found rosidl_adapter: 1.3.1 (/opt/ros/foxy/share/rosidl_adapter/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "1.1.1f")  
+-- Found FastRTPS: /opt/ros/foxy/include  
 -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
 -- Found rmw_implementation_cmake: 1.0.4 (/opt/ros/foxy/share/rmw_implementation_cmake/cmake)
 -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
 -- Found rclcpp_components: 2.4.3 (/opt/ros/foxy/share/rclcpp_components/cmake)
 -- Found sensor_msgs: 2.0.5 (/opt/ros/foxy/share/sensor_msgs/cmake)
 -- Found image_transport: 2.4.0 (/opt/ros/foxy/share/image_transport/cmake)
 -- Found cv_bridge: 3.0.7 (/opt/ros/foxy/share/cv_bridge/cmake)
 -- Found radar_interfaces: 0.0.0 (/home/hlf/Desktop/radar24_ws/install/radar_interfaces/share/radar_interfaces/cmake)
+-- Found OpenCV: /usr (found version "4.2.0") 
 'OPENCVFOUND:1'
 -- Found ament_lint_auto: 0.9.8 (/opt/ros/foxy/share/ament_lint_auto/cmake)
 -- Added test 'copyright' to check source files copyright and LICENSE
@@ -25,20 +54,20 @@
 -- Added test 'uncrustify' to check C / C++ code style
 -- Configured uncrustify additional arguments: 
 -- Added test 'xmllint' to check XML markup files
--- Configuring done (1.2s)
+-- Configuring done (3.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /home/hlf/Desktop/radar24_ws/src/yolov5_detect/cmake-build-debug
 
 Cannot get compiler information:
-	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -Dmyplugins_EXPORTS -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Xcompiler=-fPIC -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file8187969687590486499.cu
+	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -Dmyplugins_EXPORTS -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Xcompiler=-fPIC -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file6725332300827246338.cu
 	nvcc fatal   : Unknown option '-Wpedantic'
 	
 	
-	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -isystem=/usr/include/opencv4 -isystem=/home/hlf/Desktop/radar24_ws/install/radar_interfaces/include -isystem=/opt/ros/foxy/include -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file8187969687590486499.cu
+	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -isystem=/usr/include/opencv4 -isystem=/home/hlf/Desktop/radar24_ws/install/radar_interfaces/include -isystem=/opt/ros/foxy/include -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file6725332300827246338.cu
 	nvcc fatal   : Unknown option '-Wpedantic'
 	
 	
-	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -Dyolov5_detector_EXPORTS -isystem=/usr/include/opencv4 -isystem=/home/hlf/Desktop/radar24_ws/install/radar_interfaces/include -isystem=/opt/ros/foxy/include -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Xcompiler=-fPIC -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file8187969687590486499.cu
+	Compiler exited with error code 1: /usr/local/cuda/bin/nvcc -DDEFAULT_RMW_IMPLEMENTATION=rmw_fastrtps_cpp -DRCUTILS_ENABLE_FAULT_INJECTION -DSPDLOG_COMPILED_LIB -Dyolov5_detector_EXPORTS -isystem=/usr/include/opencv4 -isystem=/home/hlf/Desktop/radar24_ws/install/radar_interfaces/include -isystem=/opt/ros/foxy/include -g -std=c++14 --generate-code=arch=compute_35,code=[compute_35,sm_35] --generate-code=arch=compute_50,code=[compute_50,sm_50] --generate-code=arch=compute_72,code=[compute_72,sm_72] -Xcompiler=-fPIC -Wpedantic -Wextra -Wall --dryrun /tmp/compiler-file6725332300827246338.cu
 	nvcc fatal   : Unknown option '-Wpedantic'
 	
 	

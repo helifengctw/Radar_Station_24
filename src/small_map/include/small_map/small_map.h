@@ -59,7 +59,7 @@ private:
     void remove_duplicate();
     bool is_enemy_car(uint8_t);
     double calculate_dist(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b);
-    double Point2PointDist(const radar_interfaces::msg::Point &a, const Point3f &b);
+    double Point2PointDist(const radar_interfaces::msg::Point &a, const Point2d &b);
     radar_interfaces::msg::Point calculate_relative_codi(const Point3f &guard, const radar_interfaces::msg::Point &enemy, uint8_t priority_id);
     Point2d calculate_pixel_codi(const radar_interfaces::msg::Point &point);
     Point2d calculate_pixel_text_codi(const radar_interfaces::msg::Point &point);
@@ -81,6 +81,7 @@ private:
                                     Point(img_show_width, img_show_height), Point(img_show_width, 0)};
 
     double field_width, field_height, imgCols, imgRows, dist_threshold;
+    cv::Point2d center_far, center_close;
     int img_show_width, img_show_height;
     std::string small_map_png_path;
 

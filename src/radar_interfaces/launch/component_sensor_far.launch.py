@@ -5,8 +5,6 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    # 两个组件放在一个 container 里，也就是共享一个进程，可以降低负载
-    # 通常情况下，开发阶段使用分开进程的方式，生产环境使用这种方式
     camera_params = os.path.join(
             get_package_share_directory('radar_interfaces'),
             'config',
@@ -18,29 +16,29 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container',
             composable_node_descriptions=[
-                ComposableNode(
-                    namespace='sensor_far',
-                    name='bayer_camera_driver',
-                    package='bayer_camera_driver',
-                    plugin='bayer_camera_driver::HikvisionDriver',
-                    parameters=[
-                      {
-                        "camera_name": 'camera_far',
-                        "camera_height": 1200,
-                        "camera_width": 1920,
-                        "camera_exp":2500.0,
-                        "camera_gain": 23.98,
-                        "camera_auto_exp": 0,
-                        "camera_auto_maxexp": 4500.0,
-                        "camera_auto_minexp": 100.0,
-                        "camera_auto_gain": 0,
-                        "camera_auto_maxgain": 17.0,
-                        "camera_auto_mingain": 0.0,
-                        "camera_auto_whitebalance": 0,
-                      }
-                    ],
-                    extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                # ComposableNode(
+                #     namespace='sensor_far',
+                #     name='bayer_camera_driver',
+                #     package='bayer_camera_driver',
+                #     plugin='bayer_camera_driver::HikvisionDriver',
+                #     parameters=[
+                #       {
+                #         "camera_name": 'camera_far',
+                #         "camera_height": 1200,
+                #         "camera_width": 1920,
+                #         "camera_exp":1500.0,
+                #         "camera_gain": 13.98,
+                #         "camera_auto_exp": 0,
+                #         "camera_auto_maxexp": 4500.0,
+                #         "camera_auto_minexp": 100.0,
+                #         "camera_auto_gain": 0,
+                #         "camera_auto_maxgain": 17.0,
+                #         "camera_auto_mingain": 0.0,
+                #         "camera_auto_whitebalance": 1,
+                #       }
+                #     ],
+                #     extra_arguments=[{'use_intra_process_comms': True}]
+                # ),
                 ComposableNode(
                     package='yolov5_detect',
                     plugin='yolov5_detect::Yolov5Detector',
@@ -49,7 +47,10 @@ def generate_launch_description():
                     parameters=[
                       {
                         "show_by_cv_or_msg": 0,
-                        "camera_name": "sensor_far"
+                        "camera_name": "sensor_far",
+                        "rgb_or_bayer": True,
+                        "light_gain": 2.0,
+                        "saturation_gain": 1.6
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]
@@ -69,9 +70,9 @@ def generate_launch_description():
                     remappings=[('/sensor_far/livox/lidar', '/sensor_close/livox/lidar')],
                     parameters=[
                       {
-                        "camera_matrix": [2740.785753, 0.0, 942.857551, 0.0, 2730.148347, 595.336, 0.0, 0.0, 1.0],
-                        "distortion_coefficient": [-0.118461, 0.884219, -0.000027, -0.001337, 0.0],
-                        "uni_matrix": [0.158509, -0.987162, 0.0196718, 0.13549, 0.122233, -0.000151194, -0.992501, -0.0109141, 0.979762, 0.159725, 0.12064, -0.100546],
+                        "camera_matrix": [2786.15556, 0.0, 973.55417, 0.0, 2776.847274, 618.336654, 0.0, 0.0, 1.0],
+                        "distortion_coefficient": [-0.102390, 0.924797, -0.002373, 0.002358, 0.0],
+                        "uni_matrix": [-0.000301777, -0.999289, -0.0377013, -0.142598, 0.21708, 0.0367368, -0.975462, 0.0091706, 0.976154, -0.00847858, 0.216915, 0.0844117],
                         "length_of_cloud_queue": 10,
                         "image_width": 1920, # 1280
                         "image_height": 1200, # 1024,

@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     std::string num_engine_name;
 
     // if necessary, serialize the wts file to an engine file, and return the directory of engine file
-    if (FilePreparation(true, false, false,&car_engine_name, &num_engine_name)) {
+    if (FilePreparation(false, true, false,&car_engine_name, &num_engine_name)) {
         return 0;
     }
 
@@ -891,8 +891,8 @@ bool FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num,
     std::string car_wts_name = data_dir + "/weights/car_7_18_1_3k.wts";
     std::string car_engine_name = data_dir + "/engine/car_7_18_1_3k.engine";
     * return_car_engine = car_engine_name;
-    std::string num_wts_name = data_dir + "/weights/bestnum_5_26_1_5w.wts";
-    std::string num_engine_name = data_dir + "/engine/bestnum_5_26_1_5w.engine";
+    std::string num_wts_name = data_dir + "/weights/bestnum_light_1k.wts";
+    std::string num_engine_name = data_dir + "/engine/bestnum_light_1k.engine";
     * return_num_engine = num_engine_name;
     float gd = 0.33f, gw = 0.50f;  //extracted from parse_args()
 

@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "yolov5_detect_component.h"
 
 namespace yolov5_detect {
@@ -42,8 +44,10 @@ namespace yolov5_detect {
             cv::namedWindow(win_name);
             cv::startWindowThread();
         }
-
-//        filter_stack = std::vector<std::deque<cv::Point2f>>(12);
+        pro_start_time = std::chrono::duration<double, std::milli>(
+                std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        cost_matrix = std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
+        sorted_cost_matrix = std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
     }
 
     Yolov5Detector::~Yolov5Detector() {
@@ -75,25 +79,28 @@ namespace yolov5_detect {
 
     void Yolov5Detector::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg) {
         std::vector<cv::Mat> img_batch;
-        std::chrono::duration<double, std::milli> diff_time = std::chrono::high_resolution_clock::now() - last_frame_time;
-        double diff_time_ms = diff_time.count();
-        last_frame_time = std::chrono::high_resolution_clock::now();
-        // Decode the Bayer image to BGR format
-        cv_bridge::CvImagePtr cv_ptr;
+        last_frame_time_ms = current_time_ms;
+        current_time_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::high_resolution_clock::now().time_since_epoch()).count() - pro_start_time;
         cv::Mat src, src_raw;
-        src = cv_bridge::toCvShare(msg, "bgr8")->image;
-//        try {
-//            cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
-//        } catch (cv_bridge::Exception &e) {
-//            RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
-//            return;
-//        }
-//        cv::cvtColor(cv_ptr->image, src, cv::COLOR_BayerBG2BGR);
-//        if (src.empty()) {
-//            RCLCPP_ERROR(this->get_logger(), "image is empty");
-//            return;
-//        }
+        if (rgb_or_bayer) {
+            cv_bridge::CvImagePtr cv_ptr;
+            try {
+                cv_ptr = cv_bridge::toCvCopy(msg, msg->encoding);
+            } catch (cv_bridge::Exception &e) {
+                RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
+                return;
+            }
+            cv::cvtColor(cv_ptr->image, src, cv::COLOR_BayerBG2BGR);
+            if (src.empty()) {
+                RCLCPP_ERROR(this->get_logger(), "image is empty");
+                return;
+            }
+        } else {
+            src = cv_bridge::toCvShare(msg, "bgr8")->image;
+        }
         src.copyTo(src_raw);
+//        tune_img(src);
         img_batch.push_back(src);
 
         // 第一层识别开始，Preprocess
@@ -139,7 +146,7 @@ namespace yolov5_detect {
             }
 
             cv::Mat roi_car;
-            src(detected_rect_of_car).copyTo(roi_car);
+            src_raw(detected_rect_of_car).copyTo(roi_car);
             if (roi_car.empty()) continue;
             img_car_batch.push_back(roi_car);
             if (++car_batch_length < kNumDetectBatchSize && iter_detected_car < (int) detected_cars.size()) continue;
@@ -166,7 +173,7 @@ namespace yolov5_detect {
                 best_num_detection.class_id = 14;
                 cv::Rect best_num_rect(0, 0, 0, 0);
                 // 对一张装甲板图像识别出的数字进行迭代，选出正对雷达站的装甲板
-                for (auto & result_Detection_num : result_Detection_nums) {
+                for (auto &result_Detection_num: result_Detection_nums) {
 //                std::cout << result_Detection_nums[m].class_id << std::endl;
                     cv::Rect number_in_roi = get_rect(img_car_batch[iter_nums_batch], result_Detection_num.bbox);
                     cv::Rect number_in_img = number_in_roi;
@@ -183,13 +190,11 @@ namespace yolov5_detect {
 //                }
                 }
                 //根据装甲板ID修改车的ID（14是未识别出，12是红方未识别出，13是蓝方未识别出，其他编号一致）
-                int if_is_blue, tracker_id;
+                int if_is_blue = int(detected_cars[car_count_in_batch].class_id), tracker_id;
                 if ((int) best_num_detection.class_id == 14) {  // 第二层yolo没识别出来
                     // TODO: 检查当前是否有工程且距离较近，如果有就是一个工程给了两个框，直接去掉
-                    if_is_blue = int(detected_cars[car_count_in_batch].class_id);
                     detected_cars[car_count_in_batch].class_id = float(12 + if_is_blue);
                 } else {  //yolo识别出来了
-                    if_is_blue = int(detected_cars[car_count_in_batch].class_id);
                     detected_cars[car_count_in_batch].class_id = best_num_detection.class_id + float(6 * if_is_blue);
                 }
                 detected_cars[car_count_in_batch].conf = best_num_detection.conf;
@@ -197,12 +202,6 @@ namespace yolov5_detect {
                 radar_interfaces::msg::YoloPoint yolo_point_msg;
                 yolo_point_msg.id = (uint8_t) detected_cars[car_count_in_batch].class_id;
                 yolo_point_msg.conf = detected_cars[car_count_in_batch].conf;
-                for (int iii = 0; iii < 12; iii++) {
-                    if (yolo_point_msg.id == iii) {
-                        yolo_point_msg.tracker_id = (int16_t) id_tracker_table[iii];
-                        break;
-                    }
-                }
                 if (yolo_point_msg.id <= 5 || yolo_point_msg.id == 12) {
                     yolo_point_msg.color = false;
                 } else {
@@ -221,93 +220,64 @@ namespace yolov5_detect {
             ++car_batches_count;
         }
 
-        radar_interfaces::msg::YoloPoints filter_yolo_point_list_msg;
-        yolo_point_list_msg = remove_duplicate(yolo_point_list_msg); //自身框去重，相当于NMS
-        if (last_yolo_point_list.data.empty()) {
-            filter_yolo_point_list_msg = yolo_point_list_msg;
-        } else if (!yolo_point_list_msg.data.empty()){ // 帧间运动匹配
-            for (auto now_yolo_point: yolo_point_list_msg.data) {
-                cv::Rect now_rect = cv::Rect(now_yolo_point.x, now_yolo_point.y, now_yolo_point.width,now_yolo_point.height);
-                int now_id = now_yolo_point.id;
-                cv::Rect overlap_rect;
-                double max_overlap_area = 0;
-                int max_area_iter = 0;
-                for (int iter = 0; iter < (int) last_yolo_point_list.data.size(); iter++) { // 找出与last point重合度最大的point
-                    auto last_yolo_point = last_yolo_point_list.data[iter];
-                    cv::Rect last_rect = cv::Rect(last_yolo_point.x, last_yolo_point.y, last_yolo_point.width,
-                                                  last_yolo_point.height);
-                    overlap_rect = last_rect & now_rect;
-                    if (overlap_rect.area() > max_overlap_area) {
-                        max_overlap_area = overlap_rect.area();
-                        max_area_iter = iter;
-                    }
-                }
-                if (max_overlap_area < now_rect.area() * overlap_threshold) { // now在last中无对应点，认为其新增了point
-                    if (now_id < 12) {
-                        filter_yolo_point_list_msg.data.push_back(now_yolo_point);
-                    } else if (now_id == 12 || now_id == 13) {
-                        // TODO: 加一个处理，给未知的预测一个值
-                        filter_yolo_point_list_msg.data.push_back(now_yolo_point);
-                    }
-                } else { //now中某点能与last中部分点对应
-                    int last_id = last_yolo_point_list.data[max_area_iter].id;
-                    if (now_id == last_id || (now_id < 12 && last_id > 11)) {
-                        filter_yolo_point_list_msg.data.push_back(now_yolo_point);
-                        cv::circle(src_raw, cv::Point(now_yolo_point.x + 16,now_yolo_point.y + 16),
-                                   10, color_table["Purple"], -1); // adopt now
-                        last_yolo_point_list.data.erase(last_yolo_point_list.data.begin() + max_area_iter);
-                        continue; // 如果是同一辆车或now识别出、last为识别出，直接用now，跳过now的循环
-                    }
-                    if (now_id > 11) { // now未识别出，直接用重合度最大的last进行纠正，无论last是否识别出
-                        filter_yolo_point_list_msg.data.push_back(last_yolo_point_list.data[max_area_iter]);
-                        cv::circle(src_raw, cv::Point(now_yolo_point.x + 16,now_yolo_point.y + 16),
-                                   10, color_table["Yellow"], -1); // adopt last
-                        last_yolo_point_list.data.erase(last_yolo_point_list.data.begin() + max_area_iter);
-                    } else { // now和last都识别出了，但是相矛盾，进行纠正
-                        if ((last_id < 6 &&  now_id > 5) || (now_id < 6 && last_id > 5)) {
-                            filter_yolo_point_list_msg.data.push_back(now_yolo_point); // adopt now
-                        } else if ((last_id < 6 && now_id < 6) || (now_id > 5 && last_id > 5 && last_id < 12)) {
-                            if (diff_time_ms < time_threshold) {
-                                filter_yolo_point_list_msg.data.push_back(last_yolo_point_list.data[max_area_iter]);
-                                cv::circle(src_raw, cv::Point(now_yolo_point.x + 16,now_yolo_point.y + 16),
-                                           10, color_table["Yellow"], -1); // adopt last
-                                last_yolo_point_list.data.erase(last_yolo_point_list.data.begin() + max_area_iter);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-//        filter_yolo_point_list_msg = yolo_point_list_msg;
-        last_yolo_point_list = filter_yolo_point_list_msg;
-        show_yolo_result_in_img(filter_yolo_point_list_msg, src_raw);
-        // 将yolo识别的矩形发布
-        if (!filter_yolo_point_list_msg.data.empty()) {
-            this->rect_publisher_->publish(filter_yolo_point_list_msg);
-            // TODO : cancel debug out
-//            std::cout << std::endl << "close_rectangles_publish_one_msg: " << std::endl;
-//            for (auto &i : rect_msg.data) {
-//                std::cout << "id: " << (int)i.id << " , [ " << i.x << " , " << i.y << " , (" << i.width << " , " << i.height << ") ]"<< std::endl;
+//        radar_interfaces::msg::YoloPoints tracker_yolo_point_list_msg = remove_duplicate(yolo_point_list_msg);
+//        if (init_tracker(tracker_yolo_point_list_msg)) {
+//            std::cout << call_count << std::endl;
+//            if (!tracker_yolo_point_list_msg.data.empty()) {
+////                std::cout << tracker_yolo_point_list_msg.data.size() << ", " << prediction_points.size() << " ===> ";
+//                if (filter_tracker_and_predict()) {
+////                    std::cout << tracker_yolo_point_list_msg.data.size() << ", " << prediction_points.size() << " ===> (calc)";
+//                    calc_cost(tracker_yolo_point_list_msg);
+//                    if (!sorted_cost_matrix.empty() && !sorted_points.data.empty()) {
+////                        std::cout << "(calc)  " << tracker_yolo_point_list_msg.data.size() << ", " << prediction_points.size() << " ===> ";
+//                        KM_matching(tracker_yolo_point_list_msg.data.size(),
+//                                    prediction_points.size(), cost_matrix);
+//                        update_tracker(tracker_yolo_point_list_msg); // TODO
+//                    }
+//                } else {
+////                    std::cout << tracker_yolo_point_list_msg.data.size() << ", " << prediction_points.size() << " (else)";
+//                    track_element temp_te;
+//                    for (auto yps: tracker_yolo_point_list_msg.data) {
+//                        temp_te.rect = cv::Rect(yps.x, yps.y, yps.width, yps.height);
+//                        temp_te.time = current_time_ms;
+//                        temp_te.last_time = current_time_ms - 300;
+//                        temp_te.conf = yps.conf;
+//                        temp_te.class_id = yps.id;
+//                        temp_te.obsoleted = false;
+//                        if (yps.id < 11) {
+//                            temp_te.track_id = yps.id;
+//                        } else {
+//                            temp_te.track_id = tracker.size();
+//                            tracker.push_back(temp_te);
+//                        }
+//                    }
+//                }
+////                std::cout << std::endl;
 //            }
-            // TODO : end at here
+//        }
+
+        show_yolo_result_in_img(yolo_point_list_msg, src);
+        // 将yolo识别的矩形发布
+        if (!yolo_point_list_msg.data.empty()) {
+            this->rect_publisher_->publish(yolo_point_list_msg);
         } else {
             radar_interfaces::msg::YoloPoints rect_msg_4_none;
             rect_msg_4_none.text = "none";
             this->rect_publisher_->publish(rect_msg_4_none);
         }
         // 将yolo检图像测结果发布
-        add_time_in_img(src_raw, diff_time_ms);
+        add_time_in_img(src, current_time_ms - last_frame_time_ms);
         if (show_by_cv_or_msg == 1) {
             cv_bridge::CvImage yolo_result_img;
             yolo_result_img.encoding = "bgr8";
             yolo_result_img.header.stamp = this->now();
-            yolo_result_img.image = src_raw;
+            yolo_result_img.image = src;
             sensor_msgs::msg::Image yolo_result_msg;
             yolo_result_img.toImageMsg(yolo_result_msg);
             this->yolo_publisher_->publish(yolo_result_msg);
         } else if (show_by_cv_or_msg == 0) {
-            cv::resize(src_raw, src_raw, cv::Size(src_raw.cols*0.7, src_raw.rows*0.7));
-            cv::imshow(win_name, src_raw);
+            cv::resize(src, src, cv::Size(src.cols * 0.7, src.rows * 0.7));
+            cv::imshow(win_name, src);
         }
     }
 
@@ -448,10 +418,27 @@ namespace yolov5_detect {
     }
 
     void Yolov5Detector::load_parameters() {
-        this->declare_parameter<std::string>("camera_name", "camera_init");
-        camera_name = this->get_parameter("camera_name").as_string();
-        this->declare_parameter<int>("show_by_cv_or_msg", 0);
-        show_by_cv_or_msg = this->get_parameter("show_by_cv_or_msg").as_int();
+        declare_parameter<std::string>("camera_name", "camera_init");
+        declare_parameter<int>("show_by_cv_or_msg", 0);
+        declare_parameter<bool>("rgb_or_bayer", false);
+        declare_parameter<double>("light_gain", 0.0);
+        declare_parameter<double>("saturation_gain", 0.0);
+
+        camera_name = get_parameter("camera_name").as_string();
+        show_by_cv_or_msg = get_parameter("show_by_cv_or_msg").as_int();
+        rgb_or_bayer = get_parameter("rgb_or_bayer").as_bool();
+        light_gain = get_parameter("light_gain").as_double();
+        saturation_gain = get_parameter("saturation_gain").as_double();
+
+//        camera_name = "camera_far";
+//        show_by_cv_or_msg = 0;
+//        rgb_or_bayer = false;
+//        light_gain = 2.0;
+//        saturation_gain = 1.6;
+
+        RCLCPP_INFO(get_logger(), "camera_name:[%s]\nshow_by_cv_or_msg:[%d]\nrgb_or_bayer:[%d]",
+                    camera_name.c_str(), show_by_cv_or_msg, rgb_or_bayer, light_gain);
+        RCLCPP_INFO(get_logger(), "light_gain:[%f]\nsaturation_gain:[%f]", light_gain, saturation_gain);
     }
 
     void Yolov5Detector::Detection_2_SortBox(cv::Mat &img, const std::vector<Detection> &src_box,
@@ -484,117 +471,7 @@ namespace yolov5_detect {
         }
     }
 
-    void Yolov5Detector::id_process(cv::Mat &img, const std::vector<DetectBox> &D_box,
-                                    std::vector<Detection> &detected_cars) {
-        // D_box:lt,rb    detected_cars:center_x, center_y, w, h
-        // 1xxxxx stand for red, 2xxxxx stands for blue, xxxxx stand for tracker ID
-        for (size_t i = 0; i < D_box.size(); i++) {
-            cv::Point lt((int) D_box[i].x1, (int) D_box[i].y1), rb((int) D_box[i].x2, (int) D_box[i].y2);
-            cv::Rect D_rect(lt, rb);
-            for (size_t j = 0; j < detected_cars.size(); j++) {
-                cv::Rect R_rect = get_rect(img, detected_cars[j].bbox);
-                if (D_rect.contains(cv::Point(R_rect.x + R_rect.width / 2, R_rect.y + R_rect.height / 2))) {
-                    detected_cars[j].class_id = ((detected_cars[j].class_id + 1) * 100000) + D_box[i].trackID;
-                    break;
-                }
-            }
-        }
-    }
-
-
-    void Yolov5Detector::id_correct(float id_yolo, float &id_dst, bool if_far) {
-        int is_blue, tracker_id, *id_tracker_table;
-//    if (if_far) id_tracker_table = id_tracker_far_table;
-//    else id_tracker_table = id_tracker_close_table;
-        if ((int) id_yolo == 14) {  // yolo识别没出来
-            if (id_dst >= 10000) {  //tracker追踪到了这个车
-                is_blue = int(id_dst) / 100000 - 1 == 1;
-                tracker_id = int(id_dst) % 100000;
-                bool if_find = false;
-                for (int i = 0; i < 12; i++) {
-                    if (id_tracker_table[i] == tracker_id) {
-                        id_dst = (float) i;
-                        if_find = true;
-                        break;
-                    }
-                }
-                if (!if_find) {
-                    id_dst = float(12 + is_blue);
-                }
-            } else {  //tracker没追踪到
-                is_blue = int(id_dst);
-                id_dst = float(12 + is_blue);
-            }
-        } else {  //yolo识别出来了
-            if (id_dst >= 10000) {  //tracker追踪到了这个车
-                is_blue = int(id_dst) / 100000 - 1 == 1;
-                tracker_id = int(id_dst) % 100000;
-                id_dst = id_dst + float(6 * is_blue);
-                for (int j = 0; j < 12; j++) {
-                    if (id_tracker_table[j] == tracker_id) id_tracker_table[j] = 0;
-                }
-                std::cout << id_tracker_table[int(id_dst)] << std::endl;
-                id_tracker_table[int(id_dst)] = tracker_id;
-            } else {  //tracker没追踪到
-                is_blue = int(id_dst);
-                id_dst = id_dst + float(6 * is_blue);
-            }
-        }
-    }
-
-    int Yolov5Detector::encoding2mat_type(const std::string &encoding) {
-        if (encoding == sensor_msgs::image_encodings::BAYER_RGGB8) {
-            return CV_BayerRG2BGR;
-        } else if (encoding == sensor_msgs::image_encodings::BAYER_BGGR8) {
-            return CV_BayerBG2BGR;
-        } else if (encoding == sensor_msgs::image_encodings::BAYER_GRBG8) {
-            return CV_BayerGR2BGR;
-        } else if (encoding == sensor_msgs::image_encodings::BAYER_GBRG8) {
-            return CV_BayerGB2BGR;
-        } else {
-            throw std::runtime_error("Unsupported encoding type");
-        }
-    }
-
-    void Yolov5Detector::filter_points(const std::array<std::deque<cv::Point2f>, 12>& p_stack,
-                       std::array<std::vector<cv::Point2f>, 6>& red_stack,
-                       std::array<std::vector<cv::Point2f>, 6>& blue_stack) {
-        for (int i = 0; i < 12; i++) {
-            if (i < 6) {
-                for (int j = 0; j < 8; j++) {
-                    if ((p_stack[i][j].x > 0 || p_stack[i][j].y > 0) && red_stack[i].size() < 4) {
-                        red_stack[i].push_back(p_stack[i][j]);
-                    }
-                }
-            } else {
-                for (int j = 0; j < 8; j++) {
-                    if ((p_stack[i][j].x > 0 || p_stack[i][j].y > 0) && blue_stack[i].size() < 4) {
-                        blue_stack[i].push_back(p_stack[i][j]);
-                    }
-                }
-            }
-        }
-    }
-
-    int Yolov5Detector::classify(const std::array<std::vector<cv::Point2f>, 6>& category_stack,
-                                 const cv::Point2f& point) {
-        double min_distance = std::numeric_limits<float>::max();
-        int min_index = -1;
-
-        for (int i = 0; i < 6; ++i) {
-            for (const auto& j : category_stack[i]) {
-                double dist = cv::norm(point-j);
-                if (dist < min_distance) {
-                    min_distance = dist;
-                    min_index = i;
-                }
-            }
-        }
-
-        return min_index;
-    }
-
-    void Yolov5Detector::add_time_in_img(cv::Mat& img, double time) {
+    void Yolov5Detector::add_time_in_img(cv::Mat &img, double time) {
         std::string text = std::to_string(time) + " ms";
         // 计算文本的大小
         int fontFace = cv::FONT_HERSHEY_SIMPLEX;
@@ -610,7 +487,7 @@ namespace yolov5_detect {
 
     bool Yolov5Detector::check_same_id(radar_interfaces::msg::YoloPoints yoloPointList, int id, int threshold) {
         int count = 0;
-        for (auto i : yoloPointList.data) {
+        for (auto i: yoloPointList.data) {
             if (i.id == id) {
                 count++;
             }
@@ -618,12 +495,13 @@ namespace yolov5_detect {
         return count > threshold;
     }
 
-    void Yolov5Detector::show_yolo_result_in_img(radar_interfaces::msg::YoloPoints filter_yolo_point_list_msg, cv::Mat& src_raw) {
+    void Yolov5Detector::show_yolo_result_in_img(radar_interfaces::msg::YoloPoints filter_yolo_point_list_msg,
+                                                 cv::Mat &src_raw) {
         if (show_count++ > show_count_threshold) {
-            show_yolo_point_list = filter_yolo_point_list_msg;
+            show_yolo_point_list = std::move(filter_yolo_point_list_msg);
             show_count = 0;
         }
-        for (auto i : show_yolo_point_list.data) {
+        for (auto i: show_yolo_point_list.data) {
             std::string str_2_print, dui_str;
             switch ((int) i.id) {
                 case 0:
@@ -631,30 +509,35 @@ namespace yolov5_detect {
                 case 2:
                 case 3:
                 case 4: {
-                    str_2_print = std::to_string(char((int)i.id + 1));
+                    str_2_print = std::to_string(char((int) i.id + 1));
                     break;
-                } case 5: {
+                }
+                case 5: {
                     str_2_print = "G";
                     break;
-                } case 6:
+                }
+                case 6:
                 case 7:
                 case 8:
                 case 9:
                 case 10: {
-                    str_2_print = std::to_string(char((int)i.id - 5));
+                    str_2_print = std::to_string(char((int) i.id - 5));
                     break;
-                } case 11: {
+                }
+                case 11: {
                     str_2_print = "G";
                     break;
-                } case 12:
+                }
+                case 12:
                 case 13: {
                     str_2_print = "X";
                     break;
                 }
-                default: str_2_print = "===";
+                default:
+                    str_2_print = "===";
             }
-            cv::putText(src_raw, str_2_print,cv::Point(i.x + 12, i.y - 1),
-                        cv::FONT_HERSHEY_PLAIN, 2,color_table["Green"], 2);
+            cv::putText(src_raw, str_2_print, cv::Point(i.x + 12, i.y - 1),
+                        cv::FONT_HERSHEY_PLAIN, 2, color_table["Green"], 2);
 
             if ((int) i.id < 6 || i.id == 12) {
                 dui_str = "Red";
@@ -671,43 +554,61 @@ namespace yolov5_detect {
     /*
      * 综合考虑两个框的重合度和id情况进行去重
      */
-    radar_interfaces::msg::YoloPoints Yolov5Detector::remove_duplicate(radar_interfaces::msg::YoloPoints& yoloPointList) {
+    radar_interfaces::msg::YoloPoints Yolov5Detector::remove_duplicate(radar_interfaces::msg::YoloPoints &yoloPointList) {
         radar_interfaces::msg::YoloPoints processed_msg;
-        for (const auto& pp1 : yoloPointList.data) {
+        for (const auto &pp1: yoloPointList.data) {
             bool overlap = false;
             cv::Rect r1 = cv::Rect(pp1.x, pp1.y, pp1.width, pp1.height);
-            for (auto& pp2 : processed_msg.data) {  //检查与已经加入有没有重复，如果新的更复合要求则把已经加入队列里的替换为新的
+            for (auto &pp2: processed_msg.data) {  //检查与已经加入有没有重复，如果新的更复合要求则把已经加入队列里的替换为新的
                 cv::Rect r2 = cv::Rect(pp2.x, pp2.y, pp2.width, pp2.height);
                 cv::Rect intersect = r1 & r2;
                 int overlapArea = intersect.area();
-                if (pp1.id == pp2.id) {
+                if (int(pp1.id) == int(pp2.id) && int(pp1.id) < 12 && int(pp2.id) < 12) {
                     overlap = true; // 具有重叠度且两个id相同，则认定面积较大的
-                    if (r1.area() > r2.area()) {
-                        pp2 = pp1;
-                    }
+//                    std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
+                    if (r1.area() > r2.area()) pp2 = pp1;
                     break;
-                } else if ((pp1.id == 12 && pp2.id < 6) ||(pp1.id == 13 && pp2.id < 12 && pp2.id > 5) ) {
-                    if (overlapArea > 0.05 * r1.area() || overlapArea > 0.05 * r2.area()) {
+                } else if ((int(pp1.id) == 12 && int(pp2.id) < 6) ||
+                           (int(pp1.id) == 13 && int(pp2.id) < 12 && int(pp2.id) > 5)) {
+                    if (overlapArea > 3 * duplicate_threshold * r1.area() ||
+                        overlapArea > 3 * duplicate_threshold * r2.area()) {
+//                        std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
                         overlap = true; // 重叠度较高且pp1为未知
                         break;
                     }
-                } else if ((pp2.id == 12 && pp1.id < 6) ||(pp2.id == 13 && pp1.id < 12 && pp1.id > 5) ) {
-                    if (overlapArea > 0.05 * r1.area() || overlapArea > 0.05 * r2.area()) {
+                } else if ((int(pp2.id) == 12 && int(pp1.id) < 6) ||
+                           (int(pp2.id) == 13 && int(pp1.id) < 12 && int(pp1.id) > 5)) {
+                    if (overlapArea > 3 * duplicate_threshold * r1.area() ||
+                        overlapArea > 3 * duplicate_threshold * r2.area()) {
+//                        std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
                         overlap = true; // 重叠度较高且pp2为未知
                         pp2 = pp1;
                         break;
                     }
-                } else if ((pp1.id == 12 && pp2.id == 12) || (pp1.id == 13 && pp2.id == 13)
-                || (pp1.id < 6 && pp2.id < 6) || (pp1.id > 5 && pp1.id < 12 && pp2.id > 5 && pp2.id < 12)) {
-                    if (overlapArea > 0.1 * r1.area() || overlapArea > 0.1 * r2.area()) {
+                } else if ((int(pp1.id) == 12 && int(pp2.id) == 12) || (int(pp1.id) == 13 && int(pp2.id) == 13)) {
+                    if (overlapArea > 6 * duplicate_threshold * r1.area() ||
+                        overlapArea > 6 * duplicate_threshold * r2.area()) {
+//                        std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
                         overlap = true; // 重叠度较高且都为未知
                         if (r1.area() > r2.area()) pp2 = pp1;
                         break;
                     }
-                }  else if ((pp1.id == 12 && pp2.id == 13) || (pp1.id == 13 && pp2.id == 12)
-                || (pp1.id < 6 && pp2.id > 5 && pp2.id < 12) || (pp1.id > 5 && pp1.id < 12 && pp2.id < 6)) {
-                    if (overlapArea > 0.2 * r1.area() || overlapArea > 0.2 * r2.area()) {
-                        overlap = true; // 重叠度较高且都为已知
+                } else if ((int(pp1.id) < 6 && int(pp2.id) < 6) ||
+                           (int(pp1.id) > 5 && int(pp1.id) < 12 && int(pp2.id) > 5 && int(pp2.id) < 12)) {
+                    if (overlapArea > 8 * duplicate_threshold * r1.area() ||
+                        overlapArea > 8 * duplicate_threshold * r2.area()) {
+//                        std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
+                        overlap = true; // 重叠度较高且都为未知
+                        if (r1.area() > r2.area()) pp2 = pp1;
+                        break;
+                    }
+                } else if ((int(pp1.id) == 12 && int(pp2.id) == 13) || (int(pp1.id) == 13 && int(pp2.id) == 12)
+                           || (int(pp1.id) < 6 && int(pp2.id) > 5 && int(pp2.id) < 12) ||
+                           (int(pp1.id) > 5 && int(pp1.id) < 12 && int(pp2.id) < 6)) {
+                    if (overlapArea > 8 * duplicate_threshold * r1.area() ||
+                        overlapArea > 8 * duplicate_threshold * r2.area()) {
+//                        std::cout << "[" << int(pp1.id) << ", " << int(pp2.id) << "] "<<overlapArea << " , 1:" << r1.area() << ", 2:" << r2.area() << std::endl;
+                        overlap = true; // 重叠度较高且异色
                         if (r1.area() > r2.area()) pp2 = pp1;
                         break;
                     }
@@ -720,9 +621,278 @@ namespace yolov5_detect {
         return processed_msg;
     }
 
+    bool Yolov5Detector::check_same_color(const radar_interfaces::msg::YoloPoint &a,
+                                          const radar_interfaces::msg::YoloPoint &b) {
+        return (
+                ((a.id < 6 || a.id == 12) && (b.id < 6 || b.id == 12)) ||
+                (((b.id >= 6 && b.id < 12) || b.id == 13) && ((a.id >= 6 && a.id < 12) || a.id == 13))
+        );
+    }
+
+    void Yolov5Detector::tune_img(cv::Mat &src) {
+        cv::Mat hsvImg;
+
+        cv::cvtColor(src, hsvImg, cv::COLOR_BGR2HSV);
+        std::vector<cv::Mat> hsvChannels;
+        cv::split(hsvImg, hsvChannels);
+        hsvChannels[1] *= saturation_gain;
+        hsvChannels[2] *= light_gain;
+
+        cv::merge(hsvChannels, hsvImg);
+        cv::cvtColor(hsvImg, src, cv::COLOR_HSV2BGR);
+    }
+
+    bool Yolov5Detector::init_tracker(const radar_interfaces::msg::YoloPoints &yps) {
+        call_count++;
+        if (call_count == 1) {
+            for (int i = 0; i < 12; i++) {
+                track_element temp_te;
+                temp_te.obsoleted = false;
+                temp_te.class_id = i;
+                temp_te.time = current_time_ms - 500;
+                temp_te.last_time = current_time_ms - 1000;
+                temp_te.track_id = i;
+                tracker.push_back(temp_te);
+            }
+            for (auto i: yps.data) {
+                track_element temp_te;
+                temp_te.class_id = i.id;
+                temp_te.conf = i.conf;
+                temp_te.rect = cv::Rect(i.x, i.y, i.width, i.height);
+                temp_te.time = current_time_ms;
+                temp_te.last_time = current_time_ms - 300;
+                temp_te.obsoleted = false;
+                if (i.id < 12) {
+                    temp_te.track_id = i.id;
+                    tracker[i.id] = temp_te;
+                } else {
+                    temp_te.track_id = (int) tracker.size();
+                    tracker.push_back(temp_te);
+                }
+            }
+            return false;
+        } else if (call_count == 2) {
+            for (auto i: yps.data) {
+                track_element temp_te;
+                temp_te.class_id = i.id;
+                temp_te.conf = i.conf;
+                temp_te.last_rect = temp_te.rect;
+                temp_te.rect = cv::Rect(i.x, i.y, i.width, i.height);
+                temp_te.last_time = temp_te.time;
+                temp_te.time = current_time_ms;
+                temp_te.obsoleted = false;
+                if (i.id < 12) {
+                    temp_te.track_id = i.id;
+                    tracker[i.id] = temp_te;
+                } else {
+                    temp_te.track_id = (int) tracker.size();
+                    tracker.push_back(temp_te);
+                }
+            }
+            return false;
+        } else if (call_count >= 3) return true;
+    }
+
+    bool Yolov5Detector::filter_tracker_and_predict() {
+        prediction_points.clear();
+        double last_diff_time = 0.0, current_diff_time = 0.0;
+        for (auto i = tracker.begin(); i != tracker.end(); i++) {
+            current_diff_time = current_time_ms - i->time;
+            if (current_diff_time > 3000 && i->track_id > 11) {
+                i->obsoleted = true;
+//                std::cout << "3000(r)" << std::endl;
+            }
+        }
+        std::pair<int, radar_interfaces::msg::YoloPoint> temp_p;
+        for (const auto &i: tracker) {
+            current_diff_time = current_time_ms - i.time;
+//            std::cout << current_diff_time << "cdt" << std::endl;
+            if (current_diff_time < 400 && !i.obsoleted) {
+//                std::cout << "c400(g)" << std::endl;
+                last_diff_time = i.time - i.last_time;
+                if (last_diff_time < 400) {
+//                    std::cout << "l<400(g)" << std::endl;
+                    temp_p.first = i.track_id;
+                    temp_p.second.id = i.class_id;
+                    temp_p.second.conf = i.conf;
+                    if (last_diff_time > 200) {
+//                        std::cout << "l>200(g)" << std::endl;
+                        temp_p.second.x = i.rect.x;
+                        temp_p.second.y = i.rect.y;
+                        temp_p.second.width = i.rect.width;
+                        temp_p.second.height = i.rect.height;
+                    } else { // 如果之前两帧（前一帧和前前帧）之间的时间差小于500ms，则进行线性预测
+//                        std::cout << "l<200(g)" << std::endl;
+                        temp_p.second.x =
+                                i.rect.x + (i.rect.x - i.last_rect.x) * current_diff_time / last_diff_time;
+                        temp_p.second.y =
+                                i.rect.y + (i.rect.y - i.last_rect.y) * current_diff_time / last_diff_time;
+                        temp_p.second.width = i.rect.width;
+                        temp_p.second.height = i.rect.height;
+                    }
+                    prediction_points.push_back(temp_p);
+                }
+            }
+        }
+        return !prediction_points.empty();
+    }
+
+    void Yolov5Detector::calc_cost(radar_interfaces::msg::YoloPoints &now_points) {
+        cost_matrix = std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
+        sorted_cost_matrix = std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
+        sorted_points.data.clear();
+        int max_dist = 0;
+        for (int i = 0; i < now_points.data.size(); i++) {
+            for (int j = 0; j < prediction_points.size(); j++) {
+                double dist = calc_dist(now_points.data[i].x, now_points.data[i].y,
+                                        prediction_points[j].second.x, prediction_points[j].second.y);
+                int cost = int(dist / std::max(now_points.data[i].width, now_points.data[i].height) * 10);
+                max_dist = std::max(max_dist, cost);
+                cost_matrix[i][j] = cost;
+            }
+        }
+        std::vector<std::pair<int, int>> max_cost_list_and_index;
+        std::pair<int, int> temp_pair;
+        for (int i = 0; i < now_points.data.size(); i++) {
+            for (int j = 0; j < prediction_points.size(); j++) {
+                cost_matrix[i][j] = max_dist + 200 - cost_matrix[i][j];
+                if (prediction_points[j].second.id == now_points.data[i].id &&
+                    prediction_points[j].second.id < 12 && now_points.data[i].id < 12) {
+                    cost_matrix[i][j] *= 2;
+                } else if (check_same_color(prediction_points[j].second, now_points.data[i])) {
+                    cost_matrix[i][j] *= 1.5;
+                }
+            }
+            temp_pair.first = *std::max_element(cost_matrix[i].begin(), cost_matrix[i].end());
+            temp_pair.second = i;
+            max_cost_list_and_index.push_back(temp_pair);
+        }
+        std::sort(max_cost_list_and_index.begin(), max_cost_list_and_index.end(),
+                  [](const std::pair<int, int> &a, const std::pair<int, int> &b) {
+                      return a.first > b.first;
+                  });
+        for (int i = 0; i < max_cost_list_and_index.size(); i++) {
+            sorted_points.data.push_back(now_points.data[max_cost_list_and_index[i].second]);
+            sorted_cost_matrix[i] = cost_matrix[max_cost_list_and_index[i].second];
+        }
+        std::cout << sorted_points.data.size() << ", " << prediction_points.size() << " ===> ";
+        while (sorted_points.data.size() > prediction_points.size()) {
+            int target_iter = 0;
+            for (int i = sorted_points.data.size() - 1; i > -1; i--) {
+                std::cout << i << std::endl;
+                if (sorted_points.data[i].id >= 12) {
+                    target_iter = i;
+                    track_element temp_te;
+                    temp_te.class_id = sorted_points.data[i].id;
+                    temp_te.conf = sorted_points.data[i].conf;
+                    temp_te.rect = cv::Rect(sorted_points.data[i].x, sorted_points.data[i].y,
+                                            sorted_points.data[i].width, sorted_points.data[i].height);
+                    temp_te.time = current_time_ms;
+                    temp_te.last_time = current_time_ms - 300;
+                    temp_te.track_id = (int) tracker.size();
+                    temp_te.obsoleted = false;
+                    tracker.push_back(temp_te);
+                    break;
+                }
+            }
+            sorted_points.data.erase(sorted_points.data.begin() + target_iter);
+            sorted_cost_matrix.erase(sorted_cost_matrix.begin() + target_iter);
+        }
+        std::cout << sorted_points.data.size() << ", " << prediction_points.size() << std::endl;
+        cost_matrix = sorted_cost_matrix;
+        now_points.data = sorted_points.data;
+    }
+
+    void Yolov5Detector::update_tracker(radar_interfaces::msg::YoloPoints &now_points) {
+        int x_count = 0, y_count = 0;
+        std::vector<int> matchX(now_points.data.size());
+        for (auto i: matchY) {
+            if (i < 0 || i >= matchX.size()) continue;
+            matchX[i] = y_count++;
+        }
+        for (auto i: matchX) {
+            std::cout << "[" << x_count << ", " << i << "] *" ;
+            radar_interfaces::msg::YoloPoint temp_yp = now_points.data[x_count++];
+            if (temp_yp.id == prediction_points[i].second.id &&
+                temp_yp.id < 12 && prediction_points[i].second.id < 12) {
+                std::cout << "a*  " ;
+                tracker[prediction_points[i].first].last_rect = tracker[prediction_points[i].first].rect;
+                tracker[prediction_points[i].first].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width,
+                                                                    temp_yp.height);
+                tracker[prediction_points[i].first].last_time = tracker[prediction_points[i].first].time;
+                tracker[prediction_points[i].first].time = current_time_ms;
+                tracker[prediction_points[i].first].conf = temp_yp.conf;
+            } else if (check_same_color(temp_yp, prediction_points[i].second)) {
+                if (tracker[prediction_points[i].first].class_id < 12 && temp_yp.id > 11) {
+                    std::cout << "b*  " ;
+                    now_points.data[x_count].id = tracker[prediction_points[i].first].class_id;
+                    tracker[prediction_points[i].first].last_rect = tracker[prediction_points[i].first].rect;
+                    tracker[prediction_points[i].first].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width,
+                                                                        temp_yp.height);
+                    tracker[prediction_points[i].first].last_time = tracker[prediction_points[i].first].time;
+                    tracker[prediction_points[i].first].time = current_time_ms;
+                    tracker[prediction_points[i].first].conf = temp_yp.conf;
+                } else if (tracker[prediction_points[i].first].class_id > 11 && temp_yp.id < 12) {
+                    if (tracker[temp_yp.id].time < current_time_ms || tracker[temp_yp.id].conf < temp_yp.conf) {
+                        std::cout << "c*  " ;
+                        tracker[temp_yp.id].last_rect = tracker[prediction_points[i].first].rect;
+                        tracker[temp_yp.id].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width, temp_yp.height);
+                        tracker[temp_yp.id].last_time = tracker[prediction_points[i].first].time;
+                        tracker[temp_yp.id].time = current_time_ms;
+                        tracker[temp_yp.id].conf = temp_yp.conf;
+                        tracker[prediction_points[i].first].obsoleted = true;
+                    } else {
+                        std::cout << "d*  " ;
+                        tracker[prediction_points[i].first].last_rect = tracker[prediction_points[i].first].rect;
+                        tracker[prediction_points[i].first].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width,
+                                                                            temp_yp.height);
+                        tracker[prediction_points[i].first].last_time = tracker[prediction_points[i].first].time;
+                        tracker[prediction_points[i].first].time = current_time_ms;
+                        tracker[prediction_points[i].first].conf /= 2;
+                        now_points.data[x_count].id = tracker[prediction_points[i].first].class_id;
+                    }
+                } else if (tracker[prediction_points[i].first].class_id > 11 && temp_yp.id > 11) {
+                    if (tracker[prediction_points[i].first].time < current_time_ms) {
+                        std::cout << "e*  " ;
+                        tracker[prediction_points[i].first].last_rect = tracker[prediction_points[i].first].rect;
+                        tracker[prediction_points[i].first].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width,
+                                                                            temp_yp.height);
+                        tracker[prediction_points[i].first].last_time = tracker[prediction_points[i].first].time;
+                        tracker[prediction_points[i].first].time = current_time_ms;
+                    } else {
+                        std::cout << "f*  " ;
+                        track_element temp_te;
+                        temp_te.rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width, temp_yp.height);
+                        temp_te.time = current_time_ms;
+                        temp_te.last_time = current_time_ms - 300;
+                        temp_te.conf = temp_yp.conf;
+                        temp_te.class_id = temp_yp.id;
+                        temp_te.track_id = tracker.size();
+                        temp_te.obsoleted = false;
+                        tracker.push_back(temp_te);
+                    }
+                }
+            } else { //TODO 异色
+                std::cout << "g*  " ;
+                track_element temp_te;
+                temp_te.rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width, temp_yp.height);
+                temp_te.time = current_time_ms;
+                temp_te.last_time = current_time_ms - 300;
+                temp_te.conf = temp_yp.conf;
+                temp_te.class_id = temp_yp.id;
+                temp_te.track_id = tracker.size();
+                temp_te.obsoleted = false;
+                tracker.push_back(temp_te);
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    double Yolov5Detector::calc_dist(int x1, int y1, int x2, int y2) {
+        return sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+    }
+
 }
-
-
 
 
 #include "rclcpp_components/register_node_macro.hpp"

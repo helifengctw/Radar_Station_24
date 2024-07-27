@@ -27,9 +27,9 @@ class Yolov5_Detect_Node : public rclcpp::Node {
 public:
     Yolov5_Detect_Node() : Node("image_subscriber") {
         far_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/sensor_far/raw/image", 10, std::bind(&Yolov5_Detect_Node::FarImageCallback, this, _1));
+                "/sensor_far/image_raw", 10, std::bind(&Yolov5_Detect_Node::FarImageCallback, this, _1));
         close_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-                "/sensor_close/raw/image", 10, std::bind(&Yolov5_Detect_Node::CloseImageCallback, this, _1));
+                "/sensor_close/image_raw", 10, std::bind(&Yolov5_Detect_Node::CloseImageCallback, this, _1));
     }
 
 
@@ -44,7 +44,18 @@ private:
 
 long int write_count_far = 0, valid_count_far = 0;
 long int write_count_close = 0, valid_count_close = 0;
+void tune_img(cv::Mat& src) {
+    cv::Mat hsvImg;
 
+    cv::cvtColor(src, hsvImg, cv::COLOR_BGR2HSV);
+    std::vector<cv::Mat> hsvChannels;
+    cv::split(hsvImg, hsvChannels);
+    hsvChannels[1] *= 2.0;
+    hsvChannels[2] *= 1.6;
+
+    cv::merge(hsvChannels, hsvImg);
+    cv::cvtColor(hsvImg, src, cv::COLOR_HSV2BGR);
+}
 
 int main(int argc, char** argv) {
     cv::namedWindow("sensor_far_view");
@@ -63,9 +74,9 @@ int main(int argc, char** argv) {
 
 void Yolov5_Detect_Node::FarImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
     cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
-
+    tune_img(src);
     if (++valid_count_far >= save_threshold) {
-        if (cv::imwrite("/home/hlf/Downloads/myFiles/img_car/jinchengcd/_" + std::to_string(write_count_far) + ".jpg", src)) {
+        if (cv::imwrite("/home/hlf/Downloads/myFiles/img_car/tuned_cs/far/_" + std::to_string(write_count_far) + ".jpg", src)) {
             write_count_far++;
         }
         valid_count_far = 0;
@@ -78,9 +89,9 @@ void Yolov5_Detect_Node::FarImageCallback(const sensor_msgs::msg::Image::SharedP
 
 void Yolov5_Detect_Node::CloseImageCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
     cv::Mat src = cv_bridge::toCvShare(msg, "bgr8")->image;
-
+    tune_img(src);
     if (++valid_count_close >= save_threshold) {
-        if (cv::imwrite("/home/hlf/Downloads/myFiles/img_car/jinchengcd/_" + std::to_string(write_count_close) + ".jpg", src)) {
+        if (cv::imwrite("/home/hlf/Downloads/myFiles/img_car/tuned_cs/close/_" + std::to_string(write_count_close) + ".jpg", src)) {
             write_count_close++;
         }
         valid_count_close = 0;

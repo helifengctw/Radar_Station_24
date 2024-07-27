@@ -8,8 +8,17 @@ def generate_launch_description():
         package="yolov5_detect",
         executable="yolov5_detector_node",
         name="yolov5_detector",
-        namespace="sensor_close",
-        remappings=[('/sensor_close/raw/image', '/sensor_close/image_raw')],
+        namespace="sensor_far",
+        # remappings=[('/sensor_close/raw/image', '/sensor_close/image_raw')],
+        parameters=[
+          {
+            "show_by_cv_or_msg": 0,
+            "camera_name": "sensor_far",
+            "rgb_or_bayer": True,
+            "light_gain": 2.0,
+            "saturation_gain": 1.6
+          },
+        ],
         output="screen",
         emulate_tty=True,
         respawn=False

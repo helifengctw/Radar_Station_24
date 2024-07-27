@@ -18,33 +18,29 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container',
             composable_node_descriptions=[
-                ComposableNode(
-                    namespace='sensor_close',
-                    name='bayer_camera_driver',
-                    package='bayer_camera_driver',
-                    plugin='bayer_camera_driver::HikvisionDriver',
-                    parameters=[
-                      {
-                        "camera_name": 'camera_close',
-                        "camera_height": 1200,
-                        "camera_width": 1920,
-                        "camera_exp": 3500.0,
-                        "camera_gain": 22.05,
-                        "camera_auto_exp": 0,
-                        "camera_auto_maxexp": 4500.0,
-                        "camera_auto_minexp": 100.0,
-                        "camera_auto_gain": 0,
-                        "camera_auto_maxgain": 17.0,
-                        "camera_auto_mingain": 0.0,
-                        "camera_auto_whitebalance": 1,
-                      }
-                    ],
-                    # 尽管多个组件合并在同一个进程，ros2 也是默认走 DDS 中间件通信
-                    # 下面的参数，可以设置组件之间通过 intra-process 通信
-                    # 理论上，intra-process 直接传递指针，效率更高
-                    # 但是本样例太小了，实际测试无法看出使用 intra-process 的优势
-                    extra_arguments=[{'use_intra_process_comms': True}]
-                ),
+                # ComposableNode(
+                #     namespace='sensor_close',
+                #     name='bayer_camera_driver',
+                #     package='bayer_camera_driver',
+                #     plugin='bayer_camera_driver::HikvisionDriver',
+                #     parameters=[
+                #       {
+                #         "camera_name": 'camera_close',
+                #         "camera_height": 1200,
+                #         "camera_width": 1920,
+                #         "camera_exp": 3000.0,
+                #         "camera_gain": 23.8,
+                #         "camera_auto_exp": 0,
+                #         "camera_auto_maxexp": 4500.0,
+                #         "camera_auto_minexp": 100.0,
+                #         "camera_auto_gain": 0,
+                #         "camera_auto_maxgain": 17.0,
+                #         "camera_auto_mingain": 0.0,
+                #         "camera_auto_whitebalance": 1,
+                #       }
+                #     ],
+                #     extra_arguments=[{'use_intra_process_comms': True}]
+                # ),
                 ComposableNode(
                     package='yolov5_detect',
                     plugin='yolov5_detect::Yolov5Detector',
@@ -53,7 +49,10 @@ def generate_launch_description():
                     parameters=[
                       {
                         "show_by_cv_or_msg": 0,
-                        "camera_name": "sensor_close"
+                        "camera_name": "sensor_close",
+                        "rgb_or_bayer": True,
+                        "light_gain": 2.0,
+                        "saturation_gain": 1.6
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]
@@ -72,9 +71,9 @@ def generate_launch_description():
                     namespace='sensor_close',
                     parameters=[
                       {
-                        "camera_matrix": [2099.033157, 0.0, 979.223578, 0.0, 2090.619881, 651.142891, 0.0, 0.0, 1.0],
-                        "distortion_coefficient": [-0.074087, 0.357193, 0.000931, 0.001243, 0.0],
-                        "uni_matrix": [-0.271642, -0.96196, -0.0290318, -0.154767, -0.0715673, 0.0502737, -0.996168, 0.0182244, 0.959734, -0.268524, -0.0825014, -0.00121669],
+                        "camera_matrix": [1406.312482, 0.000000, 966.522342, 0.000000, 1402.274874, 599.342961, 0.0, 0.0, 1.0],
+                        "distortion_coefficient": [-0.068506, 0.128114, -0.000808, 0.001835, 0.0],
+                        "uni_matrix": [-0.10095, -0.994887, -0.00309011, 0.136231, -0.0384396, 0.00700415, -0.999236, -0.0196554, 0.994149, -0.100754, -0.03895, 0.0116682],
                         "length_of_cloud_queue": 10,
                         "image_width": 1920, # 1280
                         "image_height": 1200, # 1024,
