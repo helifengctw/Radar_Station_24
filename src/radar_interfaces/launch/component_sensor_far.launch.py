@@ -50,7 +50,11 @@ def generate_launch_description():
                         "camera_name": "sensor_far",
                         "rgb_or_bayer": True,
                         "light_gain": 2.0,
-                        "saturation_gain": 1.6
+                        "saturation_gain": 1.6,
+                        "image_width": 1920, # 1280
+                        "image_height": 1200, # 1024,
+                        "roi_x": 325,
+                        "roi_y": 975
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]

@@ -7,7 +7,7 @@ small_map:
       field_height: 15.0
       imgCols: 1920.0
       imgRows: 1200.0
-      dist_threshold: 2.0
+      dist_threshold: 3.0
       center_far:
         x: 7.5
         y: 12.5

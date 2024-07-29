@@ -62,7 +62,7 @@ void KM() {
 }
 
 int KM_matching(int now_size, int pred_size, std::vector<std::vector<int>> cost) {
-    std::cout << "kkk" << std::endl;
+    std::cout << "KM_matching_calculating..." << std::endl;
     m = now_size;
     n = pred_size;
     for (int i = 0; i < m; i++) {

@@ -205,7 +205,6 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
 
 void SmallMap::remove_duplicate() {
     vector<radar_interfaces::msg::Point>().swap(result_points.data);
-    vector<radar_interfaces::msg::Point>().swap(result_points.data);
     std::vector<radar_interfaces::msg::Point>::iterator far_target_iter, close_target_iter;
     int loop_count = 0, loop_max = 7;
     while (true) {
@@ -221,14 +220,15 @@ void SmallMap::remove_duplicate() {
                 }
             }
         }
-        if (dist_threshold <= min_dist) break;// 最小的距离都小于阀值，退出循环
-        else if (min_dist < dist_threshold) {
+        if (min_dist >= dist_threshold) break;// 最小的距离都大于阀值，退出循环
+        else {
             int admit_condition = 0; // 0:both, 1:conf, 2:center
             radar_interfaces::msg::Point far_tp = *far_target_iter, close_tp = *close_target_iter;
-            if (check_same_color(far_tp, close_tp)) { // 两车同色
-                if (far_tp.id == close_tp.id) {
-                    admit_condition = 2;
-                } else if ((far_tp.id == 12 && close_tp.id == 12) || (far_tp.id == 13 && close_tp.id == 13)) {
+            if (far_tp.id == close_tp.id && far_tp.id < 12 && close_tp.id < 12) {
+                admit_condition = 2;
+            }
+            else if (check_same_color(far_tp, close_tp)) { // 两车同色
+                if ((far_tp.id == 12 && close_tp.id == 12) || (far_tp.id == 13 && close_tp.id == 13)) {
                     bool far_find_same_color = false, close_find_same_color = false;
                     for (auto i : close_points.data) {
                         if (calculate_dist(far_tp, i) < dist_threshold+1.0 && check_same_color(i, far_tp)) {

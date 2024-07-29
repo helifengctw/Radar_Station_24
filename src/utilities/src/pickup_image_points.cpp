@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
         int j = 0;
         cout << "the " << i << "th one:" << endl;
         cin >> j;
-        cout << "pick : " << far_points_list[j] << endl;
+        cout << "pick : " << close_points_list[j] << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)close_points_list[j].x;
         point.y = (float)close_points_list[j].y;
