@@ -24,10 +24,9 @@ public:
                 "/sensor_close/raw/image", 10, std::bind(&PointsPickUp::CloseImgCallback, this, _1));
 
         far_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_far/calibration", 1);
+                "/sensor_far/calibration/image_points", 1);
         close_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_close/calibration", 1);
-
+                "/sensor_close/calibration/image_points", 1);
     }
     void send_far_points();
     void send_close_points();
@@ -46,13 +45,15 @@ private:
 void far_mouse_callback(int event, int x, int y, int flags, void* param);
 void close_mouse_callback(int event, int x, int y, int flags, void* param);
 
-Mat far_src, close_src;
+
+Mat far_src, close_src, points_set_img;
 float smaller = 0.6;
 int pick_far_count = 0, pick_close_count = 0, total_count = 5;
 Scalar GREEN(0, 255, 0);
 bool far_receiving = true, close_receiving = true;
 radar_interfaces::msg::Points far_points_msg, close_points_msg;
 vector<Point2f> far_points_list, close_points_list;
+vector<int> far_id_list, close_id_list;
 
 int main(int argc, char ** argv)
 {
@@ -60,10 +61,13 @@ int main(int argc, char ** argv)
     rclcpp::init(argc, argv);
     auto PPU_node = std::make_shared<PointsPickUp>("point_pick_up");
 
+    points_set_img = imread("/home/hlf/Desktop/radar24_ws/src/utilities/data/points_set.png");
     namedWindow("far");
     namedWindow("close");
+    namedWindow("points_set_show");
     setMouseCallback("far", far_mouse_callback, &far_src);
     setMouseCallback("close", close_mouse_callback, &close_src);
+    cv::imshow("points_set_show", points_set_img);
     rclcpp::Rate loop_rate(100);
 
     while(true) {
@@ -78,15 +82,19 @@ int main(int argc, char ** argv)
             }
         }
     }
-    cout << "please enter the number of wanted far " << total_count << " points :" << endl;
+    cout << "please enter the number of wanted far " << total_count << " image points and world points number:" << endl;
     for (int i = 0; i < total_count; i++) {
-        int j = 0;
+        int j = 0, k = 0;
         cout << "the " << i << "th one:" << endl;
         cin >> j;
         cout << "pick : " << far_points_list[j] << endl;
+        cout << "and the " << i << "th one world points:" << endl;
+        cin >> k;
+        cout << "pick : " << k << "world points" << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)far_points_list[j].x;
         point.y = (float)far_points_list[j].y;
+        point.id = k;
         far_points_msg.data.push_back(point);
     }
     PPU_node->send_far_points();
@@ -105,13 +113,17 @@ int main(int argc, char ** argv)
     }
     cout << "please enter the number of wanted close " << total_count << " points :" << endl;
     for (int i = 0; i < total_count; i++) {
-        int j = 0;
+        int j = 0, k = 0;
         cout << "the " << i << "th one:" << endl;
         cin >> j;
         cout << "pick : " << close_points_list[j] << endl;
+        cout << "and the " << i << "th one world points:" << endl;
+        cin >> k;
+        cout << "pick : " << k << "world points" << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)close_points_list[j].x;
         point.y = (float)close_points_list[j].y;
+        point.id = k;
         close_points_msg.data.push_back(point);
     }
     PPU_node->send_close_points();
@@ -180,11 +192,12 @@ void close_mouse_callback(int event, int x, int y, int flags, void* param) {
     }
 }
 
+
 void PointsPickUp::send_far_points() {
-    this->far_point_publisher_->publish(far_points_msg);
+    far_point_publisher_->publish(far_points_msg);
     cout << "publish far points---size: " << far_points_msg.data.size() << endl;
 }
 void PointsPickUp::send_close_points() {
-    this->close_point_publisher_->publish(close_points_msg);
+    close_point_publisher_->publish(close_points_msg);
     cout << "publish close points---size: " << close_points_msg.data.size() << endl;
 }
