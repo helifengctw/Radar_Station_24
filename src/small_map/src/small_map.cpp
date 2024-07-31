@@ -19,6 +19,8 @@ SmallMap::SmallMap(string name) : Node(name) {
             "/sensor_far/distance_point", 1, std::bind(&SmallMap::far_distPointCallback, this, _1));
     close_distant_point_subscription_ = this->create_subscription<radar_interfaces::msg::DistPoints>(
             "/sensor_close/distance_point", 1, std::bind(&SmallMap::close_distPointCallback, this, _1));
+    pickup_information_subscription_ = this->create_subscription<radar_interfaces::msg::Point>(
+            "pickup_information", 1, std::bind(&SmallMap::pickup_infoCallback, this, _1));
     timer_ = this->create_wall_timer(25ms, std::bind(&SmallMap::TimerCallback, this));
     world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 10);
     Pnp_result_client_ = this->create_client<radar_interfaces::srv::PnpResult>("pnp_results");
@@ -50,6 +52,7 @@ SmallMap::SmallMap(string name) : Node(name) {
     RCLCPP_INFO(this->get_logger(), "small_map qidong: %d", pnp_request->small_map_qidong);
     //发送异步请求，然后等待返回，返回时调用回调函数
     Pnp_result_client_->async_send_request(pnp_request, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
+    pnp_request->small_map_qidong = false;
 }
 
 SmallMap::~SmallMap() {
@@ -157,6 +160,14 @@ void SmallMap::Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResul
     cv::invert(far_R, far_invR);
     cv::invert(close_CamMatrix_, close_invM);
     cv::invert(close_R, close_invR);
+}
+
+void SmallMap::pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr) {
+    pnp_request->small_map_qidong = true;
+    RCLCPP_INFO(this->get_logger(), "utilities-pickup operated: %d", pnp_request->small_map_qidong);
+    //发送异步请求，然后等待返回，返回时调用回调函数
+    Pnp_result_client_->async_send_request(pnp_request, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
+    pnp_request->small_map_qidong = false;
 }
 
 void SmallMap::add_grid(cv::Mat &src) {

@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 }
 
 SerialPort::SerialPort(std::string name) : Node(name){
-    if (ser_init() <= 0) {
+    if (ser_init() < 0) {
         RCLCPP_ERROR(this->get_logger(), "Failed to initialize serial port, please check the hardware !!!");
     } else {
         RCLCPP_INFO(this->get_logger(), "successfully initialize serial port !!!");

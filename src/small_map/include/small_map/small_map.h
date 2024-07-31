@@ -41,6 +41,7 @@ private:
     rclcpp::Subscription<radar_interfaces::msg::DistPoints>::SharedPtr far_distant_point_subscription_;
     rclcpp::Subscription<radar_interfaces::msg::DistPoints>::SharedPtr close_distant_point_subscription_;
     rclcpp::Subscription<radar_interfaces::msg::PnpResult>::SharedPtr Pnp_result_subscription_;
+    rclcpp::Subscription<radar_interfaces::msg::Point>::SharedPtr pickup_information_subscription_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr world_point_publisher_;
     rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedPtr Pnp_result_client_;
@@ -50,6 +51,7 @@ private:
     void TimerCallback();
     void far_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
     void close_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
+    void pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr);
     void load_param();
 
     void draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image);

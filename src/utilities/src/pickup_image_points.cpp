@@ -22,21 +22,25 @@ public:
                 "/sensor_far/raw/image", 10, std::bind(&PointsPickUp::FarImgCallback, this, _1));
         close_img_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
                 "/sensor_close/raw/image", 10, std::bind(&PointsPickUp::CloseImgCallback, this, _1));
-
         far_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
                 "/sensor_far/calibration", 1);
         close_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
                 "/sensor_close/calibration", 1);
+        inform_small_map_publisher_ = this->create_publisher<radar_interfaces::msg::Point>(
+                "pickup_information", 1);
     }
     void send_far_points();
     void send_close_points();
+    void send_small_map_information();
 
-private:
+        private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr far_img_subscription_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr close_img_subscription_;
 
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr far_point_publisher_;
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr close_point_publisher_;
+    rclcpp::Publisher<radar_interfaces::msg::Point>::SharedPtr inform_small_map_publisher_;
+
 
     void FarImgCallback(sensor_msgs::msg::Image::SharedPtr) const;
     void CloseImgCallback(sensor_msgs::msg::Image::SharedPtr) const;
@@ -52,6 +56,7 @@ int pick_far_count = 0, pick_close_count = 0, total_count = 5;
 Scalar GREEN(0, 255, 0);
 bool far_receiving = true, close_receiving = true;
 radar_interfaces::msg::Points far_points_msg, close_points_msg;
+radar_interfaces::msg::Point small_map_info_msg;
 vector<Point2f> far_points_list, close_points_list;
 
 int main(int argc, char ** argv)
@@ -124,9 +129,9 @@ int main(int argc, char ** argv)
         close_points_msg.data.push_back(point);
     }
     PPU_node->send_close_points();
+    PPU_node->send_small_map_information();
 
     destroyAllWindows();
-
 }
 
 void PointsPickUp::FarImgCallback(const sensor_msgs::msg::Image::SharedPtr msg) const {
@@ -197,4 +202,10 @@ void PointsPickUp::send_far_points() {
 void PointsPickUp::send_close_points() {
     close_point_publisher_->publish(close_points_msg);
     cout << "publish close points---size: " << close_points_msg.data.size() << endl;
+}
+
+void PointsPickUp::send_small_map_information() {
+    small_map_info_msg.id = 666;
+    inform_small_map_publisher_->publish(small_map_info_msg);
+    cout << "informed small_map to update params" << endl;
 }
