@@ -224,13 +224,13 @@ namespace yolov5_detect {
                                     prediction_points.size(), cost_matrix);
                         dfs_count = 0;
                         update_tracker(tracker_yolo_point_list_msg); // TODO
-//                        for (auto i : tracker) {
-//                            if (!i.obsoleted && current_time_ms - i.time < 2000) {
-//                                cv::rectangle(src, i.rect, cv::Scalar(0, 255, 0), 2);
-//                                cv::putText(src, std::to_string(i.track_id), cv::Point(i.rect.x, i.rect.y),
-//                                            cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-//                            }
-//                        }
+                        for (auto i : tracker) {
+                            if (!i.obsoleted && current_time_ms - i.time < 2000) {
+                                cv::rectangle(src, i.rect, cv::Scalar(0, 255, 0), 2);
+                                cv::putText(src, std::to_string(i.track_id), cv::Point(i.rect.x, i.rect.y),
+                                            cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                            }
+                        }
                     }
                 } else {
                     track_element temp_te;
@@ -253,7 +253,7 @@ namespace yolov5_detect {
             }
         }
 
-        show_yolo_result_in_img(tracker_yolo_point_list_msg, src);
+//        show_yolo_result_in_img(tracker_yolo_point_list_msg, src);
         // 将yolo识别的矩形发布
         if (!tracker_yolo_point_list_msg.data.empty()) {
             this->rect_publisher_->publish(tracker_yolo_point_list_msg);
@@ -834,6 +834,7 @@ namespace yolov5_detect {
                 tracker[prediction_points[i].first].last_time = tracker[prediction_points[i].first].time;
                 tracker[prediction_points[i].first].time = current_time_ms;
                 tracker[prediction_points[i].first].conf = temp_yp.conf;
+                tracker[prediction_points[i].first].obsoleted = false;
             } else if (check_same_color(temp_yp, prediction_points[i].second)) {
                 if (tracker[prediction_points[i].first].class_id < 12 && temp_yp.id > 11) {
                     std::cout << "b*  " ;
@@ -849,6 +850,7 @@ namespace yolov5_detect {
                     if (tracker[temp_yp.id].time < current_time_ms || tracker[temp_yp.id].conf < temp_yp.conf
                         || tracker[temp_yp.id].obsoleted) {
                         std::cout << "c*  " ;
+                        tracker[temp_yp.id].class_id = temp_yp.id;
                         tracker[temp_yp.id].last_rect = tracker[prediction_points[i].first].rect;
                         tracker[temp_yp.id].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width, temp_yp.height);
                         tracker[temp_yp.id].last_time = tracker[prediction_points[i].first].time;
@@ -876,9 +878,9 @@ namespace yolov5_detect {
                         tracker[prediction_points[i].first].time = current_time_ms;
                     }
                 } else if (temp_yp.id < 12 && prediction_points[i].second.id < 12) {
-                    if (tracker[temp_yp.id].time < current_time_ms && tracker[temp_yp.id].conf < temp_yp.conf
-                        && tracker[temp_yp.id].obsoleted) {
+                    if (tracker[temp_yp.id].time < current_time_ms && tracker[temp_yp.id].conf < temp_yp.conf){
                         std::cout << "g*  " ;
+                        tracker[temp_yp.id].class_id = temp_yp.id;
                         tracker[temp_yp.id].last_rect = tracker[prediction_points[i].first].rect;
                         tracker[temp_yp.id].rect = cv::Rect(temp_yp.x, temp_yp.y, temp_yp.width, temp_yp.height);
                         tracker[temp_yp.id].last_time = tracker[prediction_points[i].first].time;

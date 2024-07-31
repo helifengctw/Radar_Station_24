@@ -62,18 +62,19 @@ SmallMap::~SmallMap() {
 
 void SmallMap::TimerCallback() {
     small_map.copyTo(small_map_copy);
+//    for (auto &i: far_points.data) {
+//        draw_point_on_map(i, small_map_copy, "Yellow");
+//    }
+//    for (auto &i : close_points.data) {
+//        draw_point_on_map(i, small_map_copy, "Orange");
+//    }
     remove_duplicate();
+    std::cout << far_points.data.size() << ", " << close_points.data.size() << " ===> ";
     for (auto &i: result_points.data) {
-        draw_point_on_map(i, small_map_copy);
+        draw_point_on_map(i, small_map_copy, "Black");
     }
+    std::cout << far_points.data.size() << ", " << close_points.data.size() << std::endl;
     this->world_point_publisher_->publish(result_points);
-
-    if (mouse_click_flag) {
-        mouse_click_flag = false;
-        std::string toshow = "at : " + to_string(mouse_point.x) + " , " + to_string(mouse_point.y);
-        cv::putText(small_map_copy, toshow, cv::Point(10, 400), cv::FONT_HERSHEY_SIMPLEX, 0.7, color_table["Red"], 2);
-    }
-
     cv::imshow("small_map", small_map_copy);
 }
 
@@ -89,13 +90,12 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             calcWorld /= 1000; // 单位：mm => m
             double x, y;
             if (red_or_blue) {
-                x = (1 - calcWorld.at<double>(0, 0)) / field_height;
-                y = (1 - calcWorld.at<double>(1, 0)) / field_width;
+                x = 1 - calcWorld.at<double>(0, 0) / field_height;
+                y = 1 - calcWorld.at<double>(1, 0) / field_width;
             } else {
                 x = calcWorld.at<double>(0, 0) / field_height;
                 y = calcWorld.at<double>(1, 0) / field_width;
             }
-
             radar_interfaces::msg::Point point;
             point.x = (float) x;
             point.y = (float) y;
@@ -103,10 +103,6 @@ void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::Sh
             point.id = input->data[i].id;
             point.conf = input->data[i].conf;
             point.tracker_id = input->data[i].tracker_id;
-            if (point.id == 66) {
-                mouse_click_flag = true;
-                mouse_point = Point2f(x * field_height, y * field_width);
-            }
             far_points.data.push_back(point);
         }
     }
@@ -121,8 +117,14 @@ void SmallMap::close_distPointCallback(const radar_interfaces::msg::DistPoints::
             x8_pixel *= (1000 * input->data[i].dist);
             Mat calcWorld = close_invR * (close_invM * x8_pixel - close_T); //2D-3D变换
             calcWorld /= 1000;
-            double x = calcWorld.at<double>(0, 0) / field_height;
-            double y = calcWorld.at<double>(1, 0) / field_width;
+            double x, y;
+            if (red_or_blue) {
+                x = 1 - calcWorld.at<double>(0, 0) / field_height;
+                y = 1 - calcWorld.at<double>(1, 0) / field_width;
+            } else {
+                x = calcWorld.at<double>(0, 0) / field_height;
+                y = calcWorld.at<double>(1, 0) / field_width;
+            }
             radar_interfaces::msg::Point point;
             point.x = (float) x;
             point.y = (float) y;
@@ -130,7 +132,6 @@ void SmallMap::close_distPointCallback(const radar_interfaces::msg::DistPoints::
             point.id = input->data[i].id;
             point.conf = input->data[i].conf;
             point.tracker_id = input->data[i].tracker_id;
-//            std::cout << x << " : " << y << " id: " << point.id << endl;
             close_points.data.push_back(point);
         }
     }
@@ -162,12 +163,14 @@ void SmallMap::Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResul
     cv::invert(close_R, close_invR);
 }
 
-void SmallMap::pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr) {
-    pnp_request->small_map_qidong = true;
-    RCLCPP_INFO(this->get_logger(), "utilities-pickup operated: %d", pnp_request->small_map_qidong);
-    //发送异步请求，然后等待返回，返回时调用回调函数
-    Pnp_result_client_->async_send_request(pnp_request, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
-    pnp_request->small_map_qidong = false;
+void SmallMap::pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr msg) {
+    if (msg->id == 66) {
+        pnp_request->small_map_qidong = true;
+        RCLCPP_INFO(this->get_logger(), "utilities-pickup operated: %d", pnp_request->small_map_qidong);
+        //发送异步请求，然后等待返回，返回时调用回调函数
+        Pnp_result_client_->async_send_request(pnp_request, std::bind(&SmallMap::Pnp_resultCallback, this, _1));
+        pnp_request->small_map_qidong = false;
+    }
 }
 
 void SmallMap::add_grid(cv::Mat &src) {
@@ -179,10 +182,10 @@ void SmallMap::add_grid(cv::Mat &src) {
     }
 }
 
-void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image) {
+void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image, const string& txt_color) {
     Scalar color;
     string id;
-    if (point.id <= 5 || point.id == 12) color = color_table["Red"];//Scalar(0, 0, 255);
+    if (point.id <= 5 || point.id == 12) color = color_table["Red"];
     else color = color_table["Blue"];
     circle(image, calculate_pixel_codi(point), 10,
            color, -1, LINE_8, 0);
@@ -192,97 +195,93 @@ void SmallMap::draw_point_on_map(const radar_interfaces::msg::Point &point, Mat 
         if (point.id >= 6) id = to_string(point.id - 5);
         if (point.id == 11) id = "G";
         putText(image, id, calculate_pixel_text_codi(point), cv::FONT_HERSHEY_SIMPLEX,
-                0.7, color_table["Withe"], 2);
+                0.7, color_table[txt_color], 2);
+
     }
 }
 
 void SmallMap::remove_duplicate() {
     vector<radar_interfaces::msg::Point>().swap(result_points.data);
     std::vector<radar_interfaces::msg::Point>::iterator far_target_iter, close_target_iter;
+    bool far_erase_flag = false, close_erase_flag = false;
     int loop_count = 0, loop_max = 7;
-    while (true) {
-        if (loop_count++ > loop_max) break;
-        double min_dist = dist_threshold; // dist 经过计算后是以米为单位的
-        for (auto pf_iter = far_points.data.begin(); pf_iter < far_points.data.end(); pf_iter++) {
-            for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
-                double dist_m = calculate_dist(*pf_iter, *pc_iter);
-                if (dist_m < min_dist) {
-                    min_dist = dist_m;
-                    far_target_iter = pf_iter;
-                    close_target_iter = pc_iter;
+
+    while(true) { //把far中已知的点与close匹配并去掉
+        auto iter_far = far_points.data.begin();
+        for (iter_far = far_points.data.begin(); iter_far!=far_points.data.end(); iter_far++) {
+            if (far_erase_flag || close_erase_flag) break;
+            if (iter_far->id >= 12) continue;
+            for (auto iter_close = close_points.data.begin(); iter_close!=close_points.data.end(); iter_close++) {
+                if (far_erase_flag || close_erase_flag) break;
+                if (iter_far->id == iter_close->id && iter_far->id < 12 && iter_close->id < 12
+                    && calculate_dist(*iter_far, *iter_close) < dist_threshold) {
+                    result_points.data.emplace_back(*iter_far); //far较准确，所以以far为基准
+                    far_target_iter = iter_far;
+                    close_target_iter = iter_close;
+                    far_erase_flag = true;
+                    close_erase_flag = true;
                 }
             }
         }
-        if (min_dist >= dist_threshold) break;// 最小的距离都大于阀值，退出循环
-        else {
-            int admit_condition = 0; // 0:both, 1:conf, 2:center
-            radar_interfaces::msg::Point far_tp = *far_target_iter, close_tp = *close_target_iter;
-            if (far_tp.id == close_tp.id && far_tp.id < 12 && close_tp.id < 12) {
-                admit_condition = 2;
-            }
-            else if (check_same_color(far_tp, close_tp)) { // 两车同色
-                if ((far_tp.id == 12 && close_tp.id == 12) || (far_tp.id == 13 && close_tp.id == 13)) {
-                    bool far_find_same_color = false, close_find_same_color = false;
-                    for (auto i : close_points.data) {
-                        if (calculate_dist(far_tp, i) < dist_threshold+1.0 && check_same_color(i, far_tp)) {
-                            far_find_same_color = true;
-                        }
-                    }
-                    for (auto i : far_points.data) {
-                        if (calculate_dist(close_tp, i) < dist_threshold+1.0 && check_same_color(i, close_tp)) {
-                            close_find_same_color = true;
-                        }
-                    }
-                    if (far_find_same_color && close_find_same_color) admit_condition = 0;
-                    else admit_condition = 1;
-                } else { // 两车同色，异号或者其中一个未知
-                    bool far_find_same_id = false, far_find_same_color = false,
-                    close_find_same_id = false, close_find_same_color = false;
-                    for (auto i : close_points.data) {
-                        if (calculate_dist(far_tp, i) < dist_threshold+1.0) {
-                            if (i.id == far_tp.id && far_tp.id < 12) far_find_same_id = true;
-                            if (check_same_color(i, far_tp)) far_find_same_color = true;
-                        }
-                    }
-                    for (auto i : far_points.data) {
-                        if (calculate_dist(close_tp, i) < dist_threshold+1.0) {
-                            if (i.id == close_tp.id && close_tp.id < 12) close_find_same_id = true;
-                            if (check_same_color(i, close_tp)) close_find_same_color = true;
-                        }
-                    }
-                    if (far_find_same_id || close_find_same_id) admit_condition = 0; // 同色异号，认为是两辆车
-                    else {
-                        if (far_find_same_color && close_find_same_color) admit_condition = 0;
-                        else admit_condition = 1;
-                    }
-                }
-            } else admit_condition = 0; //两车异色，认为是两辆车
-
-            if (admit_condition == 0) { // 0:both, 1:conf, 2:center
-                result_points.data.emplace_back(far_tp);
-                result_points.data.emplace_back(close_tp);
-            } else if (admit_condition == 1 || admit_condition == 2) {
-                radar_interfaces::msg::Point center;
-                center.id = far_tp.id;
-                center.x = (far_tp.x + close_tp.x) / 2;
-                center.y = (far_tp.y + close_tp.y) / 2;
-                double far_dist = Point2PointDist(center, center_far);
-                double close_dist = Point2PointDist(center, center_close);
-                if (far_dist < close_dist) result_points.data.emplace_back(far_tp);
-                else result_points.data.emplace_back(close_tp);
-            }
-//            } else if (admit_condition == 1) {
-//                if (far_tp.conf > close_tp.conf) result_points.data.emplace_back(far_tp);
-//                else result_points.data.emplace_back(close_tp);
-//            } else if (admit_condition == 2) {
-//                radar_interfaces::msg::Point center;
-//                center.id = far_tp.id;
-//                center.x = (far_tp.x + close_tp.x) / 2;
-//                center.y = (far_tp.y + close_tp.y) / 2;
-//                result_points.data.emplace_back(center);
-//            }
+        if (far_erase_flag) {
             far_points.data.erase(far_target_iter);
+            far_erase_flag = false;
+        }
+        if (close_erase_flag) {
             close_points.data.erase(close_target_iter);
+            close_erase_flag = false;
+        }
+        if (iter_far == far_points.data.end()) break;
+    }
+
+    for (auto i : close_points.data) {
+        if (i.id < 12) {
+            //TODO 如果close全为未知，则...
+        }
+    }
+
+    while (true) {
+        if (loop_count++ > loop_max || far_points.data.empty()) break;
+        std::vector<std::pair<double, std::vector<radar_interfaces::msg::Point>::iterator>> sorted_points;
+        auto pf_iter = far_points.data.begin();
+        for (auto pc_iter = close_points.data.begin(); pc_iter < close_points.data.end(); pc_iter++) {
+            double dist_m = calculate_dist(*pf_iter, *pc_iter);
+            sorted_points.emplace_back(
+                    dist_m, std::vector<radar_interfaces::msg::Point>::iterator(pc_iter));
+        }
+        std::sort(sorted_points.begin(), sorted_points.end(),
+                  [](const std::pair<double, std::vector<radar_interfaces::msg::Point>::iterator> &a,
+                     const std::pair<double, std::vector<radar_interfaces::msg::Point>::iterator> &b) {
+                      return a.first < b.first;
+                  });
+        for (auto i : sorted_points) {
+            if (calculate_dist(*pf_iter, *i.second) < dist_threshold) {
+                if ((pf_iter->id == 12 && i.second->id < 6)
+                || (pf_iter->id == 13 && (i.second->id >= 6 && i.second->id < 12))) {
+                    pf_iter->id = i.second->id;
+                    result_points.data.emplace_back(*pf_iter);
+                    far_target_iter = pf_iter;
+                    close_target_iter = i.second;
+                    far_erase_flag = true;
+                    close_erase_flag = true;
+                    break;
+                } else if ((pf_iter->id == 12 && i.second->id == 12) || (pf_iter->id == 13 && i.second->id == 13)) {
+                    result_points.data.emplace_back(*pf_iter);
+                    far_target_iter = pf_iter;
+                    close_target_iter = i.second;
+                    far_erase_flag = true;
+                    close_erase_flag = true;
+                    break;
+                }
+            }
+        }
+        if (far_erase_flag) {
+            far_points.data.erase(far_target_iter);
+            far_erase_flag = false;
+        }
+        if (close_erase_flag) {
+            close_points.data.erase(close_target_iter);
+            close_erase_flag = false;
         }
     }
     for (auto i : far_points.data) {

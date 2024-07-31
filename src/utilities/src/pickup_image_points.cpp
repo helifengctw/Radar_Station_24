@@ -205,7 +205,7 @@ void PointsPickUp::send_close_points() {
 }
 
 void PointsPickUp::send_small_map_information() {
-    small_map_info_msg.id = 666;
+    small_map_info_msg.id = 66;
     inform_small_map_publisher_->publish(small_map_info_msg);
     cout << "informed small_map to update params" << endl;
 }

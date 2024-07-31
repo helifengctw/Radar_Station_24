@@ -53,8 +53,8 @@ def generate_launch_description():
                         "saturation_gain": 1.6,
                         "image_width": 1920, # 1280
                         "image_height": 1200, # 1024,
-                        "roi_x": 325,
-                        "roi_y": 975,
+                        "roi_x": 0, # 325,
+                        "roi_y": 1200, # 975,
                         "last_diff_time_threshold": 600.0
                       },
                     ],

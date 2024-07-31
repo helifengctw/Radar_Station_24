@@ -24,8 +24,9 @@ using std::placeholders::_1;
 // BGR
 map<string, Scalar> color_table = {
         {"White", Scalar(0xfa, 0xfa, 0xff)},
+        {"Black", Scalar(0x00, 0x06, 0x06)},
         {"Red", Scalar(0x00, 0x00, 0xff)},
-        {"Green_light", Scalar(0xcc, 0xff, 0xcc)},
+        {"Green", Scalar(0x06, 0xff, 0x06)},
         {"Orange", Scalar(0x00, 0x8c, 0xff)},
         {"Blue", Scalar(0xff, 0x90, 0x1e)},
         {"Yellow", Scalar(0x11, 0xff, 0xff)}
@@ -48,13 +49,14 @@ private:
     std::shared_ptr<radar_interfaces::srv::PnpResult::Request> pnp_request;
 
     void Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedFuture response);
+
     void TimerCallback();
     void far_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
     void close_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
     void pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr);
     void load_param();
 
-    void draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image);
+    void draw_point_on_map(const radar_interfaces::msg::Point &point, Mat &image, const string& txt_color);
     void remove_duplicate();
     bool is_enemy_car(uint8_t);
     double calculate_dist(const radar_interfaces::msg::Point &a, const radar_interfaces::msg::Point &b);
@@ -87,7 +89,6 @@ private:
     Mat small_map, small_map_copy;
     radar_interfaces::msg::Points far_points, close_points, result_points, filtered_result_points;
     int tracker_id_lock_list[6] = {0};
-    bool mouse_click_flag = false;
     cv::Point2f mouse_point = cv::Point2f(0.0, 0.0);
 };
 
