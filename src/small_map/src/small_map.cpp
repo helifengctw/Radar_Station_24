@@ -19,8 +19,6 @@ SmallMap::SmallMap(string name) : Node(name) {
             "/sensor_far/distance_point", 1, std::bind(&SmallMap::far_distPointCallback, this, _1));
     close_distant_point_subscription_ = this->create_subscription<radar_interfaces::msg::DistPoints>(
             "/sensor_close/distance_point", 1, std::bind(&SmallMap::close_distPointCallback, this, _1));
-    Icp_result_subscription_ = this->create_subscription<radar_interfaces::msg::PnpResult>(
-            "icp_result", 1, std::bind(&SmallMap::Icp_resultCallback, this, _1));
     timer_ = this->create_wall_timer(25ms, std::bind(&SmallMap::TimerCallback, this));
     world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 10);
     Pnp_result_client_ = this->create_client<radar_interfaces::srv::PnpResult>("pnp_results");
@@ -159,22 +157,6 @@ void SmallMap::Pnp_resultCallback(rclcpp::Client<radar_interfaces::srv::PnpResul
     cv::invert(far_R, far_invR);
     cv::invert(close_CamMatrix_, close_invM);
     cv::invert(close_R, close_invR);
-}
-
-void SmallMap::Icp_resultCallback(radar_interfaces::msg::PnpResult::SharedPtr msg) {
-    for (int i = 0; i < 3; i++) {
-        far_T.at<double>(i) = msg->far_t[i];
-        close_T.at<double>(i) = msg->close_t[i];
-        for (int j = 0; j < 3; j++) {
-            far_R.at<double>(i, j) = msg->far_r[3 * i + j];
-            close_R.at<double>(i, j) = msg->close_r[3 * i + j];
-        }
-    }
-    cout << "icp result received" << endl;
-    cout << endl << "far R matrix load done!" << endl << far_R << endl;
-    cout << endl << "far T matrix load done!" << endl << far_T << endl;
-    cout << endl << "close R matrix load done!" << endl << close_R << endl;
-    cout << endl << "close T matrix load done!" << endl << close_T << endl;
 }
 
 void SmallMap::add_grid(cv::Mat &src) {

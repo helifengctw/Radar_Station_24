@@ -1,3 +1,5 @@
 # ninja log v5
 1	1545	1721986604908665796	CMakeFiles/yolov5_detector_node.dir/rclcpp_components/node_main_yolov5_detector_node.cpp.o	5b69f7dfe1cceed9
 1545	1618	1721986604980665973	yolov5_detector_node	afd97872377238ca
+1	302	1722346150045178238	CMakeFiles/Hello_world.dir/src/Hello_world.cpp.o	b341367c1f61a827
+302	357	1722346150101181478	Hello_world	ae4138ee4495a145

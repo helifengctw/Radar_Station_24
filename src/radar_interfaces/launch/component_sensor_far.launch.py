@@ -54,7 +54,8 @@ def generate_launch_description():
                         "image_width": 1920, # 1280
                         "image_height": 1200, # 1024,
                         "roi_x": 325,
-                        "roi_y": 975
+                        "roi_y": 975,
+                        "last_diff_time_threshold": 600.0
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]

@@ -3,11 +3,14 @@
 #include <algorithm>
 #include <climits>
 #include <cstring>
+#include <chrono>
+
 
 using namespace std;
 
+double start_time = 0.0, c_time = 0.0;
 const int MAXN = 20;
-int m, n; // 顶点数量
+int m, n, dfs_count = 0; // 顶点数量
 int lx[MAXN], ly[MAXN]; // 顶标
 int weight[MAXN][MAXN]; // 权重矩阵
 bool S[MAXN], T[MAXN]; // 辅助数组
@@ -15,6 +18,7 @@ int matchY[MAXN]; // Y集中的匹配点
 int slack[MAXN]; // 松弛数组
 
 bool DFS(int x) {
+    cout << dfs_count++ << ", ";
     S[x] = true;
     for (int y = 0; y < n; ++y) {
         if (T[y]) continue;
@@ -35,6 +39,7 @@ bool DFS(int x) {
 void KM() {
     memset(matchY, -1, sizeof(matchY));
     memset(ly, 0, sizeof(ly));
+    cout << "kkkk" << endl;
     for (int i = 0; i < m; ++i) {
         lx[i] = *max_element(weight[i], weight[i] + n);
     }
@@ -50,29 +55,28 @@ void KM() {
             }
             for (int i = 0; i < m; ++i) {
                 if (S[i]) lx[i] -= d;
-                for (int j = 0; j < n; ++j) {
-                    if (i > 0) break;
-                    if (T[j]) ly[j] += d;
-                    if (!S[i] && !T[j]) slack[i] -= d;
-                }
             }
-
+            for (int j = 0; j < n; ++j) {
+                if (T[j]) ly[j] += d;
+                else slack[j] -= d;
+            }
         }
     }
 }
 
 int KM_matching(int now_size, int pred_size, std::vector<std::vector<int>> cost) {
-    std::cout << "KM_matching_calculating..." << std::endl;
+    cout << "KM_matching_calculating..." << std::endl;
     m = now_size;
     n = pred_size;
     for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
             weight[i][j] = cost[i][j];
-            std::cout << weight[i][j] << ", ";
+            cout << weight[i][j] << ", ";
         }
-        std::cout << std::endl;
+        cout << "===" << endl;
     }
     // 执行KM算法
+    cout << "dfs_count: ";
     KM();
     // 输出最大匹配的权值和
     int maxWeight = 0;
@@ -80,6 +84,6 @@ int KM_matching(int now_size, int pred_size, std::vector<std::vector<int>> cost)
         if (matchY[y] != -1)
             maxWeight += weight[matchY[y]][y];
 
-    cout << "Maximum weight matching: " << maxWeight << endl;
+    cout << endl << "Maximum weight matching: " << maxWeight << endl;
     return 0;
 }

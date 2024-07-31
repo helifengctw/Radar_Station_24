@@ -24,9 +24,9 @@ public:
                 "/sensor_close/raw/image", 10, std::bind(&PointsPickUp::CloseImgCallback, this, _1));
 
         far_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_far/calibration/image_points", 1);
+                "/sensor_far/calibration", 1);
         close_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_close/calibration/image_points", 1);
+                "/sensor_close/calibration", 1);
     }
     void send_far_points();
     void send_close_points();
@@ -53,7 +53,6 @@ Scalar GREEN(0, 255, 0);
 bool far_receiving = true, close_receiving = true;
 radar_interfaces::msg::Points far_points_msg, close_points_msg;
 vector<Point2f> far_points_list, close_points_list;
-vector<int> far_id_list, close_id_list;
 
 int main(int argc, char ** argv)
 {
@@ -85,12 +84,11 @@ int main(int argc, char ** argv)
     cout << "please enter the number of wanted far " << total_count << " image points and world points number:" << endl;
     for (int i = 0; i < total_count; i++) {
         int j = 0, k = 0;
-        cout << "the " << i << "th one:" << endl;
+        cout << "----the " << i << "th one:" << endl << "image--";
         cin >> j;
-        cout << "pick : " << far_points_list[j] << endl;
-        cout << "and the " << i << "th one world points:" << endl;
+        cout << "world--";
         cin >> k;
-        cout << "pick : " << k << "world points" << endl;
+        cout << "pick : " << far_points_list[j] << " and accordingly " << k << "th world points" << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)far_points_list[j].x;
         point.y = (float)far_points_list[j].y;
@@ -114,12 +112,11 @@ int main(int argc, char ** argv)
     cout << "please enter the number of wanted close " << total_count << " points :" << endl;
     for (int i = 0; i < total_count; i++) {
         int j = 0, k = 0;
-        cout << "the " << i << "th one:" << endl;
+        cout << "----the " << i << "th one:" << endl << "image--";
         cin >> j;
-        cout << "pick : " << close_points_list[j] << endl;
-        cout << "and the " << i << "th one world points:" << endl;
+        cout << "world--";
         cin >> k;
-        cout << "pick : " << k << "world points" << endl;
+        cout << "pick : " << close_points_list[j] << " and accordingly " << k << "th world points" << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)close_points_list[j].x;
         point.y = (float)close_points_list[j].y;
