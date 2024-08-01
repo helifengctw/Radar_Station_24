@@ -39,7 +39,6 @@ bool DFS(int x) {
 void KM() {
     memset(matchY, -1, sizeof(matchY));
     memset(ly, 0, sizeof(ly));
-    cout << "kkkk" << endl;
     for (int i = 0; i < m; ++i) {
         lx[i] = *max_element(weight[i], weight[i] + n);
     }
@@ -73,7 +72,7 @@ int KM_matching(int now_size, int pred_size, std::vector<std::vector<int>> cost)
             weight[i][j] = cost[i][j];
             cout << weight[i][j] << ", ";
         }
-        cout << "===" << endl;
+        cout << endl;
     }
     // 执行KM算法
     cout << "dfs_count: ";

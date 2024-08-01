@@ -111,9 +111,9 @@ namespace get_depth {
         this->declare_parameter<int>("show_by_cv_or_msg", 0);
         show_by_cv_or_msg = this->get_parameter("show_by_cv_or_msg").as_int();
 
-        this->declare_parameter<int>("length_of_cloud_queue", 10);
-        this->declare_parameter<int>("image_width", 1920);
-        this->declare_parameter<int>("image_height", 1200);
+        this->declare_parameter<int>("length_of_cloud_queue", 0);
+        this->declare_parameter<int>("image_width", 0);
+        this->declare_parameter<int>("image_height", 0);
         length_of_cloud_queue = (int)this->get_parameter("length_of_cloud_queue").as_int();
         imgCols = (int)this->get_parameter("image_width").as_int();
         imgRows = (int)this->get_parameter("image_height").as_int();

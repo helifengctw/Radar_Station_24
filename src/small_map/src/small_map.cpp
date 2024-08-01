@@ -316,7 +316,7 @@ Point2d SmallMap::calculate_pixel_codi(const radar_interfaces::msg::Point &point
 
 Point2d SmallMap::calculate_pixel_text_codi(const radar_interfaces::msg::Point &point) {
     Point2d res;
-    res.x = (1 - point.y) * img_show_width - X_shift - 7;;
+    res.x = (1 - point.y) * img_show_width - X_shift - 7;
     res.y = (1 - point.x) * img_show_height - Y_shift + 7;
     return res;
 }
@@ -382,5 +382,5 @@ void SmallMap::load_param() {
     RCLCPP_INFO(this->get_logger(), "center_close[%f, %f]", center_close.x, center_close.y);
     if (btlcolor == "red") red_or_blue = 0;
     else if (btlcolor == "blue") red_or_blue = 1;
-    small_map_png_path =std::string("/home/hlf/Desktop/radar24_ws/src/small_map/images_24") + "/red_smallmap.png";
+    small_map_png_path = "/home/hlf/Desktop/radar24_ws/src/small_map/images_24/red_smallmap.png";
 }

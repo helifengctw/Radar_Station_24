@@ -5,11 +5,6 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    camera_params = os.path.join(
-            get_package_share_directory('radar_interfaces'),
-            'config',
-            'camera_driver_params.yaml'
-        )
     container = ComposableNodeContainer(
             namespace='sensor_far',
             name='sensor_container',
@@ -26,15 +21,15 @@ def generate_launch_description():
                 #         "camera_name": 'camera_far',
                 #         "camera_height": 1200,
                 #         "camera_width": 1920,
-                #         "camera_exp":1500.0,
-                #         "camera_gain": 13.98,
+                #         "camera_exp":2500.0,
+                #         "camera_gain": 23.98,
                 #         "camera_auto_exp": 0,
                 #         "camera_auto_maxexp": 4500.0,
                 #         "camera_auto_minexp": 100.0,
                 #         "camera_auto_gain": 0,
-                #         "camera_auto_maxgain": 17.0,
+                #         "camera_auto_maxgain": 24.0,
                 #         "camera_auto_mingain": 0.0,
-                #         "camera_auto_whitebalance": 1,
+                #         "camera_auto_whitebalance": 0
                 #       }
                 #     ],
                 #     extra_arguments=[{'use_intra_process_comms': True}]
@@ -47,12 +42,12 @@ def generate_launch_description():
                     parameters=[
                       {
                         "show_by_cv_or_msg": 0,
-                        "camera_name": "sensor_far",
+                        "camera_name": "camera_far",
                         "rgb_or_bayer": True,
                         "light_gain": 2.0,
                         "saturation_gain": 1.6,
-                        "image_width": 1920, # 1280
-                        "image_height": 1200, # 1024,
+                        "image_width": 1920,
+                        "image_height": 1200,
                         "roi_x": 0, # 325,
                         "roi_y": 1200, # 975,
                         "last_diff_time_threshold": 600.0
@@ -81,7 +76,7 @@ def generate_launch_description():
                         "length_of_cloud_queue": 10,
                         "image_width": 1920, # 1280
                         "image_height": 1200, # 1024,
-                        "camera_name": "sensor_far",
+                        "camera_name": "camera_far",
                         "show_by_cv_or_msg": 0
                       },
                     ],

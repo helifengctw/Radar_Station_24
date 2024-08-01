@@ -99,7 +99,7 @@ namespace yolov5_detect{
         float overlap_threshold = 0.1, duplicate_threshold = 0.1;
         double time_threshold = 90.0, pro_start_time = 0, current_time_ms = 0.0, last_frame_time_ms = 0.0,
         current_diff_time_threshold = 600.0, last_diff_time_threshold = 0.0, light_gain = 0.0, saturation_gain = 0.0;
-        int roi_x = 0, roi_y = 0, img_width = 0, img_height = 0;
+        int roi_x = 0, roi_y = 0, img_width = 0, img_height = 0, param_1 = 0, param_2 = 0;
         int show_count_threshold = 0, show_count = 0, show_by_cv_or_msg = 0, call_count = 0;
         radar_interfaces::msg::YoloPoints last_yolo_point_list, show_yolo_point_list;
         bool rgb_or_bayer = false;

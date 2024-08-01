@@ -148,7 +148,6 @@ struct game_status_data {
     uint8_t game_progress: 4; //0：未开始比赛 1：准备阶段 2：自检阶段 3：5s倒计时 4：对战中 5：比赛结算中
     uint16_t stage_remain_time = 0; //当前阶段剩余时间，单位s
     uint64_t SyncTimeStamp = 0; //机器人接收到该指令的精确Unix时间,当机载端收到有效的NTP服务器授时后生效
-
 } __attribute__((packed));
 
 struct game_status_msgs {

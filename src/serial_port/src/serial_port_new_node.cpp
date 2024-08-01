@@ -36,12 +36,12 @@ void SerialPort::TimerCallback() {
         if_receive = false;
         if (double_buff_chance > used_double_buff_chance) {
             if (if_double_buff_exerting) used_double_buff_chance++;
-            if (gameStatusMsgs.data.stage_remain_time < 5*60) {
-                if (detected_enemy_count > 3) {
-                    if (!if_double_buff_exerting) TriggerDoubleBuffOnce();
+            else {
+                if (gameStatusMsgs.data.stage_remain_time < 5*60) {
+                    if (detected_enemy_count > 3) TriggerDoubleBuffOnce();
+                } else if (gameStatusMsgs.data.stage_remain_time < 2*60) {
+                    TriggerDoubleBuffOnce();
                 }
-            } else if (gameStatusMsgs.data.stage_remain_time < 60) {
-                if (!if_double_buff_exerting) TriggerDoubleBuffOnce();
             }
         }
     }
@@ -97,7 +97,7 @@ void SerialPort::load_params() {
 
 bool SerialPort::sendMapMsgs() {
     mapMsg.head.SOF = 0xA5;
-    mapMsg.head.data_length = 10;
+    mapMsg.head.data_length = 24;
     mapMsg.head.seq = 1;
     mapMsg.head.crc = get_CRC8_check_sum((uint8_t *) &mapMsg, (sizeof(mapMsg.head) - sizeof(mapMsg.head.crc)),
                                          0xff);

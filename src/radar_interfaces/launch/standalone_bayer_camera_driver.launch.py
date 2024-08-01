@@ -12,14 +12,14 @@ def generate_launch_description():
     Node_bayer_camera_driver = Node(
         package="bayer_camera_driver",
         executable="hikvision_driver_node",
-        namespace='sensor_close',
+        namespace='sensor_far',
         name='bayer_camera_driver',
         parameters=[
           {
-            "camera_name": 'camera_close',
+            "camera_name": 'camera_far',
             "camera_height": 1200,
             "camera_width": 1920,
-            "camera_exp": 8000.0,
+            "camera_exp": 2000.0,
             "camera_gain": 23.0,
             "camera_auto_exp": 0,
             "camera_auto_maxexp": 4500.0,

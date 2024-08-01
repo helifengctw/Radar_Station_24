@@ -123,7 +123,7 @@ namespace yolov5_detect {
         Detection_2_SortBox(src, detected_cars, D_box);  // 把yolo的框转化为DS的框
 //        deepsort_.sort(src, D_box);  //跑DS的识别
 //        id_process(src, D_box, detected_cars);  //DS识别完了，将DS识别结果转化为yolo的框，供第二层使用
-        show_deep_sort(src, D_box);  // 展示DS的识别效果图
+//        show_deep_sort(src, D_box);  // 展示DS的识别效果图
         // 至此，第一层网络的识别、追踪已完成
 
         int iter_detected_car = 0, car_batches_count = 0, car_batch_length = 0;
@@ -224,13 +224,13 @@ namespace yolov5_detect {
                                     prediction_points.size(), cost_matrix);
                         dfs_count = 0;
                         update_tracker(tracker_yolo_point_list_msg); // TODO
-                        for (auto i : tracker) {
-                            if (!i.obsoleted && current_time_ms - i.time < 2000) {
-                                cv::rectangle(src, i.rect, cv::Scalar(0, 255, 0), 2);
-                                cv::putText(src, std::to_string(i.track_id), cv::Point(i.rect.x, i.rect.y),
-                                            cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-                            }
-                        }
+//                        for (auto i : tracker) {
+//                            if (!i.obsoleted && current_time_ms - i.time < 2000) {
+//                                cv::rectangle(src, i.rect, cv::Scalar(0, 255, 0), 2);
+//                                cv::putText(src, std::to_string(i.track_id), cv::Point(i.rect.x, i.rect.y),
+//                                            cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+//                            }
+//                        }
                     }
                 } else {
                     track_element temp_te;
@@ -253,7 +253,7 @@ namespace yolov5_detect {
             }
         }
 
-//        show_yolo_result_in_img(tracker_yolo_point_list_msg, src);
+        show_yolo_result_in_img(tracker_yolo_point_list_msg, src);
         // 将yolo识别的矩形发布
         if (!tracker_yolo_point_list_msg.data.empty()) {
             this->rect_publisher_->publish(tracker_yolo_point_list_msg);
@@ -424,7 +424,8 @@ namespace yolov5_detect {
         declare_parameter<int>("image_width", 0);
         declare_parameter<int>("image_height", 0);
         declare_parameter<double>("last_diff_time_threshold", 0.0);
-
+        declare_parameter<int>("param_1", 0);
+        declare_parameter<int>("param_2", 0);
 
         camera_name = get_parameter("camera_name").as_string();
         show_by_cv_or_msg = get_parameter("show_by_cv_or_msg").as_int();
@@ -436,6 +437,8 @@ namespace yolov5_detect {
         img_width = get_parameter("image_width").as_int(); // 1920
         img_height = get_parameter("image_height").as_int(); // 1200
         last_diff_time_threshold = get_parameter("last_diff_time_threshold").as_double();
+        param_1 = get_parameter("param_1").as_int();
+        param_2 = get_parameter("param_2").as_int();
 
 //        camera_name = "camera_far";
 //        show_by_cv_or_msg = 0;
@@ -648,9 +651,9 @@ namespace yolov5_detect {
         cv::merge(hsvChannels, hsvImg);
         cv::cvtColor(hsvImg, src, cv::COLOR_HSV2BGR);
         cv::Rect roi;
-        if (camera_name == "sensor_far") {
+        if (camera_name == "camera_far") {
             roi= cv::Rect(roi_x, 0, img_width - roi_x, roi_y);
-        } else if (camera_name == "sensor_close") {
+        } else if (camera_name == "camera_close") {
             roi = cv::Rect(0, roi_y, roi_x, img_height- roi_y);
         }
         roi_img = src(roi);
@@ -707,12 +710,12 @@ namespace yolov5_detect {
         } // 去除太久未更新的traker_element
         std::pair<int, radar_interfaces::msg::YoloPoint> temp_p;
         for (const auto &i: tracker) {
-            last_diff_time = i.time - i.last_time;
             if (!i.obsoleted) {
                 temp_p.first = i.track_id;
                 temp_p.second.id = i.class_id;
                 temp_p.second.conf = i.conf;
-                if (i.last_time < 0 || last_diff_time > last_diff_time_threshold) {
+                last_diff_time = i.time - i.last_time;
+                if (i.last_time < 0 || last_diff_time > last_diff_time_threshold) { // 新增的或者长时间未更新的
                     temp_p.second.x = i.rect.x;
                     temp_p.second.y = i.rect.y;
                     temp_p.second.width = i.rect.width;
@@ -767,12 +770,12 @@ namespace yolov5_detect {
         std::pair<int, int> temp_pair;
         for (int i = 0; i < now_points.data.size(); i++) {
             for (int j = 0; j < prediction_points.size(); j++) {
-                cost_matrix[i][j] = max_dist + 20 - cost_matrix[i][j];
+                cost_matrix[i][j] = max_dist - cost_matrix[i][j];
                 if (prediction_points[j].second.id == now_points.data[i].id &&
                     prediction_points[j].second.id < 12 && now_points.data[i].id < 12) {
-                    cost_matrix[i][j] += 1000;
+                    cost_matrix[i][j] += param_1;
                 } else if (check_same_color(prediction_points[j].second, now_points.data[i])) {
-                    cost_matrix[i][j] += 500;
+                    cost_matrix[i][j] += param_2;
                 }
             }
             temp_pair.first = *std::max_element(cost_matrix[i].begin(), cost_matrix[i].end());
@@ -791,17 +794,17 @@ namespace yolov5_detect {
         std::cout << "changes during sort: " << sorted_points.data.size() << ", " << prediction_points.size() << " ===> ";
         while (sorted_points.data.size() > prediction_points.size()) {
             track_element temp_te;
-            temp_te.conf = sorted_points.data.end()->conf;
-            temp_te.rect = cv::Rect(sorted_points.data.end()->x, sorted_points.data.end()->y,
-                                    sorted_points.data.end()->width, sorted_points.data.end()->height);
+            temp_te.conf = sorted_points.data.back().conf;
+            temp_te.rect = cv::Rect(sorted_points.data.back().x, sorted_points.data.back().y,
+                                    sorted_points.data.back().width, sorted_points.data.back().height);
             temp_te.time = current_time_ms;
             temp_te.last_time = -1;
             temp_te.track_id = (int) tracker.size();
             temp_te.obsoleted = false;
-            if (sorted_points.data.end()->id < 6 || sorted_points.data.end()->id == 12) {
+            if (sorted_points.data.back().id < 6 || sorted_points.data.back().id == 12) {
                 temp_te.class_id = 12;
-            } else if ((sorted_points.data.end()->id < 12 && sorted_points.data.end()->id > 5)
-            || sorted_points.data.end()->id == 13) {
+            } else if ((sorted_points.data.back().id < 12 && sorted_points.data.back().id > 5)
+            || sorted_points.data.back().id == 13) {
                 temp_te.class_id = 13;
             }
             tracker.push_back(temp_te);

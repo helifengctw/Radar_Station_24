@@ -13,15 +13,17 @@ def generate_launch_description():
         parameters=[
           {
             "show_by_cv_or_msg": 0,
-            "camera_name": "sensor_close",
-            "rgb_or_bayer": False,
+            "camera_name": "camera_close",
+            "rgb_or_bayer": True,
             "light_gain": 2.0,
             "saturation_gain": 2.0,
             "image_width": 1920,
             "image_height": 1200, 
-            "roi_x": 1920,
-            "roi_y": 0,
-            "last_diff_time_threshold": 600.0
+            "roi_x": 1919,
+            "roi_y": 1,
+            "last_diff_time_threshold": 400.0,
+            "param_1": 250,
+            "param_2": 150
           },
         ],
         output="screen",
