@@ -67,7 +67,7 @@ namespace get_depth {
                 radar_interfaces::msg::DistPoint distPoint;
                 distPoint.x = point.x + point.width / 2;
                 distPoint.y = point.y + point.height / 2;
-                cv::Rect dist_rect(point.x+point.width/4, point.y+point.height/2, point.width/2, point.height/2);
+                cv::Rect dist_rect(point.x+point.width/4, point.y+point.height/3, point.width/2, point.height/3);
                 distPoint.dist = (float)GetDepthInRect(dist_rect, depth_queue, point.id);
                 distPoint.color = point.color;
                 distPoint.id = point.id;
@@ -103,7 +103,6 @@ namespace get_depth {
         }
 
     }
-
 
     void DepthSensor::LoadCameraParams() {
         this->declare_parameter<std::string>("camera_name", "camera_init");

@@ -27,7 +27,7 @@ using namespace std::chrono_literals;
 struct frame_header
 {
     uint8_t SOF = 0xA5;//固定值
-    uint16_t data_length = 10;//data的长度
+    uint16_t data_length;//data的长度
     uint8_t seq; //包序号
     uint8_t crc; //帧头crc8
 } __attribute__((packed));
@@ -49,7 +49,7 @@ struct map_robot_data
     uint16_t sentry_position_y;
 } __attribute__((packed));
 
-struct map_msg {
+struct map_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0305;
     map_robot_data data;
@@ -65,7 +65,7 @@ struct mark_data {
     uint8_t mark_sentry_progress;
 } __attribute__((packed));
 
-struct mark_msg {
+struct mark_msgs {
     frame_header head;
     uint16_t cmd_id = 0x020c;
     mark_data data;
@@ -76,7 +76,7 @@ struct double_buff_info_data {
     uint8_t radar_info;
 } __attribute__((packed));
 
-struct double_buff_info_msg {
+struct double_buff_info_msgs {
     frame_header head;
     uint16_t cmd_id = 0x020e;
     double_buff_info_data double_buff_info;
@@ -87,7 +87,7 @@ struct double_buff_cmd_data {
     uint8_t radar_cmd;
 } __attribute__((packed));
 
-struct double_buff_cmd_msg {
+struct double_buff_cmd_msgs {
     frame_header head;
     uint16_t cmd_id = 0x020e;
     double_buff_cmd_data double_buff_cmd;
@@ -146,8 +146,8 @@ struct robot_health_msgs {
 struct game_status_data {
     uint8_t game_type: 4; //1：机甲大师赛 2：单项赛 3：人工智能挑战赛 4：联盟赛3v3 5：联盟赛1v1
     uint8_t game_progress: 4; //0：未开始比赛 1：准备阶段 2：自检阶段 3：5s倒计时 4：对战中 5：比赛结算中
-    uint16_t stage_remain_time = 0; //当前阶段剩余时间，单位s
-    uint64_t SyncTimeStamp = 0; //机器人接收到该指令的精确Unix时间,当机载端收到有效的NTP服务器授时后生效
+    uint16_t stage_remain_time; //当前阶段剩余时间，单位s
+    uint64_t SyncTimeStamp; //机器人接收到该指令的精确Unix时间,当机载端收到有效的NTP服务器授时后生效
 } __attribute__((packed));
 
 struct game_status_msgs {
@@ -163,7 +163,7 @@ struct game_result_data {
     uint8_t winner; //0平局 1红方胜利 2蓝方胜利
 } __attribute__((packed));
 
-struct game_result_msg {
+struct game_result_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0002;
     game_result_data data;
@@ -212,7 +212,7 @@ struct referee_warning_data {
     uint8_t foul_robot_id; //犯规机器人ID 判负时为0
 } __attribute__((packed));
 
-struct referee_warning_msg {
+struct referee_warning_msgs {
     frame_header head;
     uint16_t cmd_id = 0x0104;
     referee_warning_data data;
@@ -225,6 +225,8 @@ class SerialPort : public rclcpp::Node {
 public:
     SerialPort(std::string name);
     ~SerialPort();
+    serial::Serial ser;
+    void TimerCallback();
 
 private:
     rclcpp::Subscription<radar_interfaces::msg::Points>::SharedPtr world_point_subscription_;
@@ -235,17 +237,16 @@ private:
     void worldPointsCallback(radar_interfaces::msg::Points::SharedPtr);
     void load_params();
 
-    serial::Serial ser;
-    map_msg mapMsg;
+    map_msgs mapMsg;
     map_robot_data mapRobotData;
-    mark_msg markMsg;
-    double_buff_info_msg doubleBuffInfoMsg;
-    double_buff_cmd_msg doubleBuffCmdMsg;
+    mark_msgs markMsg;
+    double_buff_info_msgs doubleBuffInfoMsg;
+    double_buff_cmd_msgs doubleBuffCmdMsg;
     robot_interactive_msgs robotInteractiveMsgs;
     robot_health_msgs robotHealthMsgs;
-    game_result_msg gameResultMsg;
+    game_result_msgs gameResultMsg;
     site_event_msgs siteEventMsgs;
-    referee_warning_msg refereeWarningMsg;
+    referee_warning_msgs refereeWarningMsg;
     game_status_msgs gameStatusMsgs;
 
     radar_interfaces::msg::GameState gameStateRosMsg;
@@ -255,10 +256,9 @@ private:
     uint8_t receiveData[1024];
     int double_buff_chance = 0, used_double_buff_chance = 0, detected_enemy_count = 0;
     float field_height = 2800, field_width = 1500;
-    bool if_enemy_red = false, if_double_buff_exerting = false, if_receive = false;
+    bool if_enemy_red = false, if_double_buff_exerting = false, if_receive = false, if_prepared = false;
     mark_data referee_mark_data, last_referee_mark_data;
 
-    void TimerCallback();
     bool sendMapMsgs();
     bool sendInteractiveMsgs(uint16_t);
     bool TriggerDoubleBuffOnce();

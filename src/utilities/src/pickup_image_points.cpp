@@ -48,6 +48,7 @@ public:
 
 void far_mouse_callback(int event, int x, int y, int flags, void* param);
 void close_mouse_callback(int event, int x, int y, int flags, void* param);
+void tune_img(cv::Mat &src);
 
 
 Mat far_src, close_src, points_set_img;
@@ -148,6 +149,7 @@ void PointsPickUp::FarImgCallback(const sensor_msgs::msg::Image::SharedPtr msg) 
         RCLCPP_ERROR(this->get_logger(), "image is empty");
         return;
     }
+    tune_img(src);
     cv::resize(src, src, cv::Size(src.cols*smaller, src.rows*smaller));
     src.copyTo(far_src);
 }
@@ -166,6 +168,7 @@ void PointsPickUp::CloseImgCallback(sensor_msgs::msg::Image::SharedPtr msg) cons
         RCLCPP_ERROR(this->get_logger(), "image is empty");
         return;
     }
+    tune_img(src);
     cv::resize(src, src, cv::Size(src.cols*smaller, src.rows*smaller));
     src.copyTo(close_src);
 }
@@ -194,6 +197,18 @@ void close_mouse_callback(int event, int x, int y, int flags, void* param) {
     }
 }
 
+void tune_img(cv::Mat &src) {
+    cv::Mat hsvImg, roi_img;
+
+    cv::cvtColor(src, hsvImg, cv::COLOR_BGR2HSV);
+    std::vector<cv::Mat> hsvChannels;
+    cv::split(hsvImg, hsvChannels);
+    hsvChannels[1] *= 1.6;
+    hsvChannels[2] *= 2.5;
+
+    cv::merge(hsvChannels, hsvImg);
+    cv::cvtColor(hsvImg, src, cv::COLOR_HSV2BGR);
+}
 
 void PointsPickUp::send_far_points() {
     far_point_publisher_->publish(far_points_msg);

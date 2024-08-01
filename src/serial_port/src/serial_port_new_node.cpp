@@ -4,14 +4,19 @@ int main(int argc, char **argv) {
     std::cout << "ros node init" << std::endl;
     rclcpp::init(argc, argv);
     auto SP_node = std::make_shared<SerialPort>("serial_port");
-    auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
-    executor->add_node(SP_node);
-    executor->spin();
+//    auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+//    executor->add_node(SP_node);
+//    executor->spin();
+    while (rclcpp::ok()) {
+        if (SP_node->ser.available()) {
+            SP_node->TimerCallback();
+        }
+    }
     rclcpp::shutdown();
     return 0;
 }
 
-SerialPort::SerialPort(std::string name) : Node(name){
+SerialPort::SerialPort(std::string name) : Node(name) {
     if (ser_init() < 0) {
         RCLCPP_ERROR(this->get_logger(), "Failed to initialize serial port, please check the hardware !!!");
     } else {
@@ -21,7 +26,7 @@ SerialPort::SerialPort(std::string name) : Node(name){
     mark_data_publisher_ = this->create_publisher<radar_interfaces::msg::MarkData>("mark_data", 1);
     world_point_subscription_ = this->create_subscription<radar_interfaces::msg::Points>(
             "/world_point", 1, std::bind(&SerialPort::worldPointsCallback, this, _1));
-    timer_ = this->create_wall_timer(200ms, std::bind(&SerialPort::TimerCallback, this));
+//    timer_ = this->create_wall_timer(2ms, std::bind(&SerialPort::TimerCallback, this));
 
     doubleBuffCmdMsg.double_buff_cmd.radar_cmd = 0;
 }
@@ -32,18 +37,8 @@ SerialPort::~SerialPort() {
 }
 
 void SerialPort::TimerCallback() {
-    if (receiveMsgs()) { //接受来自串口的所有消息并加以判断、处理
+    if (receiveMsgs() ) { //接受来自串口的所有消息并加以判断、处理
         if_receive = false;
-        if (double_buff_chance > used_double_buff_chance) {
-            if (if_double_buff_exerting) used_double_buff_chance++;
-            else {
-                if (gameStatusMsgs.data.stage_remain_time < 5*60) {
-                    if (detected_enemy_count > 3) TriggerDoubleBuffOnce();
-                } else if (gameStatusMsgs.data.stage_remain_time < 2*60) {
-                    TriggerDoubleBuffOnce();
-                }
-            }
-        }
     }
 }
 
@@ -89,8 +84,9 @@ int SerialPort::ser_init() {
 }
 
 void SerialPort::load_params() {
-    this->declare_parameter<std::string>("our_color", "our_init");
-    std::string our_color = this->get_parameter("our_color").as_string();
+//    this->declare_parameter<std::string>("our_color", "our_init");
+//    std::string our_color = this->get_parameter("our_color").as_string();
+    std::string our_color = "red";
     if (our_color == "red") if_enemy_red = false;
     else if (our_color == "blue") if_enemy_red = true;
 }
@@ -104,7 +100,7 @@ bool SerialPort::sendMapMsgs() {
     mapMsg.cmd_id = 0x0305;
     mapMsg.data = mapRobotData;
     mapMsg.crc = get_CRC16_check_sum((uint8_t *) &mapMsg, (sizeof(mapMsg) - sizeof(mapMsg.crc)), 0xffff);
-    ser.write((uint8_t *) &mapMsg, sizeof(map_msg));
+    ser.write((uint8_t *) &mapMsg, sizeof(map_msgs));
     return true;
 }
 
@@ -116,7 +112,14 @@ bool SerialPort::TriggerDoubleBuffOnce() {
                                                    (sizeof(doubleBuffCmdMsg.head) -
                                                     sizeof(doubleBuffCmdMsg.head.crc)), 0xff);
     doubleBuffCmdMsg.cmd_id = 0x0121;
-    doubleBuffCmdMsg.double_buff_cmd.radar_cmd++;
+    if (!if_prepared) {
+        if_prepared = true;
+        doubleBuffCmdMsg.double_buff_cmd.radar_cmd = used_double_buff_chance;
+    } else {
+        if_prepared = false;
+        doubleBuffCmdMsg.double_buff_cmd.radar_cmd = double_buff_chance;
+    }
+    std::cout << std::endl << "double_buff_cmd: " << (int) doubleBuffCmdMsg.double_buff_cmd.radar_cmd << std::endl;
     doubleBuffCmdMsg.crc = get_CRC16_check_sum((uint8_t *) &doubleBuffCmdMsg,
                                                (sizeof(doubleBuffCmdMsg) - sizeof(doubleBuffCmdMsg.crc)), 0xffff);
     ser.write((uint8_t *) &doubleBuffCmdMsg, sizeof(doubleBuffCmdMsg));
@@ -161,125 +164,135 @@ bool SerialPort::sendInteractiveMsgs(uint16_t receiver_id) { //接受者ID以红
  * @return 是否成功接收
  */
 bool SerialPort::receiveMsgs() {
-    if (ser.available()) {
-        ser.read(receiveData, ser.available());
-        //使用所有消息类型进行匹配，若CRC校验通过，则匹配成功
-        gameStatusMsgs = (*(game_status_msgs *) receiveData);
-        robotHealthMsgs = (*(robot_health_msgs *) receiveData);
-        markMsg = (*(mark_msg *) receiveData);
-        gameResultMsg = (*(game_result_msg *) receiveData);
-        siteEventMsgs = (*(site_event_msgs *) receiveData);
-        refereeWarningMsg = (*(referee_warning_msg *) receiveData);
+    ser.read(receiveData, ser.available());
+    //使用所有消息类型进行匹配，若CRC校验通过，则匹配成功
+    memcpy(&gameStatusMsgs, receiveData, sizeof(game_status_msgs));
+    memcpy(&robotHealthMsgs, receiveData, sizeof(robot_health_msgs));
+    memcpy(&markMsg, receiveData, sizeof(mark_msgs));
+    memcpy(&gameResultMsg, receiveData, sizeof(game_result_msgs));
+    memcpy(&siteEventMsgs, receiveData, sizeof(site_event_msgs));
+    memcpy(&refereeWarningMsg, receiveData, sizeof(referee_warning_msgs));
 
-        gameStateRosMsg.dart_remaining_time = 16;  //己方飞镖发射剩余时间
-        gameStateRosMsg.winner = 3;  // 0:平局，1:红方胜利，2:蓝方胜利
-        if ((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &gameStatusMsgs,
-                                                           (sizeof(gameStatusMsgs.head) -
-                                                            sizeof(gameStatusMsgs.head.crc)), 0xff)) &&
-            (gameStatusMsgs.crc ==
-             get_CRC16_check_sum((uint8_t *) &gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)),
-                                 0xffff))) {
+    if ((gameStatusMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &gameStatusMsgs,
+                                                       (sizeof(gameStatusMsgs.head) -
+                                                        sizeof(gameStatusMsgs.head.crc)), 0xff))
+        && (gameStatusMsgs.crc ==
+            get_CRC16_check_sum((uint8_t *) &gameStatusMsgs, (sizeof(gameStatusMsgs) - sizeof(gameStatusMsgs.crc)),
+                                0xffff)))
+    {
+
+        if (gameStatusMsgs.data.stage_remain_time > 0) {
             gameStateRosMsg.game_progress = gameStatusMsgs.data.game_progress;
             gameStateRosMsg.game_type = gameStatusMsgs.data.game_type;
             gameStateRosMsg.stage_remain_time = gameStatusMsgs.data.stage_remain_time;
             if_receive = true;
+            std::cout << "1111" << std::endl;
+            std::cout << "remain_time: " << (int) gameStatusMsgs.data.stage_remain_time << std::endl;
+//            TriggerDoubleBuffOnce();
         }
-
-        if ((markMsg.head.crc == get_CRC8_check_sum((uint8_t *) &markMsg,
-                                                            (sizeof(markMsg.head) -
-                                                             sizeof(markMsg.head.crc)), 0xff)) &&
-            (markMsg.crc == get_CRC16_check_sum((uint8_t *) &markMsg,
-                                                        (sizeof(markMsg) - sizeof(markMsg.crc)),
-                                                        0xffff))) {
-            last_referee_mark_data = referee_mark_data;
-            referee_mark_data = markMsg.data;
-            publish_mark_data();
-            if_receive = true;
+    } else if ((markMsg.head.crc == get_CRC8_check_sum((uint8_t *) &markMsg,
+                                                       (sizeof(markMsg.head) -
+                                                        sizeof(markMsg.head.crc)), 0xff)) &&
+               (markMsg.crc == get_CRC16_check_sum((uint8_t *) &markMsg,
+                                                   (sizeof(markMsg) - sizeof(markMsg.crc)),
+                                                   0xffff)))
+    {
+        last_referee_mark_data = referee_mark_data;
+        referee_mark_data = markMsg.data;
+        std::cout << "2222" << std::endl;
+        if_receive = true;
+    }else if ((doubleBuffInfoMsg.head.crc == get_CRC8_check_sum((uint8_t *) &doubleBuffInfoMsg,
+                                                                (sizeof(doubleBuffInfoMsg.head) -
+                                                                 sizeof(doubleBuffInfoMsg.head.crc)), 0xff)) &&
+              (doubleBuffInfoMsg.crc == get_CRC16_check_sum((uint8_t *) &doubleBuffInfoMsg,
+                                                            (sizeof(doubleBuffInfoMsg) - sizeof(doubleBuffInfoMsg.crc)),
+                                                            0xffff)))
+    {
+        double_buff_chance = doubleBuffInfoMsg.double_buff_info.radar_info & 0x03;
+        if_double_buff_exerting = (doubleBuffInfoMsg.double_buff_info.radar_info & 0x04) >> 2;
+        if_receive = true;
+        std::cout << "3333" << std::endl;
+        std::cout << "chance: " << double_buff_chance << ", exerting: " << if_double_buff_exerting << std::endl;
+        if (double_buff_chance > used_double_buff_chance) {
+            if (if_double_buff_exerting) used_double_buff_chance++;
+            else {
+                if (gameStatusMsgs.data.stage_remain_time < 5*60) {
+                    if (detected_enemy_count > 3) TriggerDoubleBuffOnce();
+                } else if (gameStatusMsgs.data.stage_remain_time < 2*60) {
+                    TriggerDoubleBuffOnce();
+                }
+            }
         }
-
-        if ((doubleBuffInfoMsg.head.crc == get_CRC8_check_sum((uint8_t *) &doubleBuffInfoMsg,
-                                                    (sizeof(doubleBuffInfoMsg.head) -
-                                                     sizeof(doubleBuffInfoMsg.head.crc)), 0xff)) &&
-            (doubleBuffInfoMsg.crc == get_CRC16_check_sum((uint8_t *) &doubleBuffInfoMsg,
-                                                (sizeof(doubleBuffInfoMsg) - sizeof(doubleBuffInfoMsg.crc)),
-                                                0xffff))) {
-            double_buff_chance = doubleBuffInfoMsg.double_buff_info.radar_info & 0x03;
-            if_double_buff_exerting = (doubleBuffInfoMsg.double_buff_info.radar_info >> 2) & 0x01;
-            if_receive = true;
-        }
-
-        if ((robotHealthMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &robotHealthMsgs,
-                                                            (sizeof(robotHealthMsgs.head) -
-                                                             sizeof(robotHealthMsgs.head.crc)), 0xff)) &&
-            (robotHealthMsgs.crc == get_CRC16_check_sum((uint8_t *) &robotHealthMsgs,
-                                                        (sizeof(robotHealthMsgs) - sizeof(robotHealthMsgs.crc)),
-                                                        0xffff))) {
-            gameStateRosMsg.blue_1_robot_hp = robotHealthMsgs.data.blue_1_robot_hp;
-            gameStateRosMsg.blue_2_robot_hp = robotHealthMsgs.data.blue_2_robot_hp;
-            gameStateRosMsg.blue_3_robot_hp = robotHealthMsgs.data.blue_3_robot_hp;
-            gameStateRosMsg.blue_4_robot_hp = robotHealthMsgs.data.blue_4_robot_hp;
-            gameStateRosMsg.blue_5_robot_hp = robotHealthMsgs.data.blue_5_robot_hp;
-            gameStateRosMsg.blue_7_robot_hp = robotHealthMsgs.data.blue_7_robot_hp;
-            gameStateRosMsg.blue_base_hp = robotHealthMsgs.data.blue_base_hp;
-            gameStateRosMsg.blue_outpose_hp = robotHealthMsgs.data.blue_outpose_hp;
-            gameStateRosMsg.red_1_robot_hp = robotHealthMsgs.data.red_1_robot_hp;
-            gameStateRosMsg.red_2_robot_hp = robotHealthMsgs.data.red_2_robot_hp;
-            gameStateRosMsg.red_3_robot_hp = robotHealthMsgs.data.red_3_robot_hp;
-            gameStateRosMsg.red_4_robot_hp = robotHealthMsgs.data.red_4_robot_hp;
-            gameStateRosMsg.red_5_robot_hp = robotHealthMsgs.data.red_5_robot_hp;
-            gameStateRosMsg.red_7_robot_hp = robotHealthMsgs.data.red_7_robot_hp;
-            gameStateRosMsg.red_base_hp = robotHealthMsgs.data.red_base_hp;
-            gameStateRosMsg.red_outpose_hp = robotHealthMsgs.data.red_outpose_hp;
-            if_receive = true;
-        }
-
-        if ((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t *) &gameResultMsg, (sizeof(gameResultMsg.head) -
-                                                                                       sizeof(gameResultMsg.head.crc)),
-                                                          0xff)) && (gameResultMsg.crc ==
-                                                                     get_CRC16_check_sum((uint8_t *) &gameResultMsg,
-                                                                                         (sizeof(gameResultMsg) -
-                                                                                          sizeof(gameResultMsg.crc)),
-                                                                                         0xffff))) {
-            gameStateRosMsg.winner = gameResultMsg.data.winner;
-            if_receive = true;
-        }
-
-        if ((siteEventMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &siteEventMsgs, (sizeof(siteEventMsgs.head) -
-                                                                                       sizeof(siteEventMsgs.head.crc)),
-                                                          0xff)) && (siteEventMsgs.crc ==
-                                                                     get_CRC16_check_sum((uint8_t *) &siteEventMsgs,
-                                                                                         (sizeof(siteEventMsgs) -
-                                                                                          sizeof(siteEventMsgs.crc)),
-                                                                                         0xffff))) {
-            gameStateRosMsg.if_supply_projectile_one_occupied = (siteEventMsgs.data.event_type | 0x80000000);
-            gameStateRosMsg.if_supply_projectile_two_occupied = (siteEventMsgs.data.event_type | 0x40000000);
-            gameStateRosMsg.if_supply_projectile_three_occupied = (siteEventMsgs.data.event_type | 0x20000000);
-            gameStateRosMsg.if_wind_mill_hit_place_occupied = (siteEventMsgs.data.event_type | 0x10000000);
-            gameStateRosMsg.if_wind_mill_big_lighted = (siteEventMsgs.data.event_type | 0x80000000);
-            gameStateRosMsg.if_wind_mill_small_lighted = (siteEventMsgs.data.event_type | 0x08000000);
-            gameStateRosMsg.if_rb2_occupied = (siteEventMsgs.data.event_type | 0x04000000);
-            gameStateRosMsg.if_rb3_occupied = (siteEventMsgs.data.event_type | 0x02000000);
-            gameStateRosMsg.if_rb4_occupied = (siteEventMsgs.data.event_type | 0x01000000);
-            gameStateRosMsg.if_base_protected = (siteEventMsgs.data.event_type | 0x00800000);
-            gameStateRosMsg.if_outpose_alive = (siteEventMsgs.data.event_type | 0x00400000);
-            if_receive = true;
-        }
-
-        if ((refereeWarningMsg.head.crc == get_CRC8_check_sum((uint8_t *) &refereeWarningMsg,
-                                                              (sizeof(refereeWarningMsg.head) -
-                                                               sizeof(refereeWarningMsg.head.crc)), 0xff)) &&
-            (refereeWarningMsg.crc == get_CRC16_check_sum((uint8_t *) &refereeWarningMsg,
-                                                          (sizeof(refereeWarningMsg) -
-                                                           sizeof(refereeWarningMsg.crc)), 0xffff))) {
-            refereeWarningRosMsg.level = refereeWarningMsg.data.level; // 1:双方黄牌，2:黄牌，3:红牌，4:判负
-            refereeWarningRosMsg.foul_robot_id = refereeWarningMsg.data.foul_robot_id; //  红1:1，蓝1:101，判负双方黄牌:0
-            if_receive = true;
-        }
-
-        if (if_receive) return true;
-        return false;
+    }else if ((robotHealthMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &robotHealthMsgs,
+                                                              (sizeof(robotHealthMsgs.head) -
+                                                               sizeof(robotHealthMsgs.head.crc)), 0xff)) &&
+              (robotHealthMsgs.crc == get_CRC16_check_sum((uint8_t *) &robotHealthMsgs,
+                                                          (sizeof(robotHealthMsgs) - sizeof(robotHealthMsgs.crc)),
+                                                          0xffff)))
+    {
+        gameStateRosMsg.blue_1_robot_hp = robotHealthMsgs.data.blue_1_robot_hp;
+        gameStateRosMsg.blue_2_robot_hp = robotHealthMsgs.data.blue_2_robot_hp;
+        gameStateRosMsg.blue_3_robot_hp = robotHealthMsgs.data.blue_3_robot_hp;
+        gameStateRosMsg.blue_4_robot_hp = robotHealthMsgs.data.blue_4_robot_hp;
+        gameStateRosMsg.blue_5_robot_hp = robotHealthMsgs.data.blue_5_robot_hp;
+        gameStateRosMsg.blue_7_robot_hp = robotHealthMsgs.data.blue_7_robot_hp;
+        gameStateRosMsg.blue_base_hp = robotHealthMsgs.data.blue_base_hp;
+        gameStateRosMsg.blue_outpose_hp = robotHealthMsgs.data.blue_outpose_hp;
+        gameStateRosMsg.red_1_robot_hp = robotHealthMsgs.data.red_1_robot_hp;
+        gameStateRosMsg.red_2_robot_hp = robotHealthMsgs.data.red_2_robot_hp;
+        gameStateRosMsg.red_3_robot_hp = robotHealthMsgs.data.red_3_robot_hp;
+        gameStateRosMsg.red_4_robot_hp = robotHealthMsgs.data.red_4_robot_hp;
+        gameStateRosMsg.red_5_robot_hp = robotHealthMsgs.data.red_5_robot_hp;
+        gameStateRosMsg.red_7_robot_hp = robotHealthMsgs.data.red_7_robot_hp;
+        gameStateRosMsg.red_base_hp = robotHealthMsgs.data.red_base_hp;
+        gameStateRosMsg.red_outpose_hp = robotHealthMsgs.data.red_outpose_hp;
+        if_receive = true;
+        std::cout << "4444" << std::endl;
+    } else if ((gameResultMsg.head.crc == get_CRC8_check_sum((uint8_t *) &gameResultMsg, (sizeof(gameResultMsg.head) -
+                                                                                          sizeof(gameResultMsg.head.crc)),
+                                                             0xff)) && (gameResultMsg.crc ==
+                                                                        get_CRC16_check_sum((uint8_t *) &gameResultMsg,
+                                                                                            (sizeof(gameResultMsg) -
+                                                                                             sizeof(gameResultMsg.crc)),
+                                                                                            0xffff)))
+    {
+        gameStateRosMsg.winner = gameResultMsg.data.winner;
+        if_receive = true;
+        std::cout << "5555" << std::endl;
+    }else if ((siteEventMsgs.head.crc == get_CRC8_check_sum((uint8_t *) &siteEventMsgs, (sizeof(siteEventMsgs.head) -
+                                                                                         sizeof(siteEventMsgs.head.crc)),
+                                                            0xff)) && (siteEventMsgs.crc ==
+                                                                       get_CRC16_check_sum((uint8_t *) &siteEventMsgs,
+                                                                                           (sizeof(siteEventMsgs) -
+                                                                                            sizeof(siteEventMsgs.crc)),
+                                                                                           0xffff)))
+    {
+        gameStateRosMsg.if_supply_projectile_one_occupied = (siteEventMsgs.data.event_type | 0x80000000);
+        gameStateRosMsg.if_supply_projectile_two_occupied = (siteEventMsgs.data.event_type | 0x40000000);
+        gameStateRosMsg.if_supply_projectile_three_occupied = (siteEventMsgs.data.event_type | 0x20000000);
+        gameStateRosMsg.if_wind_mill_hit_place_occupied = (siteEventMsgs.data.event_type | 0x10000000);
+        gameStateRosMsg.if_wind_mill_big_lighted = (siteEventMsgs.data.event_type | 0x80000000);
+        gameStateRosMsg.if_wind_mill_small_lighted = (siteEventMsgs.data.event_type | 0x08000000);
+        gameStateRosMsg.if_rb2_occupied = (siteEventMsgs.data.event_type | 0x04000000);
+        gameStateRosMsg.if_rb3_occupied = (siteEventMsgs.data.event_type | 0x02000000);
+        gameStateRosMsg.if_rb4_occupied = (siteEventMsgs.data.event_type | 0x01000000);
+        gameStateRosMsg.if_base_protected = (siteEventMsgs.data.event_type | 0x00800000);
+        gameStateRosMsg.if_outpose_alive = (siteEventMsgs.data.event_type | 0x00400000);
+        if_receive = true;
+        std::cout << "6666" << std::endl;
+    }else if ((refereeWarningMsg.head.crc == get_CRC8_check_sum((uint8_t *) &refereeWarningMsg,
+                                                                (sizeof(refereeWarningMsg.head) -
+                                                                 sizeof(refereeWarningMsg.head.crc)), 0xff)) &&
+              (refereeWarningMsg.crc == get_CRC16_check_sum((uint8_t *) &refereeWarningMsg,
+                                                            (sizeof(refereeWarningMsg) -
+                                                             sizeof(refereeWarningMsg.crc)), 0xffff)))
+    {
+        refereeWarningRosMsg.level = refereeWarningMsg.data.level; // 1:双方黄牌，2:黄牌，3:红牌，4:判负
+        refereeWarningRosMsg.foul_robot_id = refereeWarningMsg.data.foul_robot_id; //  红1:1，蓝1:101，判负双方黄牌:0
+        if_receive = true;
+        std::cout << "7777" << std::endl;
     }
-    return false;
+    return if_receive;
 }
 
 /**
@@ -287,10 +300,14 @@ bool SerialPort::receiveMsgs() {
  */
 void SerialPort::publish_mark_data() {
     markDataRosMsg.mark_list[0] = referee_mark_data.mark_hero_progress - last_referee_mark_data.mark_hero_progress;
-    markDataRosMsg.mark_list[1] = referee_mark_data.mark_engineer_progress - last_referee_mark_data.mark_engineer_progress;
-    markDataRosMsg.mark_list[2] = referee_mark_data.mark_standard_3_progress - last_referee_mark_data.mark_standard_3_progress;
-    markDataRosMsg.mark_list[3] = referee_mark_data.mark_standard_4_progress - last_referee_mark_data.mark_standard_4_progress;
-    markDataRosMsg.mark_list[4] = referee_mark_data.mark_standard_5_progress - last_referee_mark_data.mark_standard_5_progress;
+    markDataRosMsg.mark_list[1] =
+            referee_mark_data.mark_engineer_progress - last_referee_mark_data.mark_engineer_progress;
+    markDataRosMsg.mark_list[2] =
+            referee_mark_data.mark_standard_3_progress - last_referee_mark_data.mark_standard_3_progress;
+    markDataRosMsg.mark_list[3] =
+            referee_mark_data.mark_standard_4_progress - last_referee_mark_data.mark_standard_4_progress;
+    markDataRosMsg.mark_list[4] =
+            referee_mark_data.mark_standard_5_progress - last_referee_mark_data.mark_standard_5_progress;
     markDataRosMsg.mark_list[5] = referee_mark_data.mark_sentry_progress - last_referee_mark_data.mark_sentry_progress;
     mark_data_publisher_->publish(markDataRosMsg);
 
@@ -300,7 +317,7 @@ void SerialPort::publish_mark_data() {
  * 目标世界坐标回调函数
  * @param msg 收到的消息
  */
-void SerialPort::worldPointsCallback(const radar_interfaces::msg::Points::SharedPtr msg){
+void SerialPort::worldPointsCallback(const radar_interfaces::msg::Points::SharedPtr msg) {
     if (msg->data.empty()) return;
     detected_enemy_count = 0;
     if (if_enemy_red) {

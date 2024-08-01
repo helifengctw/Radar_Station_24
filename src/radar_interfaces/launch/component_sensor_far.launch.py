@@ -11,29 +11,29 @@ def generate_launch_description():
             package='rclcpp_components',
             executable='component_container',
             composable_node_descriptions=[
-                # ComposableNode(
-                #     namespace='sensor_far',
-                #     name='bayer_camera_driver',
-                #     package='bayer_camera_driver',
-                #     plugin='bayer_camera_driver::HikvisionDriver',
-                #     parameters=[
-                #       {
-                #         "camera_name": 'camera_far',
-                #         "camera_height": 1200,
-                #         "camera_width": 1920,
-                #         "camera_exp":2500.0,
-                #         "camera_gain": 23.98,
-                #         "camera_auto_exp": 0,
-                #         "camera_auto_maxexp": 4500.0,
-                #         "camera_auto_minexp": 100.0,
-                #         "camera_auto_gain": 0,
-                #         "camera_auto_maxgain": 24.0,
-                #         "camera_auto_mingain": 0.0,
-                #         "camera_auto_whitebalance": 0
-                #       }
-                #     ],
-                #     extra_arguments=[{'use_intra_process_comms': True}]
-                # ),
+                ComposableNode(
+                    namespace='sensor_far',
+                    name='bayer_camera_driver',
+                    package='bayer_camera_driver',
+                    plugin='bayer_camera_driver::HikvisionDriver',
+                    parameters=[
+                      {
+                        "camera_name": 'camera_far',
+                        "camera_height": 1200,
+                        "camera_width": 1920,
+                        "camera_exp":2500.0,
+                        "camera_gain": 23.98,
+                        "camera_auto_exp": 0,
+                        "camera_auto_maxexp": 4500.0,
+                        "camera_auto_minexp": 100.0,
+                        "camera_auto_gain": 0,
+                        "camera_auto_maxgain": 24.0,
+                        "camera_auto_mingain": 0.0,
+                        "camera_auto_whitebalance": 0
+                      }
+                    ],
+                    extra_arguments=[{'use_intra_process_comms': True}]
+                ),
                 ComposableNode(
                     package='yolov5_detect',
                     plugin='yolov5_detect::Yolov5Detector',
@@ -50,7 +50,9 @@ def generate_launch_description():
                         "image_height": 1200,
                         "roi_x": 0, # 325,
                         "roi_y": 1200, # 975,
-                        "last_diff_time_threshold": 600.0
+                        "last_diff_time_threshold": 400.0,
+                        "param_1": 250,
+                        "param_2": 150
                       },
                     ],
                     extra_arguments=[{'use_intra_process_comms': True}]
