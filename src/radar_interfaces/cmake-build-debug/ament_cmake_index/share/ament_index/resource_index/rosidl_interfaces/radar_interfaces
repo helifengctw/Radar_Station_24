@@ -26,3 +26,7 @@ msg/YoloPoints.idl
 msg/YoloPoints.msg
 msg/YoloPub.idl
 msg/YoloPub.msg
+srv/PnpResult.idl
+srv/PnpResult.srv
+srv/PnpResult_Request.msg
+srv/PnpResult_Response.msg

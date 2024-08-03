@@ -7,12 +7,12 @@ def generate_launch_description():
     radar_params = os.path.join(
         get_package_share_directory('radar_interfaces'),
         'config',
-        'test_radar_params.yaml'
+        'race_radar_params.yaml'
     )
     calib_default_points = os.path.join(
         get_package_share_directory('radar_interfaces'),
         'config',
-        'test_calib_default_point.yaml'
+        'race_calib_default_point.yaml'
     )
     Node_pnp_solver = Node(
         package="pnp_solver",

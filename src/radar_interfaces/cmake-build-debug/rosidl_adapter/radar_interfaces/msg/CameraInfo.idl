@@ -39,6 +39,10 @@ module radar_interfaces {
       uint32 white_balance_green;
 
       uint32 white_balance_blue;
+
+      uint32 width;
+
+      uint32 height;
     };
   };
 };

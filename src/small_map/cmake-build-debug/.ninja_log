@@ -1,7 +1,3 @@
 # ninja log v5
-7489	8006	1721440281508086166	small_map	ab7e7dad9aa91418
-0	7489	1721440280984086169	CMakeFiles/small_map.dir/src/small_map.cpp.o	b8903510f20ea040
-10	6171	1721456276014075325	CMakeFiles/small_map.dir/src/small_map.cpp.o	b8903510f20ea040
-6171	6678	1721456276526045768	small_map	ab7e7dad9aa91418
-1	8343	1721457041728049987	CMakeFiles/small_map.dir/src/small_map.cpp.o	b8903510f20ea040
 8343	8980	1721457042373017332	small_map	ab7e7dad9aa91418
+1	8343	1721457041728049987	CMakeFiles/small_map.dir/src/small_map.cpp.o	b8903510f20ea040

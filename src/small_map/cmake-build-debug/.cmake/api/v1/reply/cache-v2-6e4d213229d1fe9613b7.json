@@ -2007,7 +2007,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib/libradar_interfaces__rosidl_typesupport_fastrtps_cpp.so"
+			"value" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_fastrtps_cpp.so"
 		},
 		{
 			"name" : "ament_cmake_DIR",
@@ -2736,6 +2736,18 @@
 			],
 			"type" : "PATH",
 			"value" : "/opt/ros/foxy/share/rmw_implementation_cmake/cmake"
+		},
+		{
+			"name" : "robot_serial_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for robot_serial."
+				}
+			],
+			"type" : "PATH",
+			"value" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/share/robot_serial/cmake"
 		},
 		{
 			"name" : "rosgraph_msgs_DIR",

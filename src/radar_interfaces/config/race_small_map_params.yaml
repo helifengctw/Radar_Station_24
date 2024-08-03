@@ -7,12 +7,12 @@ small_map:
       field_height: 28.0
       imgCols: 1920.0
       imgRows: 1200.0
-      dist_threshold: 3.0
+      dist_threshold: 5.0
       center_far:
-        x: 5
-        y: 8
+        x: 5.0
+        y: 8.0
       center_far:
-        x: 22
+        x: 22.0
         y: 3.0
 
     battle_state:

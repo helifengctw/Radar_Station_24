@@ -18,6 +18,8 @@ module radar_interfaces {
 
       float last_dist;
 
+      float conf;
+
       boolean color;
     };
   };

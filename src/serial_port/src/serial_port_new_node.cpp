@@ -164,7 +164,9 @@ bool SerialPort::sendInteractiveMsgs(uint16_t receiver_id) { //接受者ID以红
  * @return 是否成功接收
  */
 bool SerialPort::receiveMsgs() {
-    ser.read(receiveData, ser.available());
+    if (ser.read(receiveData, ser.available()) <= 0) {
+        return false;
+    }
     //使用所有消息类型进行匹配，若CRC校验通过，则匹配成功
     memcpy(&gameStatusMsgs, receiveData, sizeof(game_status_msgs));
     memcpy(&robotHealthMsgs, receiveData, sizeof(robot_health_msgs));
@@ -324,32 +326,32 @@ void SerialPort::worldPointsCallback(const radar_interfaces::msg::Points::Shared
         for (auto p: msg->data) {
             if (p.id == 0) {
                 detected_enemy_count++;
-                mapRobotData.hero_position_x = int(p.x * field_height);
-                mapRobotData.hero_position_y = int(p.y * field_width);
+                mapRobotData.hero_position_x = uint16_t (p.x * field_height);
+                mapRobotData.hero_position_y = uint16_t (p.y * field_width);
             } else if (p.id == 1) {
                 detected_enemy_count++;
-                mapRobotData.engineer_position_x = int(p.x * field_height);
-                mapRobotData.engineer_position_y = int(p.y * field_width);
+                mapRobotData.engineer_position_x = uint16_t(p.x * field_height);
+                mapRobotData.engineer_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 2) {
                 detected_enemy_count++;
-                mapRobotData.infantry_3_position_x = int(p.x * field_height);
-                mapRobotData.infantry_3_position_y = int(p.y * field_width);
+                mapRobotData.infantry_3_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_3_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 3) {
                 detected_enemy_count++;
-                mapRobotData.infantry_4_position_x = int(p.x * field_height);
-                mapRobotData.infantry_4_position_y = int(p.y * field_width);
+                mapRobotData.infantry_4_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_4_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 4) {
                 detected_enemy_count++;
-                mapRobotData.infantry_5_position_x = int(p.x * field_height);
-                mapRobotData.infantry_5_position_y = int(p.y * field_width);
+                mapRobotData.infantry_5_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_5_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 3) {
                 detected_enemy_count++;
-                mapRobotData.infantry_4_position_x = int(p.x * field_height);
-                mapRobotData.infantry_4_position_y = int(p.y * field_width);
+                mapRobotData.infantry_4_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_4_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 5) {
                 detected_enemy_count++;
-                mapRobotData.sentry_position_x = int(p.x * field_height);
-                mapRobotData.sentry_position_y = int(p.y * field_width);
+                mapRobotData.sentry_position_x = uint16_t(p.x * field_height);
+                mapRobotData.sentry_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 12) {
                 //TODO: 处理未知
             }
@@ -358,28 +360,28 @@ void SerialPort::worldPointsCallback(const radar_interfaces::msg::Points::Shared
         for (auto p: msg->data) {
             if (p.id == 6) {
                 detected_enemy_count++;
-                mapRobotData.hero_position_x = int(p.x * field_height);
-                mapRobotData.hero_position_y = int(p.y * field_width);
+                mapRobotData.hero_position_x = uint16_t(p.x * field_height);
+                mapRobotData.hero_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 7) {
                 detected_enemy_count++;
-                mapRobotData.engineer_position_x = int(p.x * field_height);
-                mapRobotData.engineer_position_y = int(p.y * field_width);
+                mapRobotData.engineer_position_x = uint16_t(p.x * field_height);
+                mapRobotData.engineer_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 8) {
                 detected_enemy_count++;
-                mapRobotData.infantry_3_position_x = int(p.x * field_height);
-                mapRobotData.infantry_3_position_y = int(p.y * field_width);
+                mapRobotData.infantry_3_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_3_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 9) {
                 detected_enemy_count++;
-                mapRobotData.infantry_4_position_x = int(p.x * field_height);
-                mapRobotData.infantry_4_position_y = int(p.y * field_width);
+                mapRobotData.infantry_4_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_4_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 10) {
                 detected_enemy_count++;
-                mapRobotData.infantry_5_position_x = int(p.x * field_height);
-                mapRobotData.infantry_5_position_y = int(p.y * field_width);
+                mapRobotData.infantry_5_position_x = uint16_t(p.x * field_height);
+                mapRobotData.infantry_5_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 11) {
                 detected_enemy_count++;
-                mapRobotData.sentry_position_x = int(p.x * field_height);
-                mapRobotData.sentry_position_y = int(p.y * field_width);
+                mapRobotData.sentry_position_x = uint16_t(p.x * field_height);
+                mapRobotData.sentry_position_y = uint16_t(p.y * field_width);
             } else if (p.id == 13) {
                 //TODO: 处理未知
             }

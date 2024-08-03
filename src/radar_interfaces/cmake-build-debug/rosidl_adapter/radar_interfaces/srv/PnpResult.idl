@@ -1,0 +1,29 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from radar_interfaces/srv/PnpResult.srv
+// generated code does not contain a copyright notice
+
+
+module radar_interfaces {
+  module srv {
+    struct PnpResult_Request {
+      boolean small_map_qidong;
+    };
+    typedef double double__9[9];
+    typedef double double__3[3];
+    struct PnpResult_Response {
+      boolean if_ok;
+
+      double__9 far_cam_matrix;
+
+      double__9 close_cam_matrix;
+
+      double__9 far_r;
+
+      double__9 close_r;
+
+      double__3 far_t;
+
+      double__3 close_t;
+    };
+  };
+};

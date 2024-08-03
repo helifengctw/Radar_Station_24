@@ -459,10 +459,6 @@
 			},
 			"sourceIndexes" : 
 			[
-				56,
-				57,
-				58,
-				59,
 				60,
 				61,
 				62,
@@ -472,7 +468,12 @@
 				66,
 				67,
 				68,
-				69
+				69,
+				70,
+				71,
+				72,
+				73,
+				74
 			]
 		}
 	],
@@ -668,17 +669,17 @@
 				52,
 				53,
 				54,
-				55
+				55,
+				56,
+				57,
+				58,
+				59
 			]
 		},
 		{
 			"name" : "Source Files",
 			"sourceIndexes" : 
 			[
-				56,
-				57,
-				58,
-				59,
 				60,
 				61,
 				62,
@@ -688,14 +689,19 @@
 				66,
 				67,
 				68,
-				69
+				69,
+				70,
+				71,
+				72,
+				73,
+				74
 			]
 		},
 		{
 			"name" : "CMake Rules",
 			"sourceIndexes" : 
 			[
-				70
+				75
 			]
 		}
 	],
@@ -1039,6 +1045,30 @@
 		},
 		{
 			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/srv/pnp_result.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/srv/detail/pnp_result__functions.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/srv/detail/pnp_result__struct.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/srv/detail/pnp_result__type_support.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
 			"compileGroupIndex" : 0,
 			"isGenerated" : true,
 			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/msg/detail/point__functions.c",
@@ -1133,6 +1163,13 @@
 			"compileGroupIndex" : 0,
 			"isGenerated" : true,
 			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/msg/detail/camera_info__functions.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_generator_c/radar_interfaces/srv/detail/pnp_result__functions.c",
 			"sourceGroupIndex" : 1
 		},
 		{

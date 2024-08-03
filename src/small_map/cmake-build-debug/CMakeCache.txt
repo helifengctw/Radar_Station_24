@@ -287,7 +287,7 @@ TINYXML2_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libtinyxml2.so
 TinyXML2_DIR:PATH=TinyXML2_DIR-NOTFOUND
 
 //Path to a library.
-_lib:FILEPATH=/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib/libradar_interfaces__rosidl_typesupport_fastrtps_cpp.so
+_lib:FILEPATH=/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_fastrtps_cpp.so
 
 //The directory containing a CMake configuration file for ament_cmake.
 ament_cmake_DIR:PATH=/opt/ros/foxy/share/ament_cmake/cmake
@@ -465,6 +465,9 @@ rmw_implementation_DIR:PATH=/opt/ros/foxy/share/rmw_implementation/cmake
 
 //The directory containing a CMake configuration file for rmw_implementation_cmake.
 rmw_implementation_cmake_DIR:PATH=/opt/ros/foxy/share/rmw_implementation_cmake/cmake
+
+//The directory containing a CMake configuration file for robot_serial.
+robot_serial_DIR:PATH=/home/hlf/Desktop/radar24_ws/install/robot_serial/share/robot_serial/cmake
 
 //The directory containing a CMake configuration file for rosgraph_msgs.
 rosgraph_msgs_DIR:PATH=/opt/ros/foxy/share/rosgraph_msgs/cmake

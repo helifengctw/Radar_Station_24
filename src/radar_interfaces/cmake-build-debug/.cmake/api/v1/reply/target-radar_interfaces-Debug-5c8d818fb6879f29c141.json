@@ -239,14 +239,17 @@
 				11,
 				12,
 				13,
-				14
+				14,
+				15,
+				16,
+				17
 			]
 		},
 		{
 			"name" : "CMake Rules",
 			"sourceIndexes" : 
 			[
-				15
+				18
 			]
 		}
 	],
@@ -320,6 +323,21 @@
 		{
 			"backtrace" : 2,
 			"path" : "msg/CameraInfo.msg",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"path" : "srv/PnpResult.srv",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cmake-build-debug/rosidl_cmake/srv/PnpResult_Request.msg",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 2,
+			"path" : "cmake-build-debug/rosidl_cmake/srv/PnpResult_Response.msg",
 			"sourceGroupIndex" : 0
 		},
 		{

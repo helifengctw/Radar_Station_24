@@ -21,8 +21,14 @@ SmallMap::SmallMap(string name) : Node(name) {
             "/sensor_close/distance_point", 1, std::bind(&SmallMap::close_distPointCallback, this, _1));
     pickup_information_subscription_ = this->create_subscription<radar_interfaces::msg::Point>(
             "pickup_information", 1, std::bind(&SmallMap::pickup_infoCallback, this, _1));
+    game_status_subscription_ = this->create_subscription<robot_serial::msg::Gamestatus>(
+            "/serial_gamestatus", 1, std::bind(&SmallMap::game_status_Callback, this, _1));
+    double_info_subscription_ = this->create_subscription<robot_serial::msg::DoubleInfo>(
+            "/serial_double_info", 1, std::bind(&SmallMap::double_info_Callback, this, _1));
     timer_ = this->create_wall_timer(25ms, std::bind(&SmallMap::TimerCallback, this));
-    world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 10);
+    serial_world_point_publisher_ = this->create_publisher<robot_serial::msg::MapPoints>("/serial_world_points", 1);
+    double_hurt_cmd_publisher_ = this->create_publisher<robot_serial::msg::DoubleHurt>("/double_hurt_cmd", 1);
+    world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 1);
     Pnp_result_client_ = this->create_client<radar_interfaces::srv::PnpResult>("pnp_results");
 
     this->load_param();
@@ -69,13 +75,118 @@ void SmallMap::TimerCallback() {
 //        draw_point_on_map(i, small_map_copy, "Orange");
 //    }
     remove_duplicate();
-    std::cout << far_points.data.size() << ", " << close_points.data.size() << " ===> ";
+//    std::cout << far_points.data.size() << ", " << close_points.data.size() << " ===> ";
     for (auto &i: result_points.data) {
         draw_point_on_map(i, small_map_copy, "Black");
+        if (red_or_blue) {
+            if (i.id == 0) {
+                detected_enemy_count++;
+                serial_world_points.x1 = uint16_t (i.x * 2800);
+                serial_world_points.y1 = uint16_t (i.y * 1500);
+            } else if (i.id == 1) {
+                detected_enemy_count++;
+                serial_world_points.x2 = uint16_t (i.x * 2800);
+                serial_world_points.y2 = uint16_t (i.y * 1500);
+            } else if (i.id == 2) {
+                detected_enemy_count++;
+                serial_world_points.x3 = uint16_t (i.x * 2800);
+                serial_world_points.y3 = uint16_t (i.y * 1500);
+            } else if (i.id == 3) {
+                detected_enemy_count++;
+                serial_world_points.x4 = uint16_t (i.x * 2800);
+                serial_world_points.y4 = uint16_t (i.y * 1500);
+            } else if (i.id == 4) {
+                detected_enemy_count++;
+                serial_world_points.x5 = uint16_t (i.x * 2800);
+                serial_world_points.y5 = uint16_t (i.y * 1500);
+            } else if (i.id == 5) {
+                detected_enemy_count++;
+                serial_world_points.x6 = uint16_t (i.x * 2800);
+                serial_world_points.y6 = uint16_t (i.y * 1500);
+            }
+        } else {
+            if (i.id == 6) {
+                detected_enemy_count++;
+                serial_world_points.x1 = uint16_t (i.x * 2800);
+                serial_world_points.y1 = uint16_t (i.y * 1500);
+            } else if (i.id == 7) {
+                detected_enemy_count++;
+                serial_world_points.x2 = uint16_t (i.x * 2800);
+                serial_world_points.y2 = uint16_t (i.y * 1500);
+            } else if (i.id == 8) {
+                detected_enemy_count++;
+                serial_world_points.x3 = uint16_t (i.x * 2800);
+                serial_world_points.y3 = uint16_t (i.y * 1500);
+            } else if (i.id == 9) {
+                detected_enemy_count++;
+                serial_world_points.x4 = uint16_t (i.x * 2800);
+                serial_world_points.y4 = uint16_t (i.y * 1500);
+            } else if (i.id == 10) {
+                detected_enemy_count++;
+                serial_world_points.x5 = uint16_t (i.x * 2800);
+                serial_world_points.y5 = uint16_t (i.y * 1500);
+            } else if (i.id == 11) {
+                detected_enemy_count++;
+                serial_world_points.x6 = uint16_t (i.x * 2800);
+                serial_world_points.y6 = uint16_t (i.y * 1500);
+            }
+        }
     }
-    std::cout << far_points.data.size() << ", " << close_points.data.size() << std::endl;
-    this->world_point_publisher_->publish(result_points);
+//    std::cout << far_points.data.size() << ", " << close_points.data.size() << std::endl;
+    serial_world_point_publisher_->publish(serial_world_points);
+    std::cout << "detected_enemy_count, " << detected_enemy_count << std::endl;
+//    this->world_point_publisher_->publish(result_points);
+
+    if (exerting) {
+        if (used_chance < double_hurt_chance) {
+            used_chance = double_hurt_chance;
+            send_one_trigger = false;
+        }
+    } else if (!send_one_trigger) {
+//        double_hurt_msg.radar_cmd = 0x02;
+//        double_hurt_cmd_publisher_->publish(double_hurt_msg);
+        if (remain_time < 4*60) {
+            if (detected_enemy_count >= 3) {
+                if (used_chance == 0 && double_hurt_chance > used_chance) {
+                    double_hurt_msg.radar_cmd = 0x01;
+                    send_one_trigger = true;
+                    double_hurt_cmd_publisher_->publish(double_hurt_msg);
+                } else if (used_chance == 1 && double_hurt_chance > used_chance) {
+                    double_hurt_msg.radar_cmd = 0x02;
+                    double_hurt_cmd_publisher_->publish(double_hurt_msg);
+                    send_one_trigger = true;
+                }
+            }
+        } else if (remain_time < 2*60) {
+            if (used_chance == 0 && double_hurt_chance > used_chance) {
+                double_hurt_msg.radar_cmd = 0x01;
+                double_hurt_cmd_publisher_->publish(double_hurt_msg);
+                send_one_trigger = true;
+            } else if (used_chance == 1 && double_hurt_chance > used_chance) {
+                double_hurt_msg.radar_cmd = 0x02;
+                double_hurt_cmd_publisher_->publish(double_hurt_msg);
+                send_one_trigger = true;
+            }
+        }
+    }
+    detected_enemy_count = 0;
+
     cv::imshow("small_map", small_map_copy);
+}
+
+void SmallMap::game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr msg) {
+    if (remain_time > 0) {
+        remain_time = msg->stage_remain_time;
+        std::cout << "remain_time: " << (int)remain_time << std::endl;
+    }
+}
+
+void SmallMap::double_info_Callback(robot_serial::msg::DoubleInfo::SharedPtr msg) {
+    if (double_hurt_chance < 3 && exerting < 2) {
+        double_hurt_chance = msg->double_hurt_chance;
+        exerting = msg->exerting;
+        std::cout << "double_hurt_chance: " << (int)double_hurt_chance << ", exerting: " << (int)exerting << std::endl;
+    }
 }
 
 
@@ -206,7 +317,7 @@ void SmallMap::remove_duplicate() {
     bool far_erase_flag = false, close_erase_flag = false;
     int loop_count = 0, loop_max = 7;
 
-    while(true) { //把far中已知的点与close匹配并去掉
+    while(rclcpp::ok()) { //把far中已知的点与close匹配并去掉
         auto iter_far = far_points.data.begin();
         for (iter_far = far_points.data.begin(); iter_far!=far_points.data.end(); iter_far++) {
             if (far_erase_flag || close_erase_flag) break;
@@ -240,7 +351,7 @@ void SmallMap::remove_duplicate() {
         }
     }
 
-    while (true) {
+    while (rclcpp::ok()) {
         if (loop_count++ > loop_max || far_points.data.empty()) break;
         std::vector<std::pair<double, std::vector<radar_interfaces::msg::Point>::iterator>> sorted_points;
         auto pf_iter = far_points.data.begin();
@@ -265,14 +376,15 @@ void SmallMap::remove_duplicate() {
                     far_erase_flag = true;
                     close_erase_flag = true;
                     break;
-                } else if ((pf_iter->id == 12 && i.second->id == 12) || (pf_iter->id == 13 && i.second->id == 13)) {
-                    result_points.data.emplace_back(*pf_iter);
-                    far_target_iter = pf_iter;
-                    close_target_iter = i.second;
-                    far_erase_flag = true;
-                    close_erase_flag = true;
-                    break;
                 }
+//                } else if ((pf_iter->id == 12 && i.second->id == 12) || (pf_iter->id == 13 && i.second->id == 13)) {
+//                    result_points.data.emplace_back(*pf_iter);
+//                    far_target_iter = pf_iter;
+//                    close_target_iter = i.second;
+//                    far_erase_flag = true;
+//                    close_erase_flag = true;
+//                    break;
+//                }
             }
         }
         if (far_erase_flag) {
@@ -285,12 +397,12 @@ void SmallMap::remove_duplicate() {
         }
     }
     for (auto i : far_points.data) {
-        result_points.data.push_back(i);
+        if (i.id < 12) result_points.data.push_back(i);
     }
     for (auto i : close_points.data) {
-        result_points.data.push_back(i);
+        if (i.id < 12) result_points.data.push_back(i);
     }
-    std::cout << "result_points size: " << result_points.data.size() << endl;
+//    std::cout << "result_points size: " << result_points.data.size() << endl;
 }
 
 radar_interfaces::msg::Point SmallMap::calculate_relative_codi(const Point3f &guard,

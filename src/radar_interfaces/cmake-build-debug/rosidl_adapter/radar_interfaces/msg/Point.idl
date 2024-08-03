@@ -10,6 +10,8 @@ module radar_interfaces {
 
       int16 tracker_id;
 
+      float conf;
+
       float x;
 
       float y;

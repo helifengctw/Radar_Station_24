@@ -15,6 +15,10 @@
 #include "radar_interfaces/msg/battle_color.hpp"
 #include "radar_interfaces/msg/mark_data.hpp"
 #include "radar_interfaces/srv/pnp_result.hpp"
+#include "robot_serial/msg/map_points.hpp"
+#include "robot_serial/msg/double_hurt.hpp"
+#include "robot_serial/msg/gamestatus.hpp"
+#include "robot_serial/msg/double_info.hpp"
 
 using namespace std;
 using namespace cv;
@@ -43,8 +47,12 @@ private:
     rclcpp::Subscription<radar_interfaces::msg::DistPoints>::SharedPtr close_distant_point_subscription_;
     rclcpp::Subscription<radar_interfaces::msg::PnpResult>::SharedPtr Pnp_result_subscription_;
     rclcpp::Subscription<radar_interfaces::msg::Point>::SharedPtr pickup_information_subscription_;
+    rclcpp::Subscription<robot_serial::msg::Gamestatus>::SharedPtr game_status_subscription_;
+    rclcpp::Subscription<robot_serial::msg::DoubleInfo>::SharedPtr double_info_subscription_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr world_point_publisher_;
+    rclcpp::Publisher<robot_serial::msg::MapPoints>::SharedPtr serial_world_point_publisher_;
+    rclcpp::Publisher<robot_serial::msg::DoubleHurt>::SharedPtr double_hurt_cmd_publisher_;
     rclcpp::Client<radar_interfaces::srv::PnpResult>::SharedPtr Pnp_result_client_;
     std::shared_ptr<radar_interfaces::srv::PnpResult::Request> pnp_request;
 
@@ -53,6 +61,8 @@ private:
     void TimerCallback();
     void far_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
     void close_distPointCallback(radar_interfaces::msg::DistPoints::SharedPtr);
+    void game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr);
+    void double_info_Callback(robot_serial::msg::DoubleInfo::SharedPtr);
     void pickup_infoCallback(radar_interfaces::msg::Point::SharedPtr);
     void load_param();
 
@@ -88,7 +98,12 @@ private:
 
     Mat small_map, small_map_copy;
     radar_interfaces::msg::Points far_points, close_points, result_points, filtered_result_points;
-    int tracker_id_lock_list[6] = {0};
+    robot_serial::msg::MapPoints serial_world_points;
+    robot_serial::msg::DoubleHurt double_hurt_msg;
+    bool send_one_trigger = false;
+    int detected_enemy_count = 0;
+    uint16_t remain_time = 1000;
+    uint8_t double_hurt_chance = 0, exerting = 0, used_chance = 0;
     cv::Point2f mouse_point = cv::Point2f(0.0, 0.0);
 };
 

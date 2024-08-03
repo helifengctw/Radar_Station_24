@@ -584,7 +584,8 @@
 				20,
 				22,
 				24,
-				26
+				26,
+				28
 			]
 		}
 	],
@@ -815,7 +816,8 @@
 				20,
 				22,
 				24,
-				26
+				26,
+				28
 			]
 		},
 		{
@@ -835,14 +837,15 @@
 				21,
 				23,
 				25,
-				27
+				27,
+				29
 			]
 		},
 		{
 			"name" : "CMake Rules",
 			"sourceIndexes" : 
 			[
-				28
+				30
 			]
 		}
 	],
@@ -1028,6 +1031,19 @@
 			"backtrace" : 5,
 			"isGenerated" : true,
 			"path" : "cmake-build-debug/rosidl_typesupport_fastrtps_cpp/radar_interfaces/msg/detail/camera_info__rosidl_typesupport_fastrtps_cpp.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 5,
+			"compileGroupIndex" : 0,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_fastrtps_cpp/radar_interfaces/srv/detail/dds_fastrtps/pnp_result__type_support.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 5,
+			"isGenerated" : true,
+			"path" : "cmake-build-debug/rosidl_typesupport_fastrtps_cpp/radar_interfaces/srv/detail/pnp_result__rosidl_typesupport_fastrtps_cpp.hpp",
 			"sourceGroupIndex" : 1
 		},
 		{

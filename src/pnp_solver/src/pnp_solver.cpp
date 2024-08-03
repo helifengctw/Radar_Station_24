@@ -221,7 +221,7 @@ void PnpSolver::LoadPnpParams() {
         far_imagePoints[i] = cv::Point2d(x, y);
         far_imagePoints[i].x *= imgCols;
         far_imagePoints[i].y *= imgRows;
-        far_objectPoints[i] = cv::Point3d(world_points_set[id].x, world_points_set[id].y, world_points_set[id].z);
+        far_objectPoints[i] = cv::Point3d(world_points_set[id-1].x, world_points_set[id-1].y, world_points_set[id-1].z);
 
         x = get_parameter(param_name_x_close).as_double();
         y = get_parameter(param_name_y_close).as_double();
@@ -229,7 +229,7 @@ void PnpSolver::LoadPnpParams() {
         close_imagePoints[i] = cv::Point2d(x, y);
         close_imagePoints[i].x *= imgCols;
         close_imagePoints[i].y *= imgRows;
-        close_objectPoints[i] = cv::Point3d(world_points_set[id].x, world_points_set[id].y, world_points_set[id].z);
+        close_objectPoints[i] = cv::Point3d(world_points_set[id-1].x, world_points_set[id-1].y, world_points_set[id-1].z);
     }
 }
 
@@ -238,8 +238,8 @@ void PnpSolver::far_calibration(const radar_interfaces::msg::Points::SharedPtr m
     int count = 0;
     for (const auto &p: msg->data) {
         far_imagePoints[count] = cv::Point2f(p.x, p.y);
-        far_objectPoints[count] = 
-                cv::Point3f(world_points_set[p.id].x, world_points_set[p.id].y, world_points_set[p.id].z);
+//        far_objectPoints[count] =
+//                cv::Point3f(world_points_set[p.id-1].x, world_points_set[p.id-1].y, world_points_set[p.id-1].z);
         count++;
     }
     cout << "已经选出如下{" << image_points_length << "}个点!下面进行SolvePnP求解外参矩阵。" << endl;
@@ -263,8 +263,8 @@ void PnpSolver::close_calibration(const radar_interfaces::msg::Points::SharedPtr
     int count = 0;
     for (const auto &p: msg->data) {
         close_imagePoints[count] = cv::Point2f(p.x, p.y);
-        close_objectPoints[count] =
-                cv::Point3f(world_points_set[p.id].x, world_points_set[p.id].y, world_points_set[p.id].z);
+//        close_objectPoints[count] =
+//                cv::Point3f(world_points_set[p.id-1].x, world_points_set[p.id-1].y, world_points_set[p.id-1].z);
         count++;
     }
     cout << "已经选出如下{" << image_points_length << "}个点!下面进行SolvePnP求解外参矩阵。" << endl;

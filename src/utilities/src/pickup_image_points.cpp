@@ -67,6 +67,8 @@ int main(int argc, char ** argv)
     auto PPU_node = std::make_shared<PointsPickUp>("point_pick_up");
 
     points_set_img = imread("/home/hlf/Desktop/radar24_ws/src/utilities/data/points_set.png");
+    cv::resize(points_set_img, points_set_img, cv::Size(points_set_img.cols*smaller, points_set_img.rows*smaller));
+
     namedWindow("far");
     namedWindow("close");
     namedWindow("points_set_show");
@@ -75,7 +77,7 @@ int main(int argc, char ** argv)
     cv::imshow("points_set_show", points_set_img);
     rclcpp::Rate loop_rate(100);
 
-    while(true) {
+    while (rclcpp::ok()) {
         if (far_receiving) {
             rclcpp::spin_some(PPU_node);
         }
@@ -92,9 +94,9 @@ int main(int argc, char ** argv)
         int j = 0, k = 0;
         cout << "----the " << i << "th one:" << endl << "image--";
         cin >> j;
-        cout << "world--";
-        cin >> k;
-        cout << "pick : " << far_points_list[j] << " and accordingly " << k << "th world points" << endl;
+//        cout << "world--";
+//        cin >> k; << " and accordingly " << k << "th world points"
+        cout << "pick : " << far_points_list[j] << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)far_points_list[j].x;
         point.y = (float)far_points_list[j].y;
@@ -103,7 +105,7 @@ int main(int argc, char ** argv)
     }
     PPU_node->send_far_points();
 
-    while(true) {
+    while (rclcpp::ok()) {
         if (close_receiving) {
             rclcpp::spin_some(PPU_node);
         }
@@ -120,9 +122,9 @@ int main(int argc, char ** argv)
         int j = 0, k = 0;
         cout << "----the " << i << "th one:" << endl << "image--";
         cin >> j;
-        cout << "world--";
-        cin >> k;
-        cout << "pick : " << close_points_list[j] << " and accordingly " << k << "th world points" << endl;
+//        cout << "world--";
+//        cin >> k;<< " and accordingly " << k << "th world points"
+        cout << "pick : " << close_points_list[j]  << endl;
         radar_interfaces::msg::Point point;
         point.x = (float)close_points_list[j].x;
         point.y = (float)close_points_list[j].y;

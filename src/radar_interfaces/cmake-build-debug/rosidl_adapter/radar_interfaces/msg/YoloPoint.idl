@@ -14,6 +14,8 @@ module radar_interfaces {
 
       int16 y;
 
+      float conf;
+
       int16 width;
 
       int16 height;

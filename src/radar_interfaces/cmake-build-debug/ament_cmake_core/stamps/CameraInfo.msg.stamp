@@ -14,3 +14,5 @@ float32 max_exposure_time
 uint32 white_balance_red
 uint32 white_balance_green
 uint32 white_balance_blue
+uint32 width
+uint32 height

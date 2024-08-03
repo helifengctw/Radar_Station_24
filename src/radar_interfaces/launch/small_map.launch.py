@@ -7,7 +7,7 @@ def generate_launch_description():
     small_map_params = os.path.join(
         get_package_share_directory('radar_interfaces'),
         'config',
-        'test_small_map_params.yaml'
+        'race_small_map_params.yaml'
     )
 
     Node_small_map = Node(

@@ -14,6 +14,7 @@
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/BattleColor.msg",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/PnpResult.msg",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/MarkData.msg",
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/CameraInfo.msg"
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:msg/CameraInfo.msg",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces:srv/PnpResult.srv"
   ]
 }

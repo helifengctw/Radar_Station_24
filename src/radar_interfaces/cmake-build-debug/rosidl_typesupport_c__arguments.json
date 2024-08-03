@@ -16,7 +16,8 @@
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/BattleColor.idl",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/PnpResult.idl",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/MarkData.idl",
-    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/CameraInfo.idl"
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:msg/CameraInfo.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces:srv/PnpResult.idl"
   ],
   "ros_interface_dependencies": [
     "std_msgs:/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
@@ -73,6 +74,7 @@
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/PnpResult.idl",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/MarkData.idl",
     "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/msg/CameraInfo.idl",
+    "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/srv/PnpResult.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Bool.idl",
     "/opt/ros/foxy/share/std_msgs/msg/Byte.idl",
     "/opt/ros/foxy/share/std_msgs/msg/ByteMultiArray.idl",

@@ -48,19 +48,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 31,
+				"line" : 32,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 39,
+				"line" : 40,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 35,
+				"line" : 36,
 				"parent" : 0
 			},
 			{
@@ -242,13 +242,13 @@
 			{
 				"command" : 8,
 				"file" : 0,
-				"line" : 32,
+				"line" : 33,
 				"parent" : 0
 			},
 			{
 				"command" : 9,
 				"file" : 0,
-				"line" : 28,
+				"line" : 29,
 				"parent" : 0
 			},
 			{
@@ -309,6 +309,11 @@
 				{
 					"backtrace" : 40,
 					"isSystem" : true,
+					"path" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/include"
+				},
+				{
+					"backtrace" : 40,
+					"isSystem" : true,
 					"path" : "/home/hlf/Desktop/radar24_ws/install/radar_interfaces/include"
 				},
 				{
@@ -360,7 +365,7 @@
 				"role" : "flags"
 			},
 			{
-				"fragment" : "-Wl,-rpath,/opt/ros/foxy/lib:/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:",
+				"fragment" : "-Wl,-rpath,/opt/ros/foxy/lib:/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib:/home/hlf/Desktop/radar24_ws/install/robot_serial/lib:/opt/ros/foxy/lib/x86_64-linux-gnu:",
 				"role" : "libraries"
 			},
 			{
@@ -401,6 +406,26 @@
 			{
 				"backtrace" : 4,
 				"fragment" : "/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib/libradar_interfaces__rosidl_typesupport_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_introspection_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_introspection_cpp.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_typesupport_cpp.so",
 				"role" : "libraries"
 			},
 			{
@@ -826,6 +851,11 @@
 			{
 				"backtrace" : 4,
 				"fragment" : "/home/hlf/Desktop/radar24_ws/install/radar_interfaces/lib/libradar_interfaces__rosidl_generator_c.so",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 4,
+				"fragment" : "/home/hlf/Desktop/radar24_ws/install/robot_serial/lib/librobot_serial__rosidl_generator_c.so",
 				"role" : "libraries"
 			},
 			{

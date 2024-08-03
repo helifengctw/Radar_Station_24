@@ -23,7 +23,7 @@ def generate_launch_description():
         ],
         output="screen",
         emulate_tty=True,
-        respawn=False
+        respawn=True
     )
 
     return LaunchDescription([Node_depth_sensor])

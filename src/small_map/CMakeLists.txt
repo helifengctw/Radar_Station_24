@@ -23,6 +23,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(radar_interfaces REQUIRED)
+find_package(robot_serial REQUIRED)
 
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -32,7 +33,7 @@ add_executable(small_map src/small_map.cpp)
 target_include_directories(small_map PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-ament_target_dependencies(small_map rclcpp std_msgs sensor_msgs cv_bridge image_transport radar_interfaces)
+ament_target_dependencies(small_map rclcpp std_msgs sensor_msgs cv_bridge image_transport radar_interfaces robot_serial)
 target_link_libraries(small_map ${OpenCV_LIBS})
 
 

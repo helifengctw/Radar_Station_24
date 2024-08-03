@@ -264,6 +264,10 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/srv" TYPE DIRECTORY FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_generator_py/radar_interfaces/srv/" REGEX "/[^/]*\\.py$")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3.8/site-packages/radar_interfaces/radar_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-38-x86_64-linux-gnu.so")
     file(RPATH_CHECK
@@ -412,6 +416,10 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/srv" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_adapter/radar_interfaces/srv/PnpResult.idl")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/Point.msg")
 endif()
 
@@ -465,6 +473,18 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/msg" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/msg/CameraInfo.msg")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/srv" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/srv/PnpResult.srv")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/srv" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_cmake/srv/PnpResult_Request.msg")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/radar_interfaces/srv" TYPE FILE FILES "/home/hlf/Desktop/radar24_ws/src/radar_interfaces/cmake-build-debug/rosidl_cmake/srv/PnpResult_Response.msg")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)

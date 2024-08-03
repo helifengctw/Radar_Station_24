@@ -15,7 +15,7 @@ def generate_launch_description():
             "battle_color": "red"
           },
         ],
-        respawn=False
+        respawn=True
     )
 
     return LaunchDescription([
