@@ -82,53 +82,53 @@ void SmallMap::TimerCallback() {
         draw_point_on_map(i, small_map_copy, "Black");
         if (red_or_blue) {
             if (i.id == 0) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x1 = uint16_t (i.x * 2800);
                 serial_world_points.y1 = uint16_t (i.y * 1500);
             } else if (i.id == 1) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x2 = uint16_t (i.x * 2800);
                 serial_world_points.y2 = uint16_t (i.y * 1500);
             } else if (i.id == 2) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x3 = uint16_t (i.x * 2800);
                 serial_world_points.y3 = uint16_t (i.y * 1500);
             } else if (i.id == 3) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x4 = uint16_t (i.x * 2800);
                 serial_world_points.y4 = uint16_t (i.y * 1500);
             } else if (i.id == 4) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x5 = uint16_t (i.x * 2800);
                 serial_world_points.y5 = uint16_t (i.y * 1500);
             } else if (i.id == 5) {
-                detected_enemy_count++;
+                if (i.x > 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x6 = uint16_t (i.x * 2800);
                 serial_world_points.y6 = uint16_t (i.y * 1500);
             }
         } else {
             if (i.id == 6) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x1 = uint16_t (i.x * 2800);
                 serial_world_points.y1 = uint16_t (i.y * 1500);
             } else if (i.id == 7) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x2 = uint16_t (i.x * 2800);
                 serial_world_points.y2 = uint16_t (i.y * 1500);
             } else if (i.id == 8) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x3 = uint16_t (i.x * 2800);
                 serial_world_points.y3 = uint16_t (i.y * 1500);
             } else if (i.id == 9) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x4 = uint16_t (i.x * 2800);
                 serial_world_points.y4 = uint16_t (i.y * 1500);
             } else if (i.id == 10) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x5 = uint16_t (i.x * 2800);
                 serial_world_points.y5 = uint16_t (i.y * 1500);
             } else if (i.id == 11) {
-                detected_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count++;
                 serial_world_points.x6 = uint16_t (i.x * 2800);
                 serial_world_points.y6 = uint16_t (i.y * 1500);
             }
@@ -136,7 +136,7 @@ void SmallMap::TimerCallback() {
     }
     cv::imshow("small_map", small_map_copy);
     serial_world_point_publisher_->publish(serial_world_points);
-//    std::cout << "detected_enemy_count, " << detected_enemy_count << std::endl;
+//    std::cout << "detected_dangerous_enemy_count, " << detected_dangerous_enemy_count << std::endl;
 //    std::cout << far_points.data.size() << ", " << close_points.data.size() << std::endl;
 //    this->world_point_publisher_->publish(result_points);
 
@@ -150,22 +150,22 @@ void SmallMap::TimerCallback() {
                 trigger_once = false;
             } else if (!exerting && !trigger_once && double_hurt_chance > 0) {
                 if (remain_time >= 60 && remain_time < 6*60) {
-                    if (used_chance == 0x00 && (small_energy_enable || big_energy_enable)) {
+                    if (big_energy_enable) {
                         trigger_once = true;
-                    }
-                    if (used_chance == 0x01 && big_energy_enable) {
-                        trigger_once = true;
+                        if (detected_dangerous_enemy_count > 0) trigger_time = remain_time + 15;
+                        else trigger_time = remain_time;
                     }
                 } else if (remain_time < 60) {
                     trigger_once = true;
+                    trigger_time = remain_time + 15;
                 }
-                if (trigger_once) {
-                    if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x01;
-                    else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x02;
-                } else {
-                    if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x00;
-                    else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x01;
-                }
+            }
+            if (trigger_once && !exerting && trigger_time - 10 >= remain_time) {
+                if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x01;
+                else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x02;
+            } else {
+                if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x00;
+                else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x01;
             }
         } else {
             double_hurt_msg.radar_cmd = 0x00;
@@ -178,7 +178,7 @@ void SmallMap::TimerCallback() {
               << " -- " << (int)used_chance
               << ", exerting: " << (int)exerting
               << ", trigger: " << trigger_once << std::endl;
-    detected_enemy_count = 0;
+    detected_dangerous_enemy_count = 0;
 }
 
 void SmallMap::game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr msg) {
@@ -186,11 +186,7 @@ void SmallMap::game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr msg
     last_game_progress = game_progress;
     game_progress = msg->game_progress;
     std::cout << "(0-未开始 ==>> 4-比赛中) stage: " << (int)game_progress
-<<<<<<< HEAD
-    << ", remain_time: " << (int)remain_time << std::endl;
-=======
-              << ", remain_time: " << (int)remain_time << std::endl;
->>>>>>> cd73628
+        << ", remain_time: " << (int)remain_time << std::endl;
 }
 
 void SmallMap::double_info_Callback(robot_serial::msg::DoubleInfo::SharedPtr msg) {
@@ -204,11 +200,7 @@ void SmallMap::event_Callback(robot_serial::msg::Event::SharedPtr msg) {
     small_energy_enable = msg->small_energy_organ_status;
     big_energy_enable = msg->big_energy_organ_status;
     std::cout << "small_energy: " << (int)small_energy_enable
-<<<<<<< HEAD
-    << ", big_energy: " << (int)big_energy_enable << std::endl;
-=======
-              << ", big_energy: " << (int)big_energy_enable << std::endl;
->>>>>>> cd73628
+        << ", big_energy: " << (int)big_energy_enable << std::endl;
 }
 
 void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::SharedPtr input) {

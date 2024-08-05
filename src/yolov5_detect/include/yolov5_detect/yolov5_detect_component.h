@@ -119,7 +119,7 @@ namespace yolov5_detect{
 
         float* gpu_buffers_car[2], *gpu_buffers_num[2];
         float* cpu_output_buffer_car = nullptr, * cpu_output_buffer_num = nullptr;
-        cudaStream_t stream_c/home/hlf/Desktop/radar24_ws/src/robot_serialar, stream_num;
+        cudaStream_t stream_car, stream_num;
         IExecutionContext* context_car = nullptr, *context_num = nullptr;
         std::string car_engine_name, num_engine_name;
         IRuntime* runtime = nullptr;
