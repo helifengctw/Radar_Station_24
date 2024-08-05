@@ -27,7 +27,7 @@ SmallMap::SmallMap(string name) : Node(name) {
             "/serial_double_info", 1, std::bind(&SmallMap::double_info_Callback, this, _1));
     event_subscription_ = this->create_subscription<robot_serial::msg::Event>(
             "/serial_event", 1, std::bind(&SmallMap::event_Callback, this, _1));
-    timer_ = this->create_wall_timer(25ms, std::bind(&SmallMap::TimerCallback, this));
+    timer_ = this->create_wall_timer(50ms, std::bind(&SmallMap::TimerCallback, this));
     serial_world_point_publisher_ = this->create_publisher<robot_serial::msg::MapPoints>("/serial_world_points", 1);
     double_hurt_cmd_publisher_ = this->create_publisher<robot_serial::msg::DoubleHurt>("/double_hurt_cmd", 1);
     world_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>("/world_point", 1);
@@ -140,60 +140,64 @@ void SmallMap::TimerCallback() {
 //    std::cout << far_points.data.size() << ", " << close_points.data.size() << std::endl;
 //    this->world_point_publisher_->publish(result_points);
 
-    if (game_progress >= 4 && remain_time <= 5*60) {
-        if (exerting && trigger_once) {
-            if (used_chance < double_hurt_chance) {
+    if (last_game_progress < 4 && game_progress < 4) {
+        double_hurt_msg.radar_cmd = 0x00;
+        used_chance = 0x00;
+    } else if (last_game_progress >= 4 && game_progress >= 4) {
+        if (remain_time <= 6*60) {
+            if (exerting && trigger_once) {
                 used_chance++;
                 trigger_once = false;
-            }
-        } else if (!exerting && !trigger_once) {
-            if (remain_time < 5*60) {
-                if (detected_enemy_count >= 2 && (small_energy_enable || big_energy_enable)) {
-                    if (used_chance == 0 && double_hurt_chance > used_chance) {
-                        double_hurt_msg.radar_cmd = 0x01;
+            } else if (!exerting && !trigger_once && double_hurt_chance > 0) {
+                if (remain_time >= 60 && remain_time < 6*60) {
+                    if (small_energy_enable || big_energy_enable) {
                         trigger_once = true;
-                        double_hurt_cmd_publisher_->publish(double_hurt_msg);
                     }
+                } else if (remain_time < 60) {
+                    trigger_once = true;
                 }
-            } else if (remain_time < 2*60) {
-                if (used_chance == 0 && double_hurt_chance > used_chance) {
-                    double_hurt_msg.radar_cmd = 0x01;
-                    double_hurt_cmd_publisher_->publish(double_hurt_msg);
-                    trigger_once = true;
-                } else if (used_chance == 1 && double_hurt_chance > used_chance) {
-                    double_hurt_msg.radar_cmd = 0x02;
-                    double_hurt_cmd_publisher_->publish(double_hurt_msg);
-                    trigger_once = true;
+                if (trigger_once) {
+                    if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x01;
+                    else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x02;
+                } else {
+                    if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x00;
+                    else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x01;
                 }
             }
+        } else {
+            double_hurt_msg.radar_cmd = 0x00;
         }
-    } else {
-        double_hurt_msg.radar_cmd = 0x00;
-        double_hurt_cmd_publisher_->publish(double_hurt_msg);
     }
+    std::cout << "!!!!!!!cmd: " << (int)double_hurt_msg.radar_cmd << std::endl;
+    double_hurt_cmd_publisher_->publish(double_hurt_msg);
+
+    std::cout << "chance--used: " << (int)double_hurt_chance
+              << " -- " << (int)used_chance
+              << ", exerting: " << (int)exerting
+              << ", trigger: " << trigger_once << std::endl;
     detected_enemy_count = 0;
 }
 
 void SmallMap::game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr msg) {
-    if (remain_time > 0) {
-        remain_time = msg->stage_remain_time;
-        game_progress = msg->game_progress;
-        std::cout << "(0-未开始 ==>> 4-比赛中) stage: " << (int)game_progress << ", remain_time: " << (int)remain_time << std::endl;
-    }
+    remain_time = msg->stage_remain_time;
+    last_game_progress = game_progress;
+    game_progress = msg->game_progress;
+    std::cout << "(0-未开始 ==>> 4-比赛中) stage: " << (int)game_progress
+    << ", remain_time: " << (int)remain_time << std::endl;
 }
 
 void SmallMap::double_info_Callback(robot_serial::msg::DoubleInfo::SharedPtr msg) {
     if (double_hurt_chance < 3 && exerting < 2) {
         double_hurt_chance = msg->double_hurt_chance;
         exerting = msg->exerting;
-        std::cout << "double_hurt_chance: " << (int)double_hurt_chance << ", exerting: " << (int)exerting << std::endl;
     }
 }
 
 void SmallMap::event_Callback(robot_serial::msg::Event::SharedPtr msg) {
     small_energy_enable = msg->small_energy_organ_status;
     big_energy_enable = msg->big_energy_organ_status;
-    std::cout << "small_energy: " << small_energy_enable << ", big_energy: " << big_energy_enable << std::endl;
+    std::cout << "small_energy: " << (int)small_energy_enable
+    << ", big_energy: " << (int)big_energy_enable << std::endl;
 }
 
 void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::SharedPtr input) {

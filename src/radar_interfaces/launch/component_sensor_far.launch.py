@@ -21,7 +21,7 @@ def generate_launch_description():
                 #         "camera_name": 'camera_far',
                 #         "camera_height": 1200,
                 #         "camera_width": 1920,
-                #         "camera_exp":2500.0,
+                #         "camera_exp":2200.0,
                 #         "camera_gain": 23.98,
                 #         "camera_auto_exp": 0,
                 #         "camera_auto_maxexp": 4500.0,

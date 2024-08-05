@@ -104,6 +104,7 @@ namespace yolov5_detect{
         radar_interfaces::msg::YoloPoints last_yolo_point_list, show_yolo_point_list;
         bool rgb_or_bayer = false;
 
+        //custom tracker components
         std::vector<track_element> tracker;
         bool init_tracker(const radar_interfaces::msg::YoloPoints&);
         double calc_dist(int x1, int y1, int x2, int y2);
@@ -114,11 +115,11 @@ namespace yolov5_detect{
         void calc_cost(radar_interfaces::msg::YoloPoints &now_points);
         void update_tracker(radar_interfaces::msg::YoloPoints &now_points);
 
-        DeepSort deepsort_;
+        DeepSort deepsort_; // 这个算法要要跑神经网络识别特征，消耗较大，所以实际没有用到，最后用了自己写的算法
 
         float* gpu_buffers_car[2], *gpu_buffers_num[2];
         float* cpu_output_buffer_car = nullptr, * cpu_output_buffer_num = nullptr;
-        cudaStream_t stream_car, stream_num;
+        cudaStream_t stream_c/home/hlf/Desktop/radar24_ws/src/robot_serialar, stream_num;
         IExecutionContext* context_car = nullptr, *context_num = nullptr;
         std::string car_engine_name, num_engine_name;
         IRuntime* runtime = nullptr;
