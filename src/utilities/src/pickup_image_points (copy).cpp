@@ -51,7 +51,6 @@ private:
 void far_mouse_callback(int event, int x, int y, int flags, void* param);
 void close_mouse_callback(int event, int x, int y, int flags, void* param);
 
-
 Mat far_src, close_src;
 int pick_far_count = 0, pick_close_count = 0, valid_far_img_count = 0, valid_close_img_count = 0,
         far_send_count = 0, close_send_count = 0;

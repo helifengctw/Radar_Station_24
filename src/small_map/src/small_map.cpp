@@ -150,7 +150,10 @@ void SmallMap::TimerCallback() {
                 trigger_once = false;
             } else if (!exerting && !trigger_once && double_hurt_chance > 0) {
                 if (remain_time >= 60 && remain_time < 6*60) {
-                    if (small_energy_enable || big_energy_enable) {
+                    if (used_chance == 0x00 && (small_energy_enable || big_energy_enable)) {
+                        trigger_once = true;
+                    }
+                    if (used_chance == 0x01 && big_energy_enable) {
                         trigger_once = true;
                     }
                 } else if (remain_time < 60) {
@@ -183,7 +186,11 @@ void SmallMap::game_status_Callback(robot_serial::msg::Gamestatus::SharedPtr msg
     last_game_progress = game_progress;
     game_progress = msg->game_progress;
     std::cout << "(0-未开始 ==>> 4-比赛中) stage: " << (int)game_progress
+<<<<<<< HEAD
     << ", remain_time: " << (int)remain_time << std::endl;
+=======
+              << ", remain_time: " << (int)remain_time << std::endl;
+>>>>>>> cd73628
 }
 
 void SmallMap::double_info_Callback(robot_serial::msg::DoubleInfo::SharedPtr msg) {
@@ -197,7 +204,11 @@ void SmallMap::event_Callback(robot_serial::msg::Event::SharedPtr msg) {
     small_energy_enable = msg->small_energy_organ_status;
     big_energy_enable = msg->big_energy_organ_status;
     std::cout << "small_energy: " << (int)small_energy_enable
+<<<<<<< HEAD
     << ", big_energy: " << (int)big_energy_enable << std::endl;
+=======
+              << ", big_energy: " << (int)big_energy_enable << std::endl;
+>>>>>>> cd73628
 }
 
 void SmallMap::far_distPointCallback(const radar_interfaces::msg::DistPoints::SharedPtr input) {

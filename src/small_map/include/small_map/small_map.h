@@ -105,8 +105,8 @@ private:
     robot_serial::msg::DoubleHurt double_hurt_msg;
     bool trigger_once = false, small_energy_enable = false, big_energy_enable = false;
     int detected_enemy_count = 0;
-    uint16_t remain_time = 1000, energy_enable_time = 0;
-    uint8_t double_hurt_chance = 0x00, used_chance = 0x00, exerting = 0x00;
+    uint16_t remain_time = 1000;
+    uint8_t double_hurt_chance = 0x00, exerting = 0x00, used_chance = 0x00;
     uint8_t last_game_progress = 0x00, game_progress = 0x00;
     cv::Point2f mouse_point = cv::Point2f(0.0, 0.0);
 };

@@ -16,5 +16,5 @@ small_map:
         y: 3.0
 
     battle_state:
-      our_color: "red"
+      our_color: "blue"
       fps_mode: 0

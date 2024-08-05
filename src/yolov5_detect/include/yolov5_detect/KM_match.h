@@ -84,5 +84,6 @@ int KM_matching(int now_size, int pred_size, std::vector<std::vector<int>> cost)
             maxWeight += weight[matchY[y]][y];
 
     cout << endl << "Maximum weight matching: " << maxWeight << endl;
+    dfs_count = 0;
     return 0;
 }

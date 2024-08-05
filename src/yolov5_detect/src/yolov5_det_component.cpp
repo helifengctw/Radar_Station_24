@@ -222,7 +222,6 @@ namespace yolov5_detect {
                     if (!tracker_yolo_point_list_msg.data.empty()) {
                         KM_matching(tracker_yolo_point_list_msg.data.size(),
                                     prediction_points.size(), cost_matrix);
-                        dfs_count = 0;
                         update_tracker(tracker_yolo_point_list_msg); // TODO
 //                        for (auto i : tracker) {
 //                            if (!i.obsoleted && current_time_ms - i.time < 2000) {
@@ -650,15 +649,35 @@ namespace yolov5_detect {
 
         cv::merge(hsvChannels, hsvImg);
         cv::cvtColor(hsvImg, src, cv::COLOR_HSV2BGR);
-        cv::Rect roi;
-        if (camera_name == "camera_far") {
-            roi= cv::Rect(roi_x, 0, img_width - roi_x, roi_y);
-        } else if (camera_name == "camera_close") {
-            roi = cv::Rect(0, roi_y, roi_x, img_height- roi_y);
+
+        if (camera_name == "camera_close") {
+            cv::Mat mask = cv::Mat::zeros(src.rows, src.cols, CV_8UC3);
+            std::vector<std::vector<cv::Point>> contour;
+            std::vector<cv::Point> pts;
+            pts.emplace_back(0, 138);
+            pts.emplace_back(308, 138);
+            pts.emplace_back(298, 525);
+            pts.emplace_back(620, 595);
+            pts.emplace_back(1303, 536);
+            pts.emplace_back(1306, 370);
+            pts.emplace_back(1375, 233);
+            pts.emplace_back(1920, 198);
+            pts.emplace_back(1920, 1200);
+            pts.emplace_back(0, 1200);
+            contour.push_back(pts);
+            drawContours(mask, contour, 0, cv::Scalar::all(255), -1);
+            cv::Mat dst;
+            src.copyTo(dst, mask);
+            src = dst;
+//            img.copyTo(dst,mask);
+//            imshow("mask",mask);
+//            imshow("img",img);
+//            imshow("dst",dst);
+//            mask = cv::Rect(0, roi_y, roi_x, img_height- roi_y);
         }
-        roi_img = src(roi);
-        src = cv::Mat(src.rows, src.cols, src.type(), cv::Scalar(0, 0, 0));
-        roi_img.copyTo(src(roi));
+//        roi_img = src(mask);
+//        src = cv::Mat(src.rows, src.cols, src.type(), cv::Scalar(0, 0, 0));
+//        roi_img.copyTo(src(mask));
     }
 
     bool Yolov5Detector::init_tracker(const radar_interfaces::msg::YoloPoints &yps) {
