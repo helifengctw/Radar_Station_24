@@ -82,33 +82,33 @@ void SmallMap::TimerCallback() {
         draw_point_on_map(i, small_map_copy, "Black");
         if (red_or_blue) {
             if (i.id == 0) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count += 3;
                 serial_world_points.x1 = uint16_t (i.x * 2800);
                 serial_world_points.y1 = uint16_t (i.y * 1500);
             } else if (i.id == 1) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x2 = uint16_t (i.x * 2800);
                 serial_world_points.y2 = uint16_t (i.y * 1500);
             } else if (i.id == 2) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count += 2;
                 serial_world_points.x3 = uint16_t (i.x * 2800);
                 serial_world_points.y3 = uint16_t (i.y * 1500);
             } else if (i.id == 3) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count += 2;
                 serial_world_points.x4 = uint16_t (i.x * 2800);
                 serial_world_points.y4 = uint16_t (i.y * 1500);
             } else if (i.id == 4) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count += 2;
                 serial_world_points.x5 = uint16_t (i.x * 2800);
                 serial_world_points.y5 = uint16_t (i.y * 1500);
             } else if (i.id == 5) {
-                if (i.x > 0.56) detected_dangerous_enemy_count++;
+                if (i.x >= 0.56) detected_dangerous_enemy_count++;
                 serial_world_points.x6 = uint16_t (i.x * 2800);
                 serial_world_points.y6 = uint16_t (i.y * 1500);
             }
         } else {
             if (i.id == 6) {
-                if (i.x < 0.44) detected_dangerous_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count += 3;
                 serial_world_points.x1 = uint16_t (i.x * 2800);
                 serial_world_points.y1 = uint16_t (i.y * 1500);
             } else if (i.id == 7) {
@@ -116,15 +116,15 @@ void SmallMap::TimerCallback() {
                 serial_world_points.x2 = uint16_t (i.x * 2800);
                 serial_world_points.y2 = uint16_t (i.y * 1500);
             } else if (i.id == 8) {
-                if (i.x < 0.44) detected_dangerous_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count += 2;
                 serial_world_points.x3 = uint16_t (i.x * 2800);
                 serial_world_points.y3 = uint16_t (i.y * 1500);
             } else if (i.id == 9) {
-                if (i.x < 0.44) detected_dangerous_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count += 2;
                 serial_world_points.x4 = uint16_t (i.x * 2800);
                 serial_world_points.y4 = uint16_t (i.y * 1500);
             } else if (i.id == 10) {
-                if (i.x < 0.44) detected_dangerous_enemy_count++;
+                if (i.x < 0.44) detected_dangerous_enemy_count += 2;
                 serial_world_points.x5 = uint16_t (i.x * 2800);
                 serial_world_points.y5 = uint16_t (i.y * 1500);
             } else if (i.id == 11) {
@@ -149,20 +149,30 @@ void SmallMap::TimerCallback() {
                 used_chance++;
                 trigger_once = false;
             } else if (!exerting && !trigger_once && double_hurt_chance > 0) {
-                if (remain_time >= 60 && remain_time < 6*60) {
-                    if (big_energy_enable) {
+                if (remain_time >= 70 && remain_time < 6*60) {
+                    if (detected_dangerous_enemy_count >= 5) {
                         trigger_once = true;
-                        if (detected_dangerous_enemy_count > 0) trigger_time = remain_time + 15;
+                        big_energy_start_time = remain_time + 50;
+                        trigger_time = remain_time + 15;
+                    } else if (big_energy_enable) {
+                        trigger_once = true;
+                        big_energy_start_time = remain_time;
+                        if (detected_dangerous_enemy_count >= 3) trigger_time = remain_time + 15;
                         else trigger_time = remain_time;
                     }
-                } else if (remain_time < 60) {
+                } else if (used_chance == 0x00 && remain_time < 70) {
                     trigger_once = true;
+                    big_energy_start_time = remain_time + 50;
+                    trigger_time = remain_time + 15;
+                } else if (used_chance == 0x01 && remain_time < 45) {
+                    trigger_once = true;
+                    big_energy_start_time = remain_time + 50;
                     trigger_time = remain_time + 15;
                 }
             }
             if (trigger_once && !exerting && trigger_time - 10 >= remain_time) {
                 if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x01;
-                else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x02;
+                else if (used_chance == 0x01 && big_energy_start_time - 45 > remain_time) double_hurt_msg.radar_cmd = 0x02;
             } else {
                 if (used_chance == 0x00)  double_hurt_msg.radar_cmd = 0x00;
                 else if (used_chance == 0x01) double_hurt_msg.radar_cmd = 0x01;

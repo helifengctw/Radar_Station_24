@@ -5,8 +5,7 @@
 namespace yolov5_detect {
 
     Yolov5Detector::Yolov5Detector(const rclcpp::NodeOptions &options) :
-            Node("yolov5_detector", options),
-            deepsort_(Deepsort_engine, 128, 256, 0, &gLogger_) {
+            Node("yolov5_detector", options) {
         cudaSetDevice(kGpuId);
 
         if (FilePreparation(false, false, false,
@@ -369,8 +368,8 @@ namespace yolov5_detect {
     bool Yolov5Detector::FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
                                          std::string *return_car_engine, std::string *return_num_engine) {
         std::string data_dir = "/home/hlf/Desktop/radar24_ws/src/yolov5_detect/data";
-        std::string car_wts_name = data_dir + "/weights/car_7_18_1_3k.wts";
-        std::string car_engine_name = data_dir + "/engine/car_7_18_1_3k.engine";
+        std::string car_wts_name = data_dir + "/weights/hlf_car_1_7k.wts";
+        std::string car_engine_name = data_dir + "/engine/hlf_car_1_7k.engine";
         *return_car_engine = car_engine_name;
         std::string num_wts_name = data_dir + "/weights/num_1_5w.wts";
         std::string num_engine_name = data_dir + "/engine/num_1_5w.engine";
@@ -655,10 +654,10 @@ namespace yolov5_detect {
             std::vector<std::vector<cv::Point>> contour;
             std::vector<cv::Point> pts;
             pts.emplace_back(0, 138);
-            pts.emplace_back(308, 138);
-            pts.emplace_back(298, 525);
-            pts.emplace_back(620, 595);
-            pts.emplace_back(1303, 536);
+            pts.emplace_back(335, 138);
+            pts.emplace_back(365, 505);
+            pts.emplace_back(640, 525);
+            pts.emplace_back(1303, 506);
             pts.emplace_back(1306, 370);
             pts.emplace_back(1375, 233);
             pts.emplace_back(1920, 198);

@@ -21,7 +21,7 @@ def generate_launch_description():
                 #         "camera_name": 'camera_far',
                 #         "camera_height": 1200,
                 #         "camera_width": 1920,
-                #         "camera_exp":2200.0,
+                #         "camera_exp":2000.0,
                 #         "camera_gain": 23.98,
                 #         "camera_auto_exp": 0,
                 #         "camera_auto_maxexp": 4500.0,
@@ -44,7 +44,7 @@ def generate_launch_description():
                         "show_by_cv_or_msg": 0,
                         "camera_name": "camera_far",
                         "rgb_or_bayer": True,
-                        "light_gain": 1.8,
+                        "light_gain": 1.6,
                         "saturation_gain": 1.6,
                         "image_width": 1920,
                         "image_height": 1200,
@@ -58,11 +58,11 @@ def generate_launch_description():
                     extra_arguments=[{'use_intra_process_comms': True}]
                 ),
                 # ComposableNode(
-                    # package='livox_ros2_driver',
-                    # plugin='livox_ros::LivoxDriver',
-                    # name='close_livox_ros2_driver',
-                    # namespace='sensor_far',
-                    # extra_arguments=[{'use_intra_process_comms': True}]
+                #   package='livox_ros2_driver',
+                #   plugin='livox_ros::LivoxDriver',
+                #   name='close_livox_ros2_driver',
+                #   namespace='sensor_far',
+                #   extra_arguments=[{'use_intra_process_comms': True}]
                 # ),
                 ComposableNode(
                     package='get_depth',

@@ -56,7 +56,6 @@ namespace yolov5_detect{
     const static int kOutputSize = kMaxNumOutputBbox * sizeof(Detection) / sizeof(float) + 1;
     const int kNumDetectBatchSize = 4;
     Logger gLogger_;
-    const std::string Deepsort_engine = "/home/hlf/Desktop/deep_sort/yolov5_deepsort_ws/src/yolo_sort/data/deepsort.engine";
 
 
     class Yolov5Detector : public rclcpp::Node{
@@ -114,8 +113,6 @@ namespace yolov5_detect{
         bool filter_tracker_and_predict();
         void calc_cost(radar_interfaces::msg::YoloPoints &now_points);
         void update_tracker(radar_interfaces::msg::YoloPoints &now_points);
-
-        DeepSort deepsort_; // 这个算法要要跑神经网络识别特征，消耗较大，所以实际没有用到，最后用了自己写的算法
 
         float* gpu_buffers_car[2], *gpu_buffers_num[2];
         float* cpu_output_buffer_car = nullptr, * cpu_output_buffer_num = nullptr;
