@@ -10,6 +10,7 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <memory>
+#include "time.h"
 
 using namespace std;
 using namespace cv;
@@ -23,14 +24,17 @@ public:
         close_img_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
                 "/sensor_close/raw/image", 10, std::bind(&PointsPickUp::CloseImgCallback, this, _1));
         far_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_far/calibration", 1);
+                "/sensor_far/calibration", 3);
         close_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
-                "/sensor_close/calibration", 1);
+                "/sensor_close/calibration", 3);
+        dart_point_publisher_ = this->create_publisher<radar_interfaces::msg::Points>(
+                "/dart_points", 3);
         inform_small_map_publisher_ = this->create_publisher<radar_interfaces::msg::Point>(
-                "pickup_information", 1);
+                "pickup_information", 3);
     }
     void send_far_points();
     void send_close_points();
+    void send_dart_points();
     void send_small_map_information();
 
         private:
@@ -39,6 +43,7 @@ public:
 
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr far_point_publisher_;
     rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr close_point_publisher_;
+    rclcpp::Publisher<radar_interfaces::msg::Points>::SharedPtr dart_point_publisher_;
     rclcpp::Publisher<radar_interfaces::msg::Point>::SharedPtr inform_small_map_publisher_;
 
 
@@ -56,7 +61,7 @@ float smaller = 0.6;
 int pick_far_count = 0, pick_close_count = 0, total_count = 5;
 Scalar GREEN(0, 255, 0);
 bool far_receiving = true, close_receiving = true;
-radar_interfaces::msg::Points far_points_msg, close_points_msg;
+radar_interfaces::msg::Points far_points_msg, close_points_msg, dart_points_msg;
 radar_interfaces::msg::Point small_map_info_msg;
 vector<Point2f> far_points_list, close_points_list;
 
@@ -104,6 +109,20 @@ int main(int argc, char ** argv)
         far_points_msg.data.push_back(point);
     }
     PPU_node->send_far_points();
+
+//    cout << "please enter the number of the wanted dart corner points 4 :" << endl;
+//    for (int i = 0; i < 2; i++) {
+//        int j = 0, k = 0;
+//        cout << "----the " << i << "th one:" << endl << "image--";
+//        cin >> j;
+//        cout << "pick : " << far_points_list[j] << endl;
+//        radar_interfaces::msg::Point point;
+//        point.x = (float)far_points_list[j].x;
+//        point.y = (float)far_points_list[j].y;
+//        point.id = k;
+//        dart_points_msg.data.push_back(point);
+//    }
+//    PPU_node->send_dart_points();
 
     while (rclcpp::ok()) {
         if (close_receiving) {
@@ -213,12 +232,22 @@ void tune_img(cv::Mat &src) {
 }
 
 void PointsPickUp::send_far_points() {
-    far_point_publisher_->publish(far_points_msg);
-    cout << "publish far points---size: " << far_points_msg.data.size() << endl;
+    for (int i = 0; i < 3; i++) {
+        far_point_publisher_->publish(far_points_msg);
+        cout << i << "th, publish far points size---" << far_points_msg.data.size() << endl;
+    }
 }
 void PointsPickUp::send_close_points() {
-    close_point_publisher_->publish(close_points_msg);
-    cout << "publish close points---size: " << close_points_msg.data.size() << endl;
+    for (int i = 0; i < 3; i++) {
+        close_point_publisher_->publish(close_points_msg);
+        cout << i << "th, publish close points size---" << close_points_msg.data.size() << endl;
+    }
+}
+void PointsPickUp::send_dart_points() {
+    for (int i = 0; i < 3; i++) {
+        dart_point_publisher_->publish(dart_points_msg);
+        cout << i << "th, publish dart points size---" << dart_points_msg.data.size() << endl;
+    }
 }
 
 void PointsPickUp::send_small_map_information() {

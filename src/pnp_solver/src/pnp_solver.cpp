@@ -25,9 +25,9 @@ public:
         RCLCPP_INFO(this->get_logger(), "Pnp solver node initialize!!!");
 
         far_calib_subscription_ = this->create_subscription<radar_interfaces::msg::Points>(
-                "/sensor_far/calibration", 1, std::bind(&PnpSolver::far_calibration, this, _1));
+                "/sensor_far/calibration", 3, std::bind(&PnpSolver::far_calibration, this, _1));
         close_calib_subscription_ = this->create_subscription<radar_interfaces::msg::Points>(
-                "/sensor_close/calibration", 1, std::bind(&PnpSolver::close_calibration, this, _1));
+                "/sensor_close/calibration", 3, std::bind(&PnpSolver::close_calibration, this, _1));
         pnp_service_ = this->create_service<radar_interfaces::srv::PnpResult>(
                 "pnp_results", std::bind(&PnpSolver::PnpResultCallback, this, _1, _2),
                 rmw_qos_profile_services_default, callback_group_organization);

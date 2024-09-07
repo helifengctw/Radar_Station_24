@@ -14,6 +14,7 @@
 #include "image_transport/image_transport.h"
 #include "radar_interfaces/msg/yolo_point.hpp"
 #include "radar_interfaces/msg/point.hpp"
+#include "radar_interfaces/msg/points.hpp"
 #include "radar_interfaces/msg/yolo_points.hpp"
 #include "deepsort.h"
 #include "KM_match.h"
@@ -65,13 +66,14 @@ namespace yolov5_detect{
 
     private:
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscription_;
+        rclcpp::Subscription<radar_interfaces::msg::Points>::SharedPtr dart_warning_subscription_;
 
         rclcpp::Publisher<radar_interfaces::msg::YoloPoints>::SharedPtr rect_publisher_;
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr yolo_publisher_;
         rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr deepsort_publisher_;
-
         void ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr msg);
         void load_parameters();
+        void DartWarningCallback(const radar_interfaces::msg::Points::ConstSharedPtr msg);
         void prepare_buffers(ICudaEngine* engine, float** gpu_input_buffer,
                              float** gpu_output_buffer, float** cpu_output_buffer, bool if_car);
         void infer(IExecutionContext& context, cudaStream_t& stream, void** gpu_buffers,
@@ -83,6 +85,7 @@ namespace yolov5_detect{
         bool FilePreparation(bool if_serialize_engine_car, bool if_serialize_engine_num, bool is_p6,
                              std::string * return_car_engine, std::string * return_num_engine);
         void show_deep_sort(cv::Mat& src, std::vector<DetectBox> & target_box);
+        void dart_door_detected(cv::Mat &src);
 
         /* custom utils function */
         void tune_img(cv::Mat& img);
@@ -102,6 +105,7 @@ namespace yolov5_detect{
         int show_count_threshold = 0, show_count = 0, show_by_cv_or_msg = 0, call_count = 0;
         radar_interfaces::msg::YoloPoints last_yolo_point_list, show_yolo_point_list;
         bool rgb_or_bayer = false;
+        std::vector<cv::Point> dart_points;
 
         //custom tracker components
         std::vector<track_element> tracker;

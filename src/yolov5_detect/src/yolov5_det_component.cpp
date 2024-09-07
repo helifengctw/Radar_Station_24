@@ -11,7 +11,7 @@ namespace yolov5_detect {
         if (FilePreparation(false, false, false,
                             &car_engine_name, &num_engine_name)) {
             RCLCPP_ERROR(this->get_logger(), "failed to prepare engine!!!!!");
-        }
+        } // 加载引擎文件，如果是用来生成引擎文件则将前前两个参数改一下，然后再进函数里面改一下wts文件地址和生成engine文件的地址，生成完结束程序。
 
         // Deserialize the engine_car from file
         deserialize_engine(car_engine_name, &runtime, &car_engine, &context_car);
@@ -33,15 +33,18 @@ namespace yolov5_detect {
 
         image_subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
                 "raw/image", 10, std::bind(&Yolov5Detector::ImageCallback, this, _1));
+//        dart_warning_subscription_ = this->create_subscription<radar_interfaces::msg::Points>(
+//                "/dart_points", 3, std::bind(&Yolov5Detector::DartWarningCallback, this, _1)); //用来检测飞镖的，为开发完全
 
         rect_publisher_ = this->create_publisher<radar_interfaces::msg::YoloPoints>("rectangles", 1);
         yolo_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("yolo_detected_img", 1);
         deepsort_publisher_ = this->create_publisher<sensor_msgs::msg::Image>("deep_sort_img", 1);
 
         load_parameters();
-        if (show_by_cv_or_msg == 0) {
+        if (show_by_cv_or_msg == 0) { // 展示模式，在参数文件里面改，用opencv开窗口展示或者发布图像话题在rqt里面看
             win_name = camera_name + " yolo_show";
             cv::namedWindow(win_name);
+//            if (camera_name == "camera_far") cv::namedWindow("dart_detection");
             cv::startWindowThread();
         }
         pro_start_time = std::chrono::duration<double, std::milli>(
@@ -102,6 +105,9 @@ namespace yolov5_detect {
         src.copyTo(src_raw);
         tune_img(src);
         img_batch.push_back(src);
+
+        // 镖门开启预警
+//        dart_door_detected(src_raw);
 
         // 第一层识别开始，Preprocess
         cuda_batch_preprocess(img_batch, gpu_buffers_car[0],
@@ -635,6 +641,35 @@ namespace yolov5_detect {
                 ((a.id < 6 || a.id == 12) && (b.id < 6 || b.id == 12))
                 || (((b.id >= 6 && b.id < 12) || b.id == 13) && ((a.id >= 6 && a.id < 12) || a.id == 13))
         );
+    }
+
+    void Yolov5Detector::DartWarningCallback(const radar_interfaces::msg::Points::ConstSharedPtr msg) {
+        dart_points.clear();
+        for (auto i: msg->data) {
+            dart_points.emplace_back(i.x, i.y);
+        }
+    }
+
+    void Yolov5Detector::dart_door_detected(cv::Mat &src) {
+        if (dart_points.empty()) return;
+        cv::Rect ROI(dart_points[0].x, dart_points[0].y, dart_points[1].x - dart_points[0].x,
+                     dart_points[1].y - dart_points[0].y);
+        cv::Mat dst = src(ROI);
+        cv::resize(dst, dst, cv::Size(dst.cols*5, dst.rows*5));
+
+        // Step 3: Define the color range white
+        cv::Scalar lower_white = cv::Scalar(240, 240, 240);
+        cv::Scalar upper_white = cv::Scalar(255, 255, 255);
+
+        // Step 4: Create masks for red and white colors
+        cv::Mat mask_white;
+        cv::inRange(dst, lower_white, upper_white, mask_white);
+
+        // Step 5: Apply the masks to the original image
+        cv::Mat white_img;
+        cv::bitwise_and(dst, dst, white_img, mask_white);
+
+        cv::imshow("dart_detection", white_img);
     }
 
     void Yolov5Detector::tune_img(cv::Mat &src) {
